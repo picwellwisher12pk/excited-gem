@@ -1,5 +1,5 @@
-import { Dropdown, Select, Space } from 'antd'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Select, Space } from 'antd'
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import type { ReactNode } from 'react'
 import {
@@ -53,6 +53,128 @@ interface MenuItem {
 const pinActions: string[] = ['toggle', 'pin', 'unpin']
 const muteActions: string[] = ['toggle', 'mute', 'unmute']
 
+// Custom Pin Dropdown Component
+const PinDropdown = ({ handlePin }) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false)
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isOpen])
+
+  const onClick = (key) => {
+    console.log('PinDropdown clicked:', key)
+    handlePin(key)
+    setIsOpen(false)
+  }
+
+  const items = [
+    { key: 'toggle', label: 'Toggle' },
+    { key: 'pin', label: 'Pin All' },
+    { key: 'unpin', label: 'Unpin All' }
+  ]
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <Btn
+        className="flex items-center"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <Pin size={14} className="mr-1" />
+        <span>Pin</span>
+        <ChevronDown size={14} className="ml-2 text-zinc-500" />
+      </Btn>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 min-w-[120px]">
+          {items.map(item => (
+            <div
+              key={item.key}
+              className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+              onClick={() => onClick(item.key)}
+            >
+              {item.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Custom Mute Dropdown Component
+const MuteDropdown = ({ handleMute }) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false)
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isOpen])
+
+  const onClick = (key) => {
+    console.log('MuteDropdown clicked:', key)
+    handleMute(key)
+    setIsOpen(false)
+  }
+
+  const items = [
+    { key: 'toggle', label: 'Toggle' },
+    { key: 'mute', label: 'Mute All' },
+    { key: 'unmute', label: 'Unmute All' }
+  ]
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <Btn
+        className="flex items-center"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <VolumeX size={14} className="mr-1" />
+        <span>Mute</span>
+        <ChevronDown size={14} className="ml-2 text-zinc-500" />
+      </Btn>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 min-w-[120px]">
+          {items.map(item => (
+            <div
+              key={item.key}
+              className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+              onClick={() => onClick(item.key)}
+            >
+              {item.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Header({
   children,
   allSelected = false,
@@ -105,41 +227,12 @@ export default function Header({
 
   const sortButton = useMemo(() => <SortButton tabs={tabs} />, [tabs])
 
-  // Replace Dropdown menus with Select components for pin and mute actions
-  const pinMenu = {
-    items: pinActions.map((action) => ({
-      key: action,
-      label: action
-    })),
-    onClick: ({ key }) => handlePin(key)
-  }
-
   const pinSelect = (
-    <Dropdown menu={pinMenu} trigger={['click']}>
-      <Btn className="flex items-center">
-        <Pin size={14} className="mr-1" />
-        <span>Pin</span>
-        <ChevronDown size={14} className="ml-2 text-zinc-500" />
-      </Btn>
-    </Dropdown>
+    <PinDropdown handlePin={handlePin} />
   )
 
-  const muteMenu = {
-    items: muteActions.map((action) => ({
-      key: action,
-      label: action
-    })),
-    onClick: ({ key }) => handleMute(key)
-  }
-
   const muteSelect = (
-    <Dropdown menu={muteMenu} trigger={['click']}>
-      <Btn className="flex items-center">
-        <VolumeX size={14} className="mr-1" />
-        <span>Mute</span>
-        <ChevronDown size={14} className="ml-2 text-zinc-500" />
-      </Btn>
-    </Dropdown>
+    <MuteDropdown handleMute={handleMute} />
   )
 
   return (

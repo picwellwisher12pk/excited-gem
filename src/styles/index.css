@@ -55,12 +55,24 @@ svg {
   position: relative;
 }
 
-.page-header .nav > li > a {
+/* Fix Ant Design dropdown z-index issues */
+.ant-dropdown,
+.ant-select-dropdown,
+.ant-picker-dropdown,
+.ant-tooltip {
+  z-index: 9999 !important;
+}
+
+.ant-popover {
+  z-index: 10000 !important;
+}
+
+.page-header .nav>li>a {
   color: #fff;
 }
 
 .page-header .nav-pills .nav-link.active,
-.page-header .nav-pills .show > .nav-link {
+.page-header .nav-pills .show>.nav-link {
   background-color: transparent;
 }
 
@@ -94,7 +106,7 @@ svg {
   border-radius: 0;
 }
 
-.panel-group .panel + .panel {
+.panel-group .panel+.panel {
   margin-top: 0;
 }
 
@@ -147,7 +159,7 @@ svg {
   box-shadow: none;
 }
 
-.context-actions .nav > li > a {
+.context-actions .nav>li>a {
   padding: 5px 0;
 }
 
@@ -211,7 +223,7 @@ svg {
   opacity: 0;
 }
 
-.selection-action .nav > li > a {
+.selection-action .nav>li>a {
   color: #fff;
 }
 

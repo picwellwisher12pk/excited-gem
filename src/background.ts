@@ -317,7 +317,7 @@ const updateActionState = async (mode: string) => {
 }
 
 chrome.storage.local.get('displayMode').then(({ displayMode }) => {
-  updateActionState(displayMode || 'sidebar')
+  updateActionState(displayMode || 'tab')
 })
 
 chrome.storage.onChanged.addListener((changes, area) => {

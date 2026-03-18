@@ -54,7 +54,7 @@ function SettingsPageContent() {
     'compact'
   )
   const [displayMode, setDisplayMode] = useState<'sidebar' | 'tab' | 'popup'>(
-    'sidebar'
+    'tab'
   )
   const [activeCategory, setActiveCategory] = useState('display')
   const [tabManagementMode, setTabManagementMode] = useState<

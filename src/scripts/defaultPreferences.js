@@ -1,4 +1,5 @@
 export const preferences = {
+  displayMode: 'tab',
   search: {
     regex: false,
     ignoreCase: true,
