@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.5.4](https://github.com/picwellwisher12pk/excited-gem/compare/v1.5.3...v1.5.4) (2026-03-18)
+
+
+### Bug Fixes
+
+* replace all Ant Design dropdowns with custom implementations ([a1249b3](https://github.com/picwellwisher12pk/excited-gem/commit/a1249b3177d4bbb4c44df39640a3451cd5e65073))
+
 ### [1.5.3](https://github.com/picwellwisher12pk/excited-gem/compare/v1.5.2...v1.5.3) (2026-03-08)
 
 ## 1.0.0 (2025-11-25)
