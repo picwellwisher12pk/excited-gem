@@ -44,12 +44,6 @@ svg {
   justify-content: center;
 }
 
-.ant-btn:active {
-  background-image: white !important;
-  background: white !important;
-  border-color: #fff;
-}
-
 .page-header {
   z-index: 999;
   position: relative;

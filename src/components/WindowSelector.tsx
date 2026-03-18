@@ -70,29 +70,63 @@ export default function WindowSelector() {
     .filter((window) => currentWindow.id !== window.id)
     .map(window => ({
       key: window.id,
-      label: `Window ${window.id}`,
+      label: 'Window',
       count: window.tabs.length,
       onClick: () => setWindow(window.id)
     }))
 
   if (allWindows.length <= 1) return null
 
-  const getCurrentLabel = () => {
-    if (selectedWindow === 'all') return 'All Windows'
-    if (selectedWindow === 'current') return 'Window (current)'
+  const getCurrentDisplay = () => {
+    if (selectedWindow === 'all') {
+      return {
+        label: 'All Windows',
+        count: totalTabCount,
+        isCurrent: false
+      }
+    }
+    if (selectedWindow === 'current') {
+      return {
+        label: 'Window',
+        count: currentWindow.tabs?.length || 0,
+        isCurrent: true
+      }
+    }
     const window = allWindows.find(w => w.id === selectedWindow)
-    return window ? `Window ${window.id}` : selectedWindow
+    return window ? {
+      label: 'Window',
+      count: window.tabs.length,
+      isCurrent: false
+    } : {
+      label: selectedWindow,
+      count: 0,
+      isCurrent: false
+    }
   }
 
   return (
     <div className="relative" ref={dropdownRef}>
       <Btn
-        className="flex items-center justify-between !border-0 shadow-md hover:shadow-sm active:shadow-none"
+        className="flex items-center justify-between !border-0 shadow-md hover:shadow-sm active:shadow-none px-3 py-2"
         style={{ width: 200 }}
         onClick={() => setIsOpen(!isOpen)}
       >
-        <span className="truncate">{getCurrentLabel()}</span>
-        <ChevronDown size={14} className="ml-2 text-zinc-500" />
+        <div className="flex justify-between items-center flex-1">
+          <div className="flex items-center">
+            <span className="inline-block w-2 h-2 rounded-full mb-[1px] mr-2"></span>
+            <span>
+              {getCurrentDisplay().label}
+              {getCurrentDisplay().isCurrent && (
+                <small className="text-gray-400 ml-1">(current)</small>
+              )}
+            </span>
+          </div>
+          <small className={`${getCurrentDisplay().count > 50 ? '!text-orange-600' : '!text-green-500'
+            }`}>
+            {getCurrentDisplay().count} tab{getCurrentDisplay().count !== 1 && 's'}
+          </small>
+        </div>
+        <ChevronDown size={14} className="ml-2 text-zinc-500 flex-shrink-0" />
       </Btn>
 
       {isOpen && (
@@ -140,7 +174,7 @@ export default function WindowSelector() {
                 <div className="flex justify-between items-center">
                   <div className="flex items-center">
                     <span className="inline-block w-2 h-2 rounded-full mb-[1px] mr-2"></span>
-                    <span>Window {option.key}</span>
+                    <span>Window</span>
                   </div>
                   <small className={option.count > 50 ? '!text-orange-600' : '!text-lime-700'}>
                     {option.count} tab{option.count > 1 && 's'}

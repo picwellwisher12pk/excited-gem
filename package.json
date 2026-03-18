@@ -20,7 +20,7 @@
   "scripts": {
     "start": "nodemon",
     "dev": "plasmo dev",
-    "dev:win": "plasmo dev & ./scripts/sync-build.sh",
+    "dev:win": "trap 'kill %1 %2 2>/dev/null; exit' INT TERM; plasmo dev & ./scripts/sync-build-enhanced.sh & wait",
     "build": "plasmo build",
     "package": "plasmo package",
     "start:chromium": "web-ext run --source-dir ./extension --target=chromium",
