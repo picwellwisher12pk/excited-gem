@@ -4,11 +4,13 @@ import { useEffect, useMemo, useState, useRef } from 'react'
 import { useSelector } from 'react-redux'
 import Btn from '../../components/Btn'
 import { DuplicateTabsModal } from '../../components/Modals/DuplicateTabsModal'
+import { YoutubeTabsModal } from '../../components/Modals/YoutubeTabsModal'
 import { message } from 'antd'
 
 const MoreActionsMenu = () => {
   const { tabs } = useSelector((state: any) => state.tabs)
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false)
+  const [isYoutubeModalOpen, setIsYoutubeModalOpen] = useState(false)
   const [hasYoutubeApiKey, setHasYoutubeApiKey] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef(null)
@@ -74,6 +76,15 @@ const MoreActionsMenu = () => {
         setIsOpen(false)
       }
     },
+    {
+      key: 'youtube-tabs',
+      label: 'Manage YouTube Tabs',
+      icon: <Youtube size={14} />,
+      onClick: () => {
+        setIsYoutubeModalOpen(true)
+        setIsOpen(false)
+      }
+    },
     ...(hasYoutubeApiKey
       ? [
         {
@@ -122,6 +133,11 @@ const MoreActionsMenu = () => {
       <DuplicateTabsModal
         visible={isDuplicateModalOpen}
         onClose={() => setIsDuplicateModalOpen(false)}
+      />
+
+      <YoutubeTabsModal
+        visible={isYoutubeModalOpen}
+        onClose={() => setIsYoutubeModalOpen(false)}
       />
     </>
   )

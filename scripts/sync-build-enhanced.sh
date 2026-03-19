@@ -75,10 +75,13 @@ if command -v inotifywait >/dev/null 2>&1; then
     log "Watching for changes in $SOURCE"
     
     # Watch for file system events
-    while inotifywait -r -e modify,create,delete,move "$SOURCE" \
-        --exclude '.*\.swp.*|.*\.tmp.*|.*~|.*\.log.*' \
-        --timeout 1 2>/dev/null; do
-        sync_changes
+    while true; do
+        if inotifywait -r -e modify,create,delete,move "$SOURCE" \
+            --exclude '.*\.swp.*|.*\.tmp.*|.*~|.*\.log.*' 2>/dev/null; then
+            sync_changes
+        else
+            sleep 1
+        fi
     done
 else
     log_warning "inotifywait not found, using polling method"
