@@ -33,6 +33,7 @@ function save_options(e) {
   pref.filterType = $('#filter-type-option-id').val()
   pref.filterCase = $('#filterCase-option-id').prop('checked')
   pref.sortAnimation = $('#sort-animation-option-id').val()
+  pref.experimentalAI = $('#experimentalAI-option-id').prop('checked')
   console.log(pref)
   chrome.storage.local.set(
     {
@@ -60,6 +61,7 @@ function restore_options() {
     $('#filter-type-option-id').val(items.pref.filterType)
     $('#sort-animation-option-id').val(items.pref.sortAnimation)
     $('#filterCase-option-id').prop('checked:', items.pref.filterCase)
+    $('#experimentalAI-option-id').prop('checked', items.pref.experimentalAI)
   })
 }
 document.addEventListener('DOMContentLoaded', restore_options)

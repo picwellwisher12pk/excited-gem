@@ -1,28 +1,39 @@
 import { Badge } from 'antd'
-import { MoreVertical, Copy, RefreshCw, Youtube } from 'lucide-react'
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { useSelector } from 'react-redux'
 import Btn from '../../components/Btn'
 import { DuplicateTabsModal } from '../../components/Modals/DuplicateTabsModal'
 import { YoutubeTabsModal } from '../../components/Modals/YoutubeTabsModal'
+import { AITestModal } from '../../components/Modals/AITestModal'
 import { message } from 'antd'
+import { Bot, Copy, MoreVertical, RefreshCw, Youtube } from 'lucide-react'
 
 const MoreActionsMenu = () => {
   const { tabs } = useSelector((state: any) => state.tabs)
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false)
   const [isYoutubeModalOpen, setIsYoutubeModalOpen] = useState(false)
+  const [isAITestModalOpen, setIsAITestModalOpen] = useState(false)
   const [hasYoutubeApiKey, setHasYoutubeApiKey] = useState(false)
+  const [experimentalAI, setExperimentalAI] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef(null)
 
   useEffect(() => {
-    chrome.storage.local.get('youtubeApiKey', (result) => {
+    // Initial fetch
+    chrome.storage.local.get(['youtubeApiKey', 'pref'], (result) => {
       setHasYoutubeApiKey(!!result.youtubeApiKey)
+      setExperimentalAI(!!result.pref?.experimentalAI)
     })
 
+    // Consolidated storage listener
     const listener = (changes: any, area: string) => {
-      if (area === 'local' && changes.youtubeApiKey) {
-        setHasYoutubeApiKey(!!changes.youtubeApiKey.newValue)
+      if (area === 'local') {
+        if (changes.youtubeApiKey) {
+          setHasYoutubeApiKey(!!changes.youtubeApiKey.newValue)
+        }
+        if (changes.pref) {
+          setExperimentalAI(!!changes.pref.newValue?.experimentalAI)
+        }
       }
     }
     chrome.storage.onChanged.addListener(listener)
@@ -85,6 +96,17 @@ const MoreActionsMenu = () => {
         setIsOpen(false)
       }
     },
+    ...(experimentalAI ? [
+      {
+        key: 'ai-assistant',
+        label: 'AI Assistant',
+        icon: <Bot size={14} />,
+        onClick: () => {
+          setIsAITestModalOpen(true)
+          setIsOpen(false)
+        }
+      }
+    ] : []),
     ...(hasYoutubeApiKey
       ? [
         {
@@ -138,6 +160,11 @@ const MoreActionsMenu = () => {
       <YoutubeTabsModal
         visible={isYoutubeModalOpen}
         onClose={() => setIsYoutubeModalOpen(false)}
+      />
+
+      <AITestModal
+        visible={isAITestModalOpen}
+        onClose={() => setIsAITestModalOpen(false)}
       />
     </>
   )
