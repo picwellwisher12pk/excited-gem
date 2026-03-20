@@ -12,7 +12,8 @@ import {
   Divider,
   Collapse,
   Menu,
-  Card
+  Card,
+  Alert
 } from 'antd'
 import {
   KeyOutlined,
@@ -23,7 +24,8 @@ import {
   SyncOutlined,
   GoogleOutlined,
   CloudSyncOutlined,
-  CloudDownloadOutlined
+  CloudDownloadOutlined,
+  ExperimentOutlined
 } from '@ant-design/icons'
 import { loginAndGetProfile, logout, UserProfile } from '../utils/auth'
 import { backupToDrive, restoreFromDrive } from '../utils/drive'
@@ -44,6 +46,7 @@ const SETTINGS_CATEGORIES = [
   { key: 'display', label: 'Display Settings', icon: <BlockOutlined /> },
   { key: 'integrations', label: 'Integrations & Sync', icon: <SyncOutlined /> },
   { key: 'search', label: 'Search Settings', icon: <SearchOutlined /> },
+  { key: 'experimental', label: 'Experimental', icon: <ExperimentOutlined /> },
   { key: 'about', label: 'About', icon: <InfoCircleOutlined /> }
 ]
 
@@ -70,6 +73,7 @@ function SettingsPageContent() {
   )
   const [youtubeApiKey, setYoutubeApiKey] = useState('')
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [experimentalAI, setExperimentalAI] = useState(false)
   const [isBackingUp, setIsBackingUp] = useState(false)
   const [isRestoring, setIsRestoring] = useState(false)
 
@@ -87,7 +91,8 @@ function SettingsPageContent() {
         'youtubeApiKey',
         'userProfile',
         'regex',
-        'searchIn'
+        'searchIn',
+        'experimentalAI'
       ],
       (result) => {
         if (result.regex !== undefined) dispatch(setRegex(result.regex))
@@ -102,6 +107,7 @@ function SettingsPageContent() {
           setTabActionButtons(result.tabActionButtons)
         if (result.youtubeApiKey) setYoutubeApiKey(result.youtubeApiKey)
         if (result.userProfile) setUserProfile(result.userProfile)
+        if (result.experimentalAI !== undefined) setExperimentalAI(result.experimentalAI)
       }
     )
   }, [])
@@ -169,6 +175,21 @@ function SettingsPageContent() {
     dispatch(toggleSearchIn(newSearchIn))
     browser.storage.local.set({ searchIn: newSearchIn }, () => {
       message.success('Search criteria saved')
+    })
+  }
+
+  const handleExperimentalAIChange = (value: boolean) => {
+    setExperimentalAI(value)
+    // Update both places for compatibility (pref object in options.js and root level here)
+    browser.storage.local.get('pref', (result) => {
+      const pref = result.pref || {}
+      pref.experimentalAI = value
+      browser.storage.local.set({ 
+        pref: pref,
+        experimentalAI: value 
+      }, () => {
+        message.success(`AI Assistant ${value ? 'enabled' : 'disabled'}`)
+      })
     })
   }
 
@@ -609,6 +630,55 @@ function SettingsPageContent() {
                           </Radio.Group>
                         </Space>
                       </div>
+                    </div>
+                  </Space>
+                )}
+
+                {activeCategory === 'experimental' && (
+                  <Space direction="vertical" size="large" className="w-full">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Text strong>AI Assistant (Beta)</Text>
+                        <div className="bg-blue-100 text-blue-600 px-2 py-0.5 rounded text-[10px] font-bold uppercase">Experimental</div>
+                      </div>
+                      <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-100 mb-4">
+                        <Checkbox 
+                          checked={experimentalAI} 
+                          onChange={(e) => handleExperimentalAIChange(e.target.checked)}
+                          className="font-medium"
+                        >
+                          Enable Experimental AI Assistant
+                        </Checkbox>
+                        <div className="mt-2 ml-6">
+                          <Text type="secondary" className="text-xs block">
+                            Unlocks the AI Assistant drawer in the main menu. 
+                            Uses browser-native Prompt API for privacy-first, on-device intelligence.
+                          </Text>
+                          <div className="mt-3 flex gap-2">
+                            <div className="bg-white/80 px-2 py-1 rounded border border-blue-100 text-[10px] text-blue-500">
+                              ✨ Context-aware
+                            </div>
+                            <div className="bg-white/80 px-2 py-1 rounded border border-blue-100 text-[10px] text-blue-500">
+                              🔒 100% On-device
+                            </div>
+                            <div className="bg-white/80 px-2 py-1 rounded border border-blue-100 text-[10px] text-blue-500">
+                              💬 Chat History
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <Alert
+                        message="Requirements"
+                        description={
+                          <ul className="text-xs list-disc ml-4 mt-1 text-gray-500">
+                            <li>Chrome 127+ (Dev/Canary recommended)</li>
+                            <li>Enabling "Prompt API for Gemini Nano" in chrome://flags</li>
+                            <li>"Optimization Guide On Device Model" set to "Enabled BypassPerfRequirement"</li>
+                          </ul>
+                        }
+                        type="info"
+                        showIcon
+                      />
                     </div>
                   </Space>
                 )}

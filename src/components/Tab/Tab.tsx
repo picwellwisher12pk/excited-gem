@@ -56,6 +56,7 @@ export interface TabProps {
   youtubeInfo?: YouTubeInfo // Added youtubeInfo to TabProps
   isCompact?: boolean // Add isCompact prop
   isSelectionMode?: boolean // Add isSelectionMode prop
+  hideUrl?: boolean // Add hideUrl prop
 }
 
 interface SearchState {
@@ -90,6 +91,7 @@ export const Tab = React.forwardRef<HTMLDivElement, TabProps>(
       discardTab,
       youtubeInfo,
       isCompact = false,
+      hideUrl = false,
       ...props // For dragging props
     },
     ref
@@ -313,18 +315,22 @@ export const Tab = React.forwardRef<HTMLDivElement, TabProps>(
                 >
                   {parse(markedTitle)}
                 </span>
-                {/* Mobile: Show URL below title */}
-                <span className="text-xs text-slate-400 truncate w-full text-left sm:hidden block leading-none">
-                  {parse(markedUrl)}
-                </span>
-                {/* Desktop: Show URL next to title (hidden on mobile) */}
-                <button
-                  className="text-xs text-slate-400 truncate w-full text-left hover:text-slate-600 transition-colors hidden sm:block bg-transparent border-0 cursor-pointer p-0"
-                  title={url}
-                  onClick={handleTabClick}
-                >
-                  {parse(markedUrl)}
-                </button>
+                {!hideUrl && (
+                  <>
+                    {/* Mobile: Show URL below title */}
+                    <span className="text-xs text-slate-400 truncate w-full text-left sm:hidden block leading-none">
+                      {parse(markedUrl)}
+                    </span>
+                    {/* Desktop: Show URL next to title (hidden on mobile) */}
+                    <button
+                      className="text-xs text-slate-400 truncate w-full text-left hover:text-slate-600 transition-colors hidden sm:block bg-transparent border-0 cursor-pointer p-0"
+                      title={url}
+                      onClick={handleTabClick}
+                    >
+                      {parse(markedUrl)}
+                    </button>
+                  </>
+                )}
               </div>
               {/* YouTube Video Controls */}
               {isYouTube && (
