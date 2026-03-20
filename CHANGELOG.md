@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.6.1](https://github.com/picwellwisher12pk/excited-gem/compare/v1.6.0...v1.6.1) (2026-03-20)
+
+
+### Features
+
+* add experimental AI Assistant setting and improve AI tab pagination UX ([51d3bed](https://github.com/picwellwisher12pk/excited-gem/commit/51d3bedf25663eb30844cc887052a29d03b6fe06))
+
 ## [1.6.0](https://github.com/picwellwisher12pk/excited-gem/compare/v1.5.6...v1.6.0) (2026-03-20)
 
 
