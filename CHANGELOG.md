@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.6.0](https://github.com/picwellwisher12pk/excited-gem/compare/v1.5.6...v1.6.0) (2026-03-20)
+
+
+### Features
+
+* add YouTube Tabs action, fix watcher timeout ([256320c](https://github.com/picwellwisher12pk/excited-gem/commit/256320c96be6a94b14b1326f76b2cff4f1bf16ae))
+* implement experimental AI Assistant drawer with chat history and intent-based context ([fb61720](https://github.com/picwellwisher12pk/excited-gem/commit/fb61720952aa7c4309f9d1cf4e030ad87a93d030))
+
 ### [1.5.4](https://github.com/picwellwisher12pk/excited-gem/compare/v1.5.3...v1.5.4) (2026-03-18)
 
 
