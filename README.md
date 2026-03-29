@@ -4,66 +4,66 @@
 
 # 💎 Excited Gem
 
-Excited Gem is a high-performance, unified productivity browser extension designed for power users. More than just a tab manager, it serves as your digital workspace—combining advanced session management, YouTube media control, and secure cloud synchronization into a beautiful, lightning-fast interface.
+Excited Gem is a high-performance, unified productivity browser extension designed for power users who manage hundreds of tabs. More than just a tab manager, it serves as your digital workspace—combining advanced session management, YouTube media control, on-device AI assistance, and secure cloud synchronization into a beautiful, lightning-fast interface.
 
 ---
 
 ## ✨ Key Features
 
-### 🚀 Advanced Tab & Session Management
-- **Visual Command Center**: A clean, real-time overview of all open tabs across all windows.
-- **Smart Sessions**: Save entire windows or specific tab groups into persistent sessions. Declutter your browser and free up system memory instantly.
-- **Library Management**: Organize saved sessions into custom categories for different projects or workflows.
-- **Tab Actions**: Bulk close, mute, pin, or move tabs with precision.
+### 🚀 Smart Tab & Session Power Tools
+- **Visual Command Center (Virtualization)**: Handles thousands of open tabs with zero lag using React virtualization. Get a clean, real-time overview of your entire browser state across all windows in a single, high-performance view.
+- **Intelligent Sessions & Collections**: 
+  - **Sessions**: Snapshot your entire browser state (all windows and tabs) and restore it with one click. Ideal for switching between deep-work contexts.
+  - **Tab Lists**: Curate specific groups of tabs and save them as persistent collections. Choose to store them in the **Extension Storage** for speed or directly as **Browser Bookmarks** for native sync.
+- **Flexible Management Modes**: Configure the extension to run in **Single Tab Mode** (one instance for all windows) or **Per-Window Mode** (isolated management per browser window).
+- **Bulk Productivity Actions**: Perform group actions like "Close all tabs from this domain," "Mute all tabs with sound," or "Unpin all tabs" with precision and speed.
 
-### 📺 🎥 Enhanced YouTube Integration
-- **Universal Remote**: Control YouTube playback (Play/Pause, Seek) directly from the extension sidebar or popup.
-- **Shorts Support**: Full integration with YouTube Shorts for seamless browsing and control.
-- **Metadata Fetching**: Automatically retrieves high-quality video titles and durations, even for unloaded tabs.
-- **Narrowed Permissions**: Built with privacy in mind—host permissions are strictly limited to video-related URLs for maximum security.
+### 🤖 Local-First AI Assistant (Beta)
+- **On-Device Intelligence**: Leverages Chrome's native **Prompt API (Gemini Nano)** to provide assistant capabilities without sending your sensitive browsing data to any external servers.
+- **Action-Oriented Context**: Your assistant "sees" your open tabs and can perform actions via text commands:
+  - *"Mute all noisy tabs in the background"*
+  - *"Close all shopping-related tabs"*
+  - *"Group my research tabs into a new window"*
+- **Privacy-First Design**: Designed for the privacy-conscious, the AI operates 100% locally on your machine, requiring zero external API calls for its core logic.
 
-### 🔖 Bookmark Power Tools
-- **Deep Organization**: Move, rename, and categorize your browser bookmarks within a specialized productivity UI.
-- **Quick Links**: Access your most important sites with a dedicated Bookmarks view.
+### 📺 🎥 Advanced YouTube Workspace
+- **Universal Media Remote**: Control YouTube playback (Play/Pause, Seek) directly from the extension sidebar or popup. No more hunting for the tab that's playing music.
+- **Playback Progress Tracking**: Real-time progress bars for every YouTube tab, allowing you to see exactly where you are in a video or Short without switching tabs.
+- **Custom API Integration (BYOK)**: For advanced users, "Bring Your Own Key" support for the YouTube Data API ensures you have full control over metadata fetching and never hit shared quota limits.
+- **Shorts & Videos Integration**: Seamlessly handles both standard videos and YouTube Shorts with dedicated extraction logic.
 
-### ☁️ Secure Cloud Sync (BYOK)
-- **Google Drive Integration**: Back up your extension settings, sessions, and data to your personal Google Drive (App Data folder).
-- **Privacy First**: Your data never touches our servers. Authentication happens directly with Google, and your data stays in your personal cloud.
-- **BYOK (Bring Your Own Key)**: Support for custom YouTube API keys for advanced users who want full control over their data fetching.
+### 🔍 Precision Search & Filtering
+- **Regex & Advanced Queries**: Find exactly what you need using Regular Expression support. Search across Titles, URLs, or both with customizable search scopes.
+- **Dynamic Search Behavior**: Choose between **"As you type"** (instant results) or **"On Enter"** search behaviors to match your workflow.
+- **Status Filtering**: Instantly isolate tabs that are Audible, Pinned, Discarded (suspended), or from specific windows.
 
-### 🔍 Powerful Search & Filtering
-- **Regex Support**: Find exactly what you need using advanced Regular Expression search across titles and URLs.
-- **Live Filtering**: Filter tabs by audible status, pinned status, or specific domains in real-time.
+### ☁️ Secure Cloud Sync & Privacy
+- **Google Drive AppData Sync**: Back up your extension settings, sessions, and lists to your personal Google Drive's hidden `appData` folder. Your data stays in your personal cloud, not ours.
+- **Privacy-Centric Permissions**: Built with minimal host permissions. We only request access to the URLs necessary for media control (YouTube), ensuring your other browsing remains private.
+- **No Telemetry**: We believe in your right to privacy. Excited Gem includes zero third-party tracking, ads, or hidden telemetry.
 
 ### 🎨 Premium User Experience
-- **Adaptive Layouts**: Seamlessly switch between **Sidebar (Side Panel)**, **Popup**, and **Full Tab** views.
-- **Contextual UI**: Enhanced context menus and a **Floating Action Bar** for quick access to frequent tasks.
-- **Modern Tech**: Built on React 18, TypeScript, Tailwind CSS, and optimized with the Bun runtime.
-
----
-
-## 📸 Visual Experience
-
-![Excited Gem Dashboard](Designs/new.jpg)
+- **Adaptive UI Layouts**: Optimized for the modern browser experience. Switch seamlessly between the **Side Panel** (best for persistent management), **Popup**, and **Full Tab** views.
+- **Customizable Aesthetics**: Choose between Compact or Expanded list views. Set tab action buttons to be "Always Visible" or "On Hover" to reduce visual clutter.
+- **Modern Tech Stack**: Engineered for speed with React 18, TypeScript, and Tailwind CSS.
 
 ---
 
 ## 🛠 Tech Stack
 
 - **Core**: [React](https://reactjs.org/) & [TypeScript](https://www.typescriptlang.org/)
-- **UI Components**: [Ant Design](https://ant.design/) & [Tailwind CSS](https://tailwindcss.com/)
-- **State Management**: [Redux Toolkit](https://redux-toolkit.js.org/)
-- **Build System**: [Plasmo](https://docs.plasmo.com/) & [Bun](https://bun.sh/)
+- **UI Architecture**: [Ant Design](https://ant.design/) & [Tailwind CSS](https://tailwindcss.com/)
+- **State Engine**: [Redux Toolkit](https://redux-toolkit.js.org/)
+- **Build & Runtime**: [Plasmo Framework](https://docs.plasmo.com/) & [Bun](https://bun.sh/)
 
 ---
 
 ## 🔒 Privacy & Security
 
-We believe your browsing data is yours alone.
-- **Local-First**: All data is processed locally in your browser.
-- **No Tracking**: No telemetry, no ads, and no third-party tracking.
-- **Standardized Review**: Permissions are narrowed to satisfy the strictest Chrome Web Store security requirements.
-- **[Privacy Policy](https://picwellwisher12pk.github.io/excited-gem/privacy.html)**: Transparent disclosure of all browser permissions.
+Data sovereignty is at the heart of Excited Gem.
+- **Local-By-Default**: Your tabs, sessions, and chat history never leave your browser unless YOU trigger a sync.
+- **Secure Auth**: Authentication for sync is handled directly by Google Identity Services; the extension never sees your password.
+- **Open Transparency**: Read our full **[Privacy Policy](https://picwellwisher12pk.github.io/excited-gem/privacy.html)** for a detailed breakdown of how we use every permission.
 
 ---
 
