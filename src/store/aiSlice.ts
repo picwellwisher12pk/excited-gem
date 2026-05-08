@@ -19,9 +19,17 @@ export interface ChatMessage {
   streaming?: boolean
 }
 
+export interface ChatSession {
+  id: string
+  title: string
+  messages: ChatMessage[]
+  lastModified: number
+}
+
 interface AIState {
   settings: AISettings
-  messages: ChatMessage[]
+  sessions: ChatSession[]
+  currentSessionId: string | null
   drawerOpen: boolean
   isLoading: boolean
   streamingMessageId: string | null
@@ -34,7 +42,8 @@ interface AIState {
 
 const initialState: AIState = {
   settings: DEFAULT_AI_SETTINGS,
-  messages: [],
+  sessions: [],
+  currentSessionId: null,
   drawerOpen: false,
   isLoading: false,
   streamingMessageId: null,
@@ -46,8 +55,8 @@ const initialState: AIState = {
 }
 
 // ─── Persistence Helpers ──────────────────────────────────────────────────────
-const saveMessages = (messages: ChatMessage[]) => {
-  chrome.storage.local.set({ aiChatHistory: messages })
+const saveSessions = (sessions: ChatSession[], currentId: string | null) => {
+  chrome.storage.local.set({ aiSessions: sessions, aiCurrentSessionId: currentId })
 }
 
 // ─── Async Thunks ─────────────────────────────────────────────────────────────
@@ -83,8 +92,24 @@ export const testConnection = createAsyncThunk(
 )
 
 export const loadChatHistory = createAsyncThunk('ai/loadChatHistory', async () => {
-  const { aiChatHistory } = await chrome.storage.local.get('aiChatHistory')
-  return (aiChatHistory as ChatMessage[]) ?? []
+  const { aiSessions, aiCurrentSessionId, aiChatHistory } = await chrome.storage.local.get(['aiSessions', 'aiCurrentSessionId', 'aiChatHistory'])
+  
+  let sessions = (aiSessions as ChatSession[]) ?? []
+  let currentId = aiCurrentSessionId as string | null
+
+  // Migration: if old history exists but no sessions, create a default session
+  if (sessions.length === 0 && aiChatHistory && (aiChatHistory as ChatMessage[]).length > 0) {
+    const defaultSession: ChatSession = {
+      id: 'default',
+      title: 'Previous Conversation',
+      messages: aiChatHistory as ChatMessage[],
+      lastModified: Date.now()
+    }
+    sessions = [defaultSession]
+    currentId = 'default'
+  }
+
+  return { sessions, currentId }
 })
 
 // ─── Slice ────────────────────────────────────────────────────────────────────
@@ -103,44 +128,86 @@ const aiSlice = createSlice({
       state.drawerOpen = !state.drawerOpen
     },
     addMessage(state, action: PayloadAction<ChatMessage>) {
-      state.messages.push(action.payload)
-      saveMessages(state.messages)
+      const session = state.sessions.find(s => s.id === state.currentSessionId)
+      if (session) {
+        session.messages.push(action.payload)
+        session.lastModified = Date.now()
+        // Auto-generate title if it's the first user message
+        if (session.title === 'New Chat' && action.payload.role === 'user') {
+          session.title = action.payload.content.slice(0, 30) + (action.payload.content.length > 30 ? '...' : '')
+        }
+        saveSessions(state.sessions, state.currentSessionId)
+      }
     },
     updateStreamingMessage(state, action: PayloadAction<{ id: string; content: string }>) {
-      const msg = state.messages.find((m) => m.id === action.payload.id)
-      if (msg) {
-        msg.content = action.payload.content
-        // We don't save on every stream chunk to avoid storage thrashing
+      const session = state.sessions.find(s => s.id === state.currentSessionId)
+      if (session) {
+        const msg = session.messages.find((m) => m.id === action.payload.id)
+        if (msg) {
+          msg.content = action.payload.content
+        }
       }
     },
     finalizeStreamingMessage(state, action: PayloadAction<{ id: string; action?: BrowserAction | null }>) {
-      const msg = state.messages.find((m) => m.id === action.payload.id)
-      if (msg) {
-        msg.streaming = false
-        msg.action = action.payload.action
+      const session = state.sessions.find(s => s.id === state.currentSessionId)
+      if (session) {
+        const msg = session.messages.find((m) => m.id === action.payload.id)
+        if (msg) {
+          msg.streaming = false
+          msg.action = action.payload.action
+        }
+        state.streamingMessageId = null
+        state.isLoading = false
+        session.lastModified = Date.now()
+        saveSessions(state.sessions, state.currentSessionId)
       }
-      state.streamingMessageId = null
-      state.isLoading = false
-      saveMessages(state.messages)
-    },
-    setStreamingMessageId(state, action: PayloadAction<string | null>) {
-      state.streamingMessageId = action.payload
-    },
-    setLoading(state, action: PayloadAction<boolean>) {
-      state.isLoading = action.payload
-    },
-    setPendingAction(state, action: PayloadAction<BrowserAction | null>) {
-      state.pendingAction = action.payload
     },
     setExecutionResult(state, action: PayloadAction<{ messageId: string; result: string }>) {
-      const msg = state.messages.find((m) => m.id === action.payload.messageId)
-      if (msg) msg.executionResult = action.payload.result
-      state.pendingAction = null
-      saveMessages(state.messages)
+      const session = state.sessions.find(s => s.id === state.currentSessionId)
+      if (session) {
+        const msg = session.messages.find((m) => m.id === action.payload.messageId)
+        if (msg) msg.executionResult = action.payload.result
+        state.pendingAction = null
+        session.lastModified = Date.now()
+        saveSessions(state.sessions, state.currentSessionId)
+      }
     },
     clearMessages(state) {
-      state.messages = []
-      saveMessages([])
+      const session = state.sessions.find(s => s.id === state.currentSessionId)
+      if (session) {
+        session.messages = []
+        saveSessions(state.sessions, state.currentSessionId)
+      }
+    },
+    // Session Management
+    createChatSession(state) {
+      const newSession: ChatSession = {
+        id: Date.now().toString(),
+        title: 'New Chat',
+        messages: [],
+        lastModified: Date.now()
+      }
+      state.sessions.unshift(newSession)
+      state.currentSessionId = newSession.id
+      saveSessions(state.sessions, state.currentSessionId)
+    },
+    switchChatSession(state, action: PayloadAction<string>) {
+      state.currentSessionId = action.payload
+      saveSessions(state.sessions, state.currentSessionId)
+    },
+    deleteChatSession(state, action: PayloadAction<string>) {
+      state.sessions = state.sessions.filter(s => s.id !== action.payload)
+      if (state.currentSessionId === action.payload) {
+        state.currentSessionId = state.sessions[0]?.id || null
+      }
+      saveSessions(state.sessions, state.currentSessionId)
+    },
+    renameChatSession(state, action: PayloadAction<{ id: string; title: string }>) {
+      const session = state.sessions.find(s => s.id === action.payload.id)
+      if (session) {
+        session.title = action.payload.title
+        saveSessions(state.sessions, state.currentSessionId)
+      }
     },
     updateSettingsField<K extends keyof AISettings>(
       state: AIState,
@@ -184,7 +251,20 @@ const aiSlice = createSlice({
         state.status = { connected: false, error: 'Connection test failed.' }
       })
       .addCase(loadChatHistory.fulfilled, (state, action) => {
-        state.messages = action.payload
+        state.sessions = action.payload.sessions
+        state.currentSessionId = action.payload.currentId
+        
+        // Ensure at least one session exists
+        if (state.sessions.length === 0) {
+          const defaultSession: ChatSession = {
+            id: 'default',
+            title: 'New Chat',
+            messages: [],
+            lastModified: Date.now()
+          }
+          state.sessions = [defaultSession]
+          state.currentSessionId = 'default'
+        }
       })
   }
 })
@@ -193,7 +273,8 @@ export const {
   openDrawer, closeDrawer, toggleDrawer,
   addMessage, updateStreamingMessage, finalizeStreamingMessage,
   setStreamingMessageId, setLoading, setPendingAction, setExecutionResult,
-  clearMessages, updateSettingsField, setProviderStatus
+  clearMessages, updateSettingsField, setProviderStatus,
+  createChatSession, switchChatSession, deleteChatSession, renameChatSession
 } = aiSlice.actions
 
 export default aiSlice.reducer

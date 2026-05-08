@@ -3,17 +3,29 @@
  * Full-height overlay with glassmorphism header, chat thread, and command bar.
  */
 
-import React, { useRef, useEffect } from 'react'
+import React, { useRef, useEffect, useState } from 'react'
 import { Button, Tooltip } from 'antd'
 import {
-  CloseOutlined,
-  SettingOutlined,
   RobotOutlined,
-  DeleteOutlined
+  DeleteOutlined,
+  HistoryOutlined,
+  PlusOutlined,
+  EditOutlined,
+  CloseOutlined,
+  SettingOutlined
 } from '@ant-design/icons'
 import { useDispatch, useSelector } from 'react-redux'
 import type { AppDispatch, RootState } from '../../store/store'
-import { closeDrawer, clearMessages, loadAISettings, loadChatHistory } from '../../store/aiSlice'
+import { 
+  closeDrawer, 
+  clearMessages, 
+  loadAISettings, 
+  loadChatHistory,
+  createChatSession,
+  switchChatSession,
+  deleteChatSession,
+  renameChatSession
+} from '../../store/aiSlice'
 import { AIChat } from './AIChat'
 import { AICommandBar } from './AICommandBar'
 import { AIProviderBadge } from './AIProviderBadge'
@@ -24,7 +36,8 @@ interface AIDrawerProps {
 
 export function AIDrawer({ onOpenSettings }: AIDrawerProps) {
   const dispatch = useDispatch<AppDispatch>()
-  const { drawerOpen, isLoading, settings } = useSelector((s: RootState) => s.ai)
+  const { drawerOpen, isLoading, settings, sessions, currentSessionId } = useSelector((s: RootState) => s.ai)
+  const [showHistory, setShowHistory] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
 
   // Load settings on mount
@@ -76,13 +89,34 @@ export function AIDrawer({ onOpenSettings }: AIDrawerProps) {
                 </div>
                 <div>
                   <div className="text-white font-bold text-base leading-tight">AI Assistant</div>
-                  <div className="mt-0.5">
+                  <div className="mt-0.5 flex items-center gap-2">
                     <AIProviderBadge size="sm" showModel />
                   </div>
                 </div>
               </div>
 
               <div className="flex items-center gap-1">
+                <Tooltip title="New Chat">
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<PlusOutlined />}
+                    onClick={() => {
+                      dispatch(createChatSession())
+                      setShowHistory(false)
+                    }}
+                    className="!text-white/70 hover:!text-white hover:!bg-white/10 !border-0"
+                  />
+                </Tooltip>
+                <Tooltip title="Chat History">
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<HistoryOutlined />}
+                    onClick={() => setShowHistory(!showHistory)}
+                    className={`!text-white/70 hover:!text-white hover:!bg-white/10 !border-0 ${showHistory ? '!text-white !bg-white/20' : ''}`}
+                  />
+                </Tooltip>
                 <Tooltip title="AI Settings">
                   <Button
                     type="text"
@@ -114,6 +148,60 @@ export function AIDrawer({ onOpenSettings }: AIDrawerProps) {
             )}
           </div>
         </div>
+
+        {/* Sessions Panel Overlay */}
+        {showHistory && (
+          <div className="absolute inset-0 top-[72px] bottom-[64px] bg-white z-[60] flex flex-col animate-in slide-in-from-left duration-200">
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Previous Chats</span>
+              <Button 
+                type="text" 
+                size="small" 
+                icon={<CloseOutlined />} 
+                onClick={() => setShowHistory(false)}
+                className="!text-gray-400"
+              />
+            </div>
+            <div className="flex-1 overflow-y-auto p-2 space-y-1">
+              {sessions.map(session => (
+                <div 
+                  key={session.id}
+                  onClick={() => {
+                    dispatch(switchChatSession(session.id))
+                    setShowHistory(false)
+                  }}
+                  className={`
+                    group flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all
+                    ${session.id === currentSessionId 
+                      ? 'bg-blue-50 border border-blue-100' 
+                      : 'hover:bg-gray-50 border border-transparent'
+                    }
+                  `}
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className={`text-sm truncate ${session.id === currentSessionId ? 'text-blue-700 font-semibold' : 'text-gray-700'}`}>
+                      {session.title || 'Untitled Chat'}
+                    </div>
+                    <div className="text-[10px] text-gray-400 mt-0.5">
+                      {new Date(session.lastModified).toLocaleDateString()} · {session.messages.length} messages
+                    </div>
+                  </div>
+                  <Button
+                    type="text"
+                    size="small"
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      dispatch(deleteChatSession(session.id))
+                    }}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity !flex items-center justify-center"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Chat Thread */}
         <AIChat isLoading={isLoading} />
