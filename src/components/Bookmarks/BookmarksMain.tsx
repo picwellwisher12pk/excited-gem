@@ -102,7 +102,7 @@ export default function BookmarksMain() {
         const result: BookmarkNode[] = [];
         let searchRegex: RegExp | null = null;
         if (isRegex) {
-            try { searchRegex = new RegExp(query, 'i'); } catch (e) {}
+            try { searchRegex = new RegExp(query, 'i'); } catch (e) { }
         }
         const q = query.toLowerCase();
 
@@ -885,6 +885,9 @@ export default function BookmarksMain() {
                 open={drawerOpen}
                 onClose={() => dispatch(toggleDrawer())}
                 isLoading={aiLoading}
+                onOpenSettings={() => {
+                    chrome.tabs.create({ url: chrome.runtime.getURL('tabs/settings.html#ai') })
+                }}
             />
 
             <div className="fixed bottom-4 right-4 z-30">

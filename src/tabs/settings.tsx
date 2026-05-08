@@ -62,7 +62,10 @@ function SettingsPageContent() {
   const [displayMode, setDisplayMode] = useState<'sidebar' | 'tab' | 'popup'>(
     'tab'
   )
-  const [activeCategory, setActiveCategory] = useState('display')
+  const [activeCategory, setActiveCategory] = useState(() => {
+    const hash = window.location.hash.replace('#', '')
+    return SETTINGS_CATEGORIES.some(c => c.key === hash) ? hash : 'display'
+  })
   const [tabManagementMode, setTabManagementMode] = useState<
     'single' | 'per-window'
   >('single')
@@ -111,7 +114,23 @@ function SettingsPageContent() {
         if (result.userProfile) setUserProfile(result.userProfile)
       }
     )
+
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '')
+      if (SETTINGS_CATEGORIES.some(c => c.key === hash)) {
+        setActiveCategory(hash)
+      }
+    }
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
   }, [])
+
+  // Update hash when category changes
+  useEffect(() => {
+    if (window.location.hash.replace('#', '') !== activeCategory) {
+      window.location.hash = activeCategory
+    }
+  }, [activeCategory])
 
   const handleSearchBehaviorChange = (value: 'debounce' | 'enter') => {
     setSearchBehavior(value)

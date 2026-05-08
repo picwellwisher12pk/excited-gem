@@ -9,5 +9,8 @@ module.exports = {
     './popup/**/*.{ts,tsx}',
     './options/**/*.{ts,tsx}'
   ],
-  plugins: [require('@tailwindcss/forms')]
+  plugins: [
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/typography')
+  ]
 }

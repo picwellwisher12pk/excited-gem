@@ -16,10 +16,10 @@ import {
 } from '@ant-design/icons'
 import { useDispatch, useSelector } from 'react-redux'
 import type { AppDispatch, RootState } from '../../store/store'
-import { 
-  closeDrawer, 
-  clearMessages, 
-  loadAISettings, 
+import {
+  closeDrawer,
+  clearMessages,
+  loadAISettings,
   loadChatHistory,
   createChatSession,
   switchChatSession,
@@ -36,8 +36,14 @@ interface AIDrawerProps {
 
 export function AIDrawer({ onOpenSettings }: AIDrawerProps) {
   const dispatch = useDispatch<AppDispatch>()
-  const { drawerOpen, isLoading, settings, sessions, currentSessionId } = useSelector((s: RootState) => s.ai)
+  const { drawerOpen, isLoading, settings, currentSessionId } = useSelector((s: RootState) => s.ai)
+  const sessions = useSelector((s: RootState) => s.ai.sessions) ?? []
+  
+  console.log('AIDrawer state:', { sessions, isArray: Array.isArray(sessions) })
+
   const [showHistory, setShowHistory] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editTitle, setEditTitle] = useState('')
   const abortRef = useRef<AbortController | null>(null)
 
   // Load settings on mount
@@ -154,49 +160,91 @@ export function AIDrawer({ onOpenSettings }: AIDrawerProps) {
           <div className="absolute inset-0 top-[72px] bottom-[64px] bg-white z-[60] flex flex-col animate-in slide-in-from-left duration-200">
             <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
               <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Previous Chats</span>
-              <Button 
-                type="text" 
-                size="small" 
-                icon={<CloseOutlined />} 
+              <Button
+                type="text"
+                size="small"
+                icon={<CloseOutlined />}
                 onClick={() => setShowHistory(false)}
                 className="!text-gray-400"
               />
             </div>
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
-              {sessions.map(session => (
-                <div 
+              {Array.isArray(sessions) && sessions.map(session => (
+                <div
                   key={session.id}
                   onClick={() => {
+                    if (editingId) return
                     dispatch(switchChatSession(session.id))
                     setShowHistory(false)
                   }}
                   className={`
                     group flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all
-                    ${session.id === currentSessionId 
-                      ? 'bg-blue-50 border border-blue-100' 
+                    ${session.id === currentSessionId
+                      ? 'bg-blue-50 border border-blue-100'
                       : 'hover:bg-gray-50 border border-transparent'
                     }
                   `}
                 >
                   <div className="min-w-0 flex-1">
-                    <div className={`text-sm truncate ${session.id === currentSessionId ? 'text-blue-700 font-semibold' : 'text-gray-700'}`}>
-                      {session.title || 'Untitled Chat'}
-                    </div>
+                    {editingId === session.id ? (
+                      <input
+                        autoFocus
+                        className="w-full text-sm bg-white border border-blue-300 rounded px-1.5 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        onBlur={() => {
+                          if (editTitle.trim()) {
+                            dispatch(renameChatSession({ id: session.id, title: editTitle.trim() }))
+                          }
+                          setEditingId(null)
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            if (editTitle.trim()) {
+                              dispatch(renameChatSession({ id: session.id, title: editTitle.trim() }))
+                            }
+                            setEditingId(null)
+                          }
+                          if (e.key === 'Escape') setEditingId(null)
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    ) : (
+                      <div className={`text-sm truncate ${session.id === currentSessionId ? 'text-blue-700 font-semibold' : 'text-gray-700'}`}>
+                        {session.title || 'Untitled Chat'}
+                      </div>
+                    )}
                     <div className="text-[10px] text-gray-400 mt-0.5">
                       {new Date(session.lastModified).toLocaleDateString()} · {session.messages.length} messages
                     </div>
                   </div>
-                  <Button
-                    type="text"
-                    size="small"
-                    danger
-                    icon={<DeleteOutlined />}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      dispatch(deleteChatSession(session.id))
-                    }}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity !flex items-center justify-center"
-                  />
+                  
+                  <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {!editingId && (
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={<EditOutlined />}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setEditingId(session.id)
+                          setEditTitle(session.title)
+                        }}
+                        className="!text-gray-400 hover:!text-blue-500 !flex items-center justify-center"
+                      />
+                    )}
+                    <Button
+                      type="text"
+                      size="small"
+                      danger
+                      icon={<DeleteOutlined />}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        dispatch(deleteChatSession(session.id))
+                      }}
+                      className="!flex items-center justify-center"
+                    />
+                  </div>
                 </div>
               ))}
             </div>

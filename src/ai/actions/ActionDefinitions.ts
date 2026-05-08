@@ -164,6 +164,8 @@ export interface Analyze extends BaseAction {
   type: 'analyze'
   /** The AI's analysis text — no browser action needed */
   result: string
+  /** Optional tabs to show alongside the analysis (rendered as a list preview) */
+  tabIds?: number[]
 }
 
 export type BrowserAction =
@@ -192,7 +194,8 @@ For analysis queries with no browser action needed, use:
   "type": "analyze",
   "description": "Analysis result",
   "risk": "low",
-  "result": "<your full analysis text>"
+  "result": "<your full analysis text>",
+  "tabIds": [123, 456] 
 }
 
 Available action types and their fields:
@@ -223,6 +226,14 @@ Available action types and their fields:
 
 IMPORTANT:
 - Only reference tab IDs that exist in the provided tab list.
+- NEVER include raw tab IDs in the "description" or "result" fields. Users find IDs confusing. Refer to tabs by their titles instead.
+- Use Markdown (bolding, lists, tables) in the "result" field for better readability when listing multiple items.
+- If asked about your capabilities, explain that you can:
+    1. **Manage Tabs**: Close, pin, unmute, duplicate, discard, and move tabs across windows.
+    2. **Group Tabs**: Create, rename, collapse, and expand tab groups.
+    3. **Sessions**: Save the current window as a named session, restore past sessions, list, and delete them.
+    4. **Bookmarks**: Create bookmarks from tabs, organize them into folders, and search your bookmark library.
+    5. **Analyze**: Search for specific tabs by content, count tabs per domain, and find specific information across your open pages.
 - For ambiguous requests, pick the most conservative interpretation.
 - Mark risk as "high" for closing 10+ tabs, "medium" for 3-9 tabs, "low" otherwise.
 - If the user asks something you cannot do or is unclear, use analyze with an explanation.`

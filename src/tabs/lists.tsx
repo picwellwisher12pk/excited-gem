@@ -379,14 +379,14 @@ function ListsPageContent() {
         const q = value.toLowerCase()
         const filter = (libs: LibraryData[]) => {
             if (!q) return libs
-            
+
             let searchRegex: RegExp | null = null
             if (isRegex) {
                 try {
                     searchRegex = new RegExp(value, 'i')
-                } catch(e) { /* invalid regex */ }
+                } catch (e) { /* invalid regex */ }
             }
-            
+
             return libs.filter(
                 (lib) => {
                     if (isRegex && searchRegex) {
@@ -394,11 +394,11 @@ function ListsPageContent() {
                             lib.lists.some(list => searchRegex?.test(list.name) || list.tabs.some(t => searchRegex?.test(t.url) || searchRegex?.test(t.title)))
                     }
                     return lib.name.toLowerCase().includes(q) ||
-                    lib.lists.some(
-                        (list) =>
-                            list.name.toLowerCase().includes(q) ||
-                            list.tabs.some((t) => t.url.toLowerCase().includes(q) || t.title.toLowerCase().includes(q))
-                    )
+                        lib.lists.some(
+                            (list) =>
+                                list.name.toLowerCase().includes(q) ||
+                                list.tabs.some((t) => t.url.toLowerCase().includes(q) || t.title.toLowerCase().includes(q))
+                        )
                 }
             )
         }
@@ -503,6 +503,9 @@ function ListsPageContent() {
                 open={drawerOpen}
                 onClose={() => dispatch(toggleDrawer())}
                 isLoading={aiLoading}
+                onOpenSettings={() => {
+                    chrome.tabs.create({ url: chrome.runtime.getURL('tabs/settings.html#ai') })
+                }}
             />
 
             <div className="fixed bottom-4 right-4 z-30">

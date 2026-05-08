@@ -155,7 +155,8 @@ export class AIService {
   async query(
     userMessage: string,
     tabs: TabData[],
-    currentWindowId?: number
+    currentWindowId?: number,
+    history: ChatMessage[] = []
   ): Promise<{ action: BrowserAction | null; rawResponse: string }> {
     if (!this.provider) throw new Error('AI provider not configured.')
 
@@ -168,8 +169,13 @@ export class AIService {
       currentWindowId
     })
 
+    const combinedSystemPrompt = this.settings.systemPrompt
+      ? `${ACTION_SYSTEM_PROMPT}\n\nUSER CUSTOM INSTRUCTIONS:\n${this.settings.systemPrompt}`
+      : ACTION_SYSTEM_PROMPT
+
     const messages = [
-      { role: 'system' as const, content: ACTION_SYSTEM_PROMPT },
+      { role: 'system' as const, content: combinedSystemPrompt },
+      ...history.map(m => ({ role: m.role, content: m.content })),
       {
         role: 'user' as const,
         content: `${ctx.text}\n\n---\nUser request: ${userMessage}`
@@ -189,7 +195,8 @@ export class AIService {
     userMessage: string,
     tabs: TabData[],
     currentWindowId?: number,
-    abortSignal?: AbortSignal
+    abortSignal?: AbortSignal,
+    history: ChatMessage[] = []
   ): AsyncGenerator<StreamChunk> {
     if (!this.provider) throw new Error('AI provider not configured.')
 
@@ -202,8 +209,13 @@ export class AIService {
       currentWindowId
     })
 
+    const combinedSystemPrompt = this.settings.systemPrompt
+      ? `${ACTION_SYSTEM_PROMPT}\n\nUSER CUSTOM INSTRUCTIONS:\n${this.settings.systemPrompt}`
+      : ACTION_SYSTEM_PROMPT
+
     const messages = [
-      { role: 'system' as const, content: ACTION_SYSTEM_PROMPT },
+      { role: 'system' as const, content: combinedSystemPrompt },
+      ...history.map(m => ({ role: m.role, content: m.content })),
       {
         role: 'user' as const,
         content: `${ctx.text}\n\n---\nUser request: ${userMessage}`

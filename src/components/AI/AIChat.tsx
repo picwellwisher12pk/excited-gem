@@ -6,8 +6,9 @@
  * - Streaming shows "thinking" dots until response is formatted
  */
 
-import React, { useRef, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Button, Tag, Spin, Tooltip } from 'antd'
+import ReactMarkdown from 'react-markdown'
 import {
   RobotOutlined,
   CheckOutlined,
@@ -15,7 +16,14 @@ import {
   LoadingOutlined,
   CopyOutlined,
   WarningOutlined,
-  LinkOutlined
+  LinkOutlined,
+  SearchOutlined,
+  AppstoreOutlined,
+  PieChartOutlined,
+  AudioMutedOutlined,
+  SaveOutlined,
+  EditOutlined,
+  ArrowRightOutlined
 } from '@ant-design/icons'
 import { useDispatch, useSelector } from 'react-redux'
 import type { AppDispatch, RootState } from '../../store/store'
@@ -23,6 +31,7 @@ import { setExecutionResult } from '../../store/aiSlice'
 import { TabActionExecutor } from '../../ai/actions/TabActionExecutor'
 import type { ChatMessage } from '../../store/aiSlice'
 import type { BrowserAction } from '../../ai/actions/ActionDefinitions'
+import Tab from '../Tab/Tab'
 
 const RISK_COLORS = { low: 'green', medium: 'orange', high: 'red' } as const
 const RISK_LABELS = { low: 'Safe', medium: 'Moderate', high: 'Irreversible' }
@@ -39,6 +48,12 @@ function TabListPreview({ tabIds, limit = 8 }: { tabIds: number[]; limit?: numbe
 
   const shown = matched.slice(0, limit)
   const remaining = matched.length - shown.length
+  const tabOperations = {
+    remove: (id: number) => chrome.tabs.remove(id),
+    toggleMuteTab: (id: number, muted: boolean) => chrome.tabs.update(id, { muted: !muted }),
+    togglePinTab: (id: number, pinned: boolean) => chrome.tabs.update(id, { pinned: !pinned }),
+    discardTab: (id: number) => chrome.tabs.discard(id)
+  }
 
   if (!shown.length) {
     return (
@@ -48,30 +63,23 @@ function TabListPreview({ tabIds, limit = 8 }: { tabIds: number[]; limit?: numbe
     )
   }
 
-  const getDomain = (url?: string) => {
-    try { return new URL(url ?? '').hostname.replace(/^www\./, '') } catch { return '' }
-  }
-  const getFavicon = (url?: string) => {
-    try { return `https://www.google.com/s2/favicons?domain=${new URL(url ?? '').hostname}&sz=16` } catch { return null }
-  }
-
   return (
-    <div className="mt-2 space-y-1">
-      {shown.map((tab: any) => (
-        <div key={tab.id} className="flex items-start gap-1.5 text-xs text-gray-700 bg-gray-50 rounded-lg px-2 py-1.5">
-          {getFavicon(tab.url) ? (
-            <img src={getFavicon(tab.url)!} alt="" className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 rounded-sm" />
-          ) : (
-            <LinkOutlined className="text-gray-400 mt-0.5 flex-shrink-0" style={{ fontSize: 11 }} />
-          )}
-          <div className="min-w-0 flex-1">
-            <div className="font-medium truncate leading-tight">{tab.title || 'Untitled'}</div>
-            <div className="text-[10px] text-gray-400 truncate mt-0.5 font-mono">{getDomain(tab.url)}</div>
-          </div>
-        </div>
+    <div className="mt-2 space-y-1 bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
+      {shown.map((tab: any, idx) => (
+        <Tab
+          key={tab.id}
+          {...tab}
+          index={idx}
+          activeTab={tab.active}
+          selected={false}
+          isCompact={true}
+          tabActionButtons="hover"
+          hideUrl={true}
+          {...tabOperations}
+        />
       ))}
       {remaining > 0 && (
-        <div className="text-[10px] text-gray-400 pl-2">
+        <div className="text-[10px] text-gray-400 p-2 border-t border-gray-50 bg-gray-50/50">
           +{remaining} more tab{remaining !== 1 ? 's' : ''}
         </div>
       )}
@@ -101,7 +109,14 @@ function ActionCard({
     dispatch(setExecutionResult({ messageId, result: '✗ Cancelled.' }))
   }
 
-  if (action.type === 'analyze') return null
+  if (action.type === 'analyze') {
+    if (!action.tabIds || action.tabIds.length === 0) return null
+    return (
+      <div className="mt-2">
+        <TabListPreview tabIds={action.tabIds} />
+      </div>
+    )
+  }
 
   // Get tab IDs if the action has them
   const tabIds: number[] = (action as any).tabIds ?? ((action as any).tabId ? [(action as any).tabId] : [])
@@ -223,12 +238,14 @@ function MessageBubble({ message }: { message: ChatMessage }) {
             }
           `}>
             {message.streaming ? (
-              <span>
-                {message.content}
-                <span className="inline-block w-0.5 h-3.5 bg-gray-400 ml-0.5 animate-pulse rounded" />
-              </span>
+              <div className="prose prose-sm max-w-none">
+                <ReactMarkdown>{message.content}</ReactMarkdown>
+                <span className="inline-block w-0.5 h-3.5 bg-gray-400 ml-0.5 animate-pulse rounded align-middle" />
+              </div>
             ) : (
-              <span className="whitespace-pre-wrap">{message.content}</span>
+              <div className="prose prose-sm max-w-none prose-p:leading-relaxed prose-li:my-0 prose-ul:my-1">
+                <ReactMarkdown>{message.content}</ReactMarkdown>
+              </div>
             )}
           </div>
         )}
@@ -283,7 +300,10 @@ interface AIChatProps {
 }
 
 export function AIChat({ isLoading }: AIChatProps) {
-  const { messages } = useSelector((s: RootState) => s.ai)
+  const { sessions = [], currentSessionId } = useSelector((s: RootState) => s.ai)
+  const messages = Array.isArray(sessions)
+    ? sessions.find((s) => s.id === currentSessionId)?.messages ?? []
+    : []
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -300,21 +320,43 @@ export function AIChat({ isLoading }: AIChatProps) {
         <div className="text-gray-500 text-xs leading-relaxed mb-5">
           Ask me anything about your tabs. I can close, group, move, bookmark, or analyze them.
         </div>
-        <div className="grid grid-cols-1 gap-1.5 w-full">
+        <div className="grid grid-cols-1 gap-2 w-full">
           {[
-            'List all Facebook tabs',
-            'Close all YouTube tabs',
-            'Group tabs by domain',
-            'Which domain has the most tabs?',
-            'Mute all audio tabs',
-            'Save this window as session "Work"'
-          ].map((suggestion) => (
+            { text: 'What can you do?', icon: <RobotOutlined />, prompt: 'List all your actions, features and capabilities.' },
+            { text: 'List all Facebook tabs', icon: <SearchOutlined /> },
+            { text: 'Close all YouTube tabs', icon: <CloseOutlined /> },
+            { text: 'Group tabs by domain', icon: <AppstoreOutlined /> },
+            { text: 'Which domain has the most tabs?', icon: <PieChartOutlined /> },
+            { text: 'Mute all audio tabs', icon: <AudioMutedOutlined /> },
+            { text: 'Save this window as session "Work"', icon: <SaveOutlined /> }
+          ].map((cap) => (
             <div
-              key={suggestion}
-              className="text-xs text-left px-3 py-2 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg cursor-pointer transition-all text-gray-600 hover:text-blue-700"
-              onClick={() => document.dispatchEvent(new CustomEvent('ai:suggestion', { detail: suggestion }))}
+              key={cap.text}
+              className="group flex items-center gap-2 text-xs text-left bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-xl cursor-pointer transition-all overflow-hidden"
             >
-              {suggestion}
+              <div
+                className="flex-1 flex items-center gap-2.5 px-3 py-2.5 text-gray-600 hover:text-blue-700"
+                onClick={() => document.dispatchEvent(new CustomEvent('ai:suggestion', {
+                  detail: { text: cap.prompt || cap.text, autoSend: true }
+                }))}
+              >
+                <span className="text-gray-400 group-hover:text-blue-500 transition-colors">{cap.icon}</span>
+                <span className="font-medium">{cap.text}</span>
+              </div>
+
+              <Tooltip title="Edit before sending">
+                <button
+                  className="px-3 py-2.5 border-l border-gray-200 hover:bg-blue-100 text-gray-400 hover:text-blue-600 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    document.dispatchEvent(new CustomEvent('ai:suggestion', {
+                      detail: { text: cap.prompt || cap.text, autoSend: false }
+                    }))
+                  }}
+                >
+                  <EditOutlined />
+                </button>
+              </Tooltip>
             </div>
           ))}
         </div>

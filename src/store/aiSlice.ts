@@ -93,8 +93,8 @@ export const testConnection = createAsyncThunk(
 
 export const loadChatHistory = createAsyncThunk('ai/loadChatHistory', async () => {
   const { aiSessions, aiCurrentSessionId, aiChatHistory } = await chrome.storage.local.get(['aiSessions', 'aiCurrentSessionId', 'aiChatHistory'])
-  
-  let sessions = (aiSessions as ChatSession[]) ?? []
+
+  let sessions = Array.isArray(aiSessions) ? (aiSessions as ChatSession[]) : []
   let currentId = aiCurrentSessionId as string | null
 
   // Migration: if old history exists but no sessions, create a default session
@@ -128,16 +128,28 @@ const aiSlice = createSlice({
       state.drawerOpen = !state.drawerOpen
     },
     addMessage(state, action: PayloadAction<ChatMessage>) {
-      const session = state.sessions.find(s => s.id === state.currentSessionId)
-      if (session) {
-        session.messages.push(action.payload)
-        session.lastModified = Date.now()
-        // Auto-generate title if it's the first user message
-        if (session.title === 'New Chat' && action.payload.role === 'user') {
-          session.title = action.payload.content.slice(0, 30) + (action.payload.content.length > 30 ? '...' : '')
+      let session = state.sessions.find(s => s.id === state.currentSessionId)
+
+      // If no session exists, create one on the fly
+      if (!session) {
+        session = {
+          id: Date.now().toString(),
+          title: 'New Chat',
+          messages: [],
+          lastModified: Date.now()
         }
-        saveSessions(state.sessions, state.currentSessionId)
+        state.sessions.unshift(session)
+        state.currentSessionId = session.id
       }
+
+      session.messages.push(action.payload)
+      session.lastModified = Date.now()
+
+      // Auto-generate title if it's the first user message
+      if (session.title === 'New Chat' && action.payload.role === 'user') {
+        session.title = action.payload.content.slice(0, 30) + (action.payload.content.length > 30 ? '...' : '')
+      }
+      saveSessions(state.sessions, state.currentSessionId)
     },
     updateStreamingMessage(state, action: PayloadAction<{ id: string; content: string }>) {
       const session = state.sessions.find(s => s.id === state.currentSessionId)
@@ -200,6 +212,17 @@ const aiSlice = createSlice({
       if (state.currentSessionId === action.payload) {
         state.currentSessionId = state.sessions[0]?.id || null
       }
+      // If no sessions left, create a new one
+      if (state.sessions.length === 0) {
+        const newSession: ChatSession = {
+          id: 'default',
+          title: 'New Chat',
+          messages: [],
+          lastModified: Date.now()
+        }
+        state.sessions = [newSession]
+        state.currentSessionId = 'default'
+      }
       saveSessions(state.sessions, state.currentSessionId)
     },
     renameChatSession(state, action: PayloadAction<{ id: string; title: string }>) {
@@ -217,6 +240,15 @@ const aiSlice = createSlice({
     },
     setProviderStatus(state, action: PayloadAction<ProviderStatus | null>) {
       state.status = action.payload
+    },
+    setStreamingMessageId(state, action: PayloadAction<string | null>) {
+      state.streamingMessageId = action.payload
+    },
+    setLoading(state, action: PayloadAction<boolean>) {
+      state.isLoading = action.payload
+    },
+    setPendingAction(state, action: PayloadAction<BrowserAction | null>) {
+      state.pendingAction = action.payload
     }
   },
   extraReducers: (builder) => {
@@ -253,7 +285,7 @@ const aiSlice = createSlice({
       .addCase(loadChatHistory.fulfilled, (state, action) => {
         state.sessions = action.payload.sessions
         state.currentSessionId = action.payload.currentId
-        
+
         // Ensure at least one session exists
         if (state.sessions.length === 0) {
           const defaultSession: ChatSession = {

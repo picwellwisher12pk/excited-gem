@@ -618,21 +618,24 @@ function SessionsPageContent() {
               }}
             />
           )}
-      </div>
+        </div>
 
-      <AIDrawer
-        open={drawerOpen}
-        onClose={() => dispatch(toggleDrawer())}
-        isLoading={aiLoading}
-      />
-
-      <div className="fixed bottom-4 right-4 z-30">
-        <AIProviderBadge
-          onClick={() => dispatch(toggleDrawer())}
-          status={status}
-          active={drawerOpen}
+        <AIDrawer
+          open={drawerOpen}
+          onClose={() => dispatch(toggleDrawer())}
+          isLoading={aiLoading}
+          onOpenSettings={() => {
+            chrome.tabs.create({ url: chrome.runtime.getURL('tabs/settings.html#ai') })
+          }}
         />
-      </div>
+
+        <div className="fixed bottom-4 right-4 z-30">
+          <AIProviderBadge
+            onClick={() => dispatch(toggleDrawer())}
+            status={status}
+            active={drawerOpen}
+          />
+        </div>
       </div>
     </div>
   )

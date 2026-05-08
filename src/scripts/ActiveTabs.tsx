@@ -203,6 +203,10 @@ const ActiveTabs = () => {
     checkAI()
   }, [dispatch])
 
+  const openAISettings = () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL('tabs/settings.html#ai') })
+  }
+
   const navigation = useMemo(
     () => <Navigation tabCount={tabs.length} />,
     [tabs]
@@ -233,6 +237,7 @@ const ActiveTabs = () => {
         open={drawerOpen}
         onClose={() => dispatch(toggleDrawer())}
         isLoading={aiLoading}
+        onOpenSettings={openAISettings}
       />
 
       {/* Floating AI trigger button */}
@@ -247,4 +252,3 @@ const ActiveTabs = () => {
   )
 }
 export default ActiveTabs
-

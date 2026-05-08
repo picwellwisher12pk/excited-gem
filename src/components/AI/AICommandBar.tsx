@@ -7,7 +7,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { Button, Tooltip } from 'antd'
 import { DeleteOutlined, StopOutlined } from '@ant-design/icons'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch, useSelector, useStore } from 'react-redux'
 import type { AppDispatch, RootState } from '../../store/store'
 import {
   addMessage,
@@ -15,10 +15,11 @@ import {
   finalizeStreamingMessage,
   setStreamingMessageId,
   setLoading,
-  clearMessages
+  clearMessages,
+  createChatSession
 } from '../../store/aiSlice'
 import { TabActionExecutor } from '../../ai/actions/TabActionExecutor'
-import { getAIService, resetAIService } from '../../ai/AIService'
+import { AIService } from '../../ai/AIService'
 import type { ChatMessage } from '../../store/aiSlice'
 
 function uid(): string {
@@ -50,7 +51,7 @@ interface AICommandBarProps {
 
 export function AICommandBar({ abortRef }: AICommandBarProps) {
   const dispatch = useDispatch<AppDispatch>()
-  const { isLoading, settings, streamingMessageId } = useSelector((s: RootState) => s.ai)
+  const { isLoading, settings, streamingMessageId, sessions, currentSessionId } = useSelector((s: RootState) => s.ai)
   const { tabs } = useSelector((s: RootState) => s.tabs)
   const [input, setInput] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -63,21 +64,19 @@ export function AICommandBar({ abortRef }: AICommandBarProps) {
     ta.style.height = `${Math.min(ta.scrollHeight, 120)}px`
   }, [input])
 
-  // Listen for suggestion clicks from AIChat
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const suggestion = (e as CustomEvent<string>).detail
-      setInput(suggestion)
-      setTimeout(() => textareaRef.current?.focus(), 50)
-    }
-    document.addEventListener('ai:suggestion', handler)
-    return () => document.removeEventListener('ai:suggestion', handler)
-  }, [])
+  const store = useStore<RootState>()
 
-  const handleSend = useCallback(async () => {
-    const text = input.trim()
+  const sendQuery = useCallback(async (overrideText?: string) => {
+    const text = (overrideText || input).trim()
     if (!text || isLoading) return
-    setInput('')
+    
+    // Get absolute latest state from store to avoid stale closure issues in setTimeouts
+    const state = store.getState()
+    const { sessions, currentSessionId } = state.ai
+    const currentSession = sessions.find(s => s.id === currentSessionId)
+    const history = currentSession?.messages || []
+    
+    if (!overrideText) setInput('')
 
     // Add user message
     const userMsgId = uid()
@@ -89,7 +88,7 @@ export function AICommandBar({ abortRef }: AICommandBarProps) {
     } as ChatMessage))
     dispatch(setLoading(true))
 
-    // Create AI message placeholder (empty — shows bouncing dots)
+    // Create AI message placeholder
     const aiMsgId = uid()
     dispatch(addMessage({
       id: aiMsgId,
@@ -104,28 +103,24 @@ export function AICommandBar({ abortRef }: AICommandBarProps) {
     abortRef.current = abort
 
     try {
-      resetAIService()
-      const service = await getAIService()
+      console.log(`[AI] Querying ${settings.providerType} with model ${settings.model}...`)
+      const service = new AIService(settings)
       const currentWindow = await chrome.windows.getCurrent()
 
-      // Always accumulate full raw text first, then display clean version
       let fullText = ''
 
       if (settings.streaming) {
-        const stream = service.streamQuery(text, tabs as any[], currentWindow.id, abort.signal)
+        const stream = service.streamQuery(text, tabs as any[], currentWindow.id, abort.signal, history)
         for await (const chunk of stream) {
           if (abort.signal.aborted) break
           fullText += chunk.text
-          // During streaming: keep content empty — show bouncing dots
-          // (We only reveal content after parsing so no raw JSON flashes on screen)
           if (chunk.done) break
         }
       } else {
-        const { rawResponse } = await service.query(text, tabs as any[], currentWindow.id)
+        const { rawResponse } = await service.query(text, tabs as any[], currentWindow.id, history)
         fullText = rawResponse
       }
 
-      // Parse action and set clean display text
       const action = TabActionExecutor.parseAIResponse(fullText)
       const displayText = toDisplayText(fullText, action)
 
@@ -142,8 +137,31 @@ export function AICommandBar({ abortRef }: AICommandBarProps) {
       }
     } finally {
       abortRef.current = null
+      dispatch(setLoading(false))
     }
-  }, [input, isLoading, dispatch, settings, tabs, abortRef])
+  }, [input, isLoading, dispatch, settings, tabs, abortRef, store])
+
+  const handleSend = () => sendQuery()
+
+  // Listen for suggestion clicks from AIChat
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const data = (e as CustomEvent).detail
+      const text = typeof data === 'string' ? data : data.text
+      const autoSend = typeof data === 'object' ? !!data.autoSend : false
+
+      if (autoSend) {
+        dispatch(createChatSession())
+        // Wait for session to be available in store
+        setTimeout(() => sendQuery(text), 150)
+      } else {
+        setInput(text)
+        setTimeout(() => textareaRef.current?.focus(), 50)
+      }
+    }
+    document.addEventListener('ai:suggestion', handler as any)
+    return () => document.removeEventListener('ai:suggestion', handler as any)
+  }, [sendQuery, dispatch])
 
   const handleStop = () => {
     abortRef.current?.abort()

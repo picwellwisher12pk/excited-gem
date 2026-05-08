@@ -50,6 +50,7 @@
     "@react-buddy/palette-antd": "^5.3.1",
     "@reduxjs/toolkit": "^2.5.0",
     "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/typography": "^0.5.19",
     "@types/react-window": "^2.0.0",
     "antd": "^5.24.3",
     "chokidar": "^4.0.3",
@@ -77,6 +78,7 @@
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.5.2",
     "react-lazy-load-image-component": "^1.6.3",
+    "react-markdown": "^8.0.7",
     "react-redux": "^9.2.0",
     "react-virtualized-auto-sizer": "^1.0.26",
     "react-window": "^2.2.3",
@@ -126,7 +128,14 @@
       "https://*.youtube.com/watch*",
       "https://*.youtube.com/shorts/*",
       "http://*.youtube.com/watch*",
-      "http://*.youtube.com/shorts/*"
+      "http://*.youtube.com/shorts/*",
+      "http://localhost/*",
+      "http://127.0.0.1/*",
+      "https://api.openai.com/*",
+      "https://api.anthropic.com/*",
+      "https://api.groq.com/*",
+      "https://api.together.xyz/*",
+      "https://api.google.com/*"
     ],
     "oauth2": {
       "client_id": "895689043158-ilstmlvd16i9p88n22b7sva0d6mhnp6n.apps.googleusercontent.com",
