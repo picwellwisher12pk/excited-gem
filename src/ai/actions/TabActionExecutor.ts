@@ -139,6 +139,15 @@ export class TabActionExecutor {
         case 'restore_session':
           await browser.runtime.sendMessage({ type: 'AI_RESTORE_SESSION', sessionName: action.sessionName })
           return { success: true, message: `Restoring session "${action.sessionName}".` }
+        
+        case 'list_sessions': {
+          const res = await browser.runtime.sendMessage({ type: 'AI_LIST_SESSIONS' })
+          return { success: true, message: `Found ${res.sessions?.length || 0} session(s): ${res.sessions?.map(s => s.name).join(', ') || 'None'}` }
+        }
+
+        case 'delete_session':
+          await browser.runtime.sendMessage({ type: 'AI_DELETE_SESSION', sessionName: action.sessionName })
+          return { success: true, message: `Deleted session "${action.sessionName}".` }
 
         case 'save_to_list':
           await browser.runtime.sendMessage({ type: 'AI_SAVE_TO_LIST', tabIds: action.tabIds, listName: action.listName })
@@ -156,6 +165,20 @@ export class TabActionExecutor {
           )
           return { success: true, message: `Bookmarked ${tabs.length} tab(s)${action.folderName ? ` in "${action.folderName}"` : ''}.` }
         }
+
+        case 'list_bookmarks': {
+          const results = await browser.bookmarks.search(action.query || {})
+          const list = results.slice(0, 10).map(b => `${b.title} (${b.url || 'folder'})`).join('\n')
+          return { success: true, message: `Bookmarks matching "${action.query || 'all'}":\n${list || 'No results'}` }
+        }
+
+        case 'delete_bookmarks':
+          await Promise.all(action.bookmarkIds.map(id => browser.bookmarks.remove(id)))
+          return { success: true, message: `Deleted ${action.bookmarkIds.length} bookmark(s).` }
+
+        case 'move_bookmarks':
+          await Promise.all(action.bookmarkIds.map(id => browser.bookmarks.move(id, { parentId: action.folderId })))
+          return { success: true, message: `Moved ${action.bookmarkIds.length} bookmark(s) to folder.` }
 
         case 'analyze':
           return { success: true, message: action.result }

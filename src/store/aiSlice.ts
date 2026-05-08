@@ -45,6 +45,11 @@ const initialState: AIState = {
   pendingAction: null
 }
 
+// ─── Persistence Helpers ──────────────────────────────────────────────────────
+const saveMessages = (messages: ChatMessage[]) => {
+  chrome.storage.local.set({ aiChatHistory: messages })
+}
+
 // ─── Async Thunks ─────────────────────────────────────────────────────────────
 
 export const loadAISettings = createAsyncThunk('ai/loadSettings', async () => {
@@ -77,6 +82,11 @@ export const testConnection = createAsyncThunk(
   }
 )
 
+export const loadChatHistory = createAsyncThunk('ai/loadChatHistory', async () => {
+  const { aiChatHistory } = await chrome.storage.local.get('aiChatHistory')
+  return (aiChatHistory as ChatMessage[]) ?? []
+})
+
 // ─── Slice ────────────────────────────────────────────────────────────────────
 
 const aiSlice = createSlice({
@@ -94,10 +104,14 @@ const aiSlice = createSlice({
     },
     addMessage(state, action: PayloadAction<ChatMessage>) {
       state.messages.push(action.payload)
+      saveMessages(state.messages)
     },
     updateStreamingMessage(state, action: PayloadAction<{ id: string; content: string }>) {
       const msg = state.messages.find((m) => m.id === action.payload.id)
-      if (msg) msg.content = action.payload.content
+      if (msg) {
+        msg.content = action.payload.content
+        // We don't save on every stream chunk to avoid storage thrashing
+      }
     },
     finalizeStreamingMessage(state, action: PayloadAction<{ id: string; action?: BrowserAction | null }>) {
       const msg = state.messages.find((m) => m.id === action.payload.id)
@@ -107,6 +121,7 @@ const aiSlice = createSlice({
       }
       state.streamingMessageId = null
       state.isLoading = false
+      saveMessages(state.messages)
     },
     setStreamingMessageId(state, action: PayloadAction<string | null>) {
       state.streamingMessageId = action.payload
@@ -121,9 +136,11 @@ const aiSlice = createSlice({
       const msg = state.messages.find((m) => m.id === action.payload.messageId)
       if (msg) msg.executionResult = action.payload.result
       state.pendingAction = null
+      saveMessages(state.messages)
     },
     clearMessages(state) {
       state.messages = []
+      saveMessages([])
     },
     updateSettingsField<K extends keyof AISettings>(
       state: AIState,
@@ -165,6 +182,9 @@ const aiSlice = createSlice({
       .addCase(testConnection.rejected, (state) => {
         state.isTesting = false
         state.status = { connected: false, error: 'Connection test failed.' }
+      })
+      .addCase(loadChatHistory.fulfilled, (state, action) => {
+        state.messages = action.payload
       })
   }
 })

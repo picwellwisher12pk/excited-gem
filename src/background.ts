@@ -305,6 +305,44 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     })
     return true
   }
+  if (message.type === 'AI_RESTORE_SESSION') {
+    chrome.storage.local.get(['sessions'], (result) => {
+      const sessions = result.sessions ?? {}
+      const session = Object.values(sessions).find((s: any) => s.name === message.sessionName) as any
+      if (session) {
+        Object.values(session.windows).forEach((tabs: any) => {
+          tabs.forEach((t: any) => chrome.tabs.create({ url: t.url }))
+        })
+        sendResponse({ success: true })
+      } else {
+        sendResponse({ success: false, error: 'Session not found' })
+      }
+    })
+    return true
+  }
+
+  if (message.type === 'AI_LIST_SESSIONS') {
+    chrome.storage.local.get(['sessions'], (result) => {
+      const sessions = result.sessions ?? {}
+      sendResponse({ success: true, sessions: Object.values(sessions) })
+    })
+    return true
+  }
+
+  if (message.type === 'AI_DELETE_SESSION') {
+    chrome.storage.local.get(['sessions'], (result) => {
+      const sessions = result.sessions ?? {}
+      const keyToDelete = Object.keys(sessions).find((k) => sessions[k].name === message.sessionName)
+      if (keyToDelete) {
+        delete sessions[keyToDelete]
+        chrome.storage.local.set({ sessions })
+        sendResponse({ success: true })
+      } else {
+        sendResponse({ success: false, error: 'Session not found' })
+      }
+    })
+    return true
+  }
   // ────────────────────────────────────────────────────────────────────────
 })
 

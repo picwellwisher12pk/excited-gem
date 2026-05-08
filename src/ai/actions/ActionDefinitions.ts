@@ -28,10 +28,14 @@ export type ActionType =
   // Sessions (extension-level)
   | 'save_session'
   | 'restore_session'
-  // Lists (extension-level)
+  | 'list_sessions'
+  | 'delete_session'
   | 'save_to_list'
   // Bookmarks
   | 'bookmark_tabs'
+  | 'list_bookmarks'
+  | 'delete_bookmarks'
+  | 'move_bookmarks'
   // Pure analysis (no side effects)
   | 'analyze'
 
@@ -111,6 +115,15 @@ export interface RestoreSession extends BaseAction {
   sessionName: string
 }
 
+export interface ListSessions extends BaseAction {
+  type: 'list_sessions'
+}
+
+export interface DeleteSession extends BaseAction {
+  type: 'delete_session'
+  sessionName: string
+}
+
 export interface SaveToList extends BaseAction {
   type: 'save_to_list'
   tabIds: number[]
@@ -121,6 +134,22 @@ export interface BookmarkTabs extends BaseAction {
   type: 'bookmark_tabs'
   tabIds: number[]
   folderName?: string
+}
+
+export interface ListBookmarks extends BaseAction {
+  type: 'list_bookmarks'
+  query?: string
+}
+
+export interface DeleteBookmarks extends BaseAction {
+  type: 'delete_bookmarks'
+  bookmarkIds: string[]
+}
+
+export interface MoveBookmarks extends BaseAction {
+  type: 'move_bookmarks'
+  bookmarkIds: string[]
+  folderId: string
 }
 
 export interface Analyze extends BaseAction {
@@ -134,7 +163,8 @@ export type BrowserAction =
   | DiscardTabs | ReloadTabs | UngroupTabs
   | FocusTab | DuplicateTab | MoveTabsToWindow
   | CreateTabGroup | RenameTabGroup | CollapseTabGroup | ExpandTabGroup
-  | OpenNewWindowWithTabs | SaveSession | RestoreSession | SaveToList | BookmarkTabs
+  | OpenNewWindowWithTabs | SaveSession | RestoreSession | ListSessions | DeleteSession
+  | SaveToList | BookmarkTabs | ListBookmarks | DeleteBookmarks | MoveBookmarks
   | Analyze
 
 /** System prompt that instructs the AI to always return structured JSON */
@@ -173,8 +203,13 @@ Available action types and their fields:
 - open_new_window_with_tabs: { tabIds: number[], incognito?: boolean }
 - save_session: { name: string }
 - restore_session: { sessionName: string }
+- list_sessions: {}
+- delete_session: { sessionName: string }
 - save_to_list: { tabIds: number[], listName: string }
 - bookmark_tabs: { tabIds: number[], folderName?: string }
+- list_bookmarks: { query?: string }
+- delete_bookmarks: { bookmarkIds: string[] }
+- move_bookmarks: { bookmarkIds: string[], folderId: string }
 - analyze: { result: string }
 
 IMPORTANT:

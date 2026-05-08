@@ -13,7 +13,7 @@ import {
 } from '@ant-design/icons'
 import { useDispatch, useSelector } from 'react-redux'
 import type { AppDispatch, RootState } from '../../store/store'
-import { closeDrawer, clearMessages, loadAISettings } from '../../store/aiSlice'
+import { closeDrawer, clearMessages, loadAISettings, loadChatHistory } from '../../store/aiSlice'
 import { AIChat } from './AIChat'
 import { AICommandBar } from './AICommandBar'
 import { AIProviderBadge } from './AIProviderBadge'
@@ -30,6 +30,7 @@ export function AIDrawer({ onOpenSettings }: AIDrawerProps) {
   // Load settings on mount
   useEffect(() => {
     dispatch(loadAISettings())
+    dispatch(loadChatHistory())
   }, [])
 
   // Abort any in-flight request when drawer closes
