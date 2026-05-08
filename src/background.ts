@@ -266,10 +266,51 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       })
     })
   }
+
+  // ─── AI Action Handlers ─────────────────────────────────────────────────
+  if (message.type === 'AI_SAVE_SESSION') {
+    // Delegate to existing session save logic
+    chrome.storage.local.get(['sessions', 'pref'], (result) => {
+      const sessions = result.sessions ?? {}
+      const sessionName = message.name || `Session ${new Date().toLocaleDateString()}`
+      chrome.tabs.query({}).then((tabs) => {
+        const byWindow: Record<number, any[]> = {}
+        tabs.forEach((t) => {
+          if (t.windowId && t.url) {
+            if (!byWindow[t.windowId]) byWindow[t.windowId] = []
+            byWindow[t.windowId].push({ url: t.url, title: t.title ?? '' })
+          }
+        })
+        sessions[Date.now()] = { name: sessionName, created: Date.now(), windows: byWindow }
+        chrome.storage.local.set({ sessions })
+        sendResponse({ success: true })
+      })
+    })
+    return true // async
+  }
+
+  if (message.type === 'AI_SAVE_TO_LIST') {
+    chrome.storage.local.get(['lists'], (result) => {
+      const lists = result.lists ?? {}
+      const listName = message.listName || 'AI Saved Tabs'
+      if (!lists[listName]) lists[listName] = []
+      chrome.tabs.query({}).then((tabs) => {
+        const tabsToSave = tabs.filter((t) => message.tabIds.includes(t.id))
+        tabsToSave.forEach((t) => {
+          lists[listName].push({ url: t.url, title: t.title, added: Date.now() })
+        })
+        chrome.storage.local.set({ lists })
+        sendResponse({ success: true })
+      })
+    })
+    return true
+  }
+  // ────────────────────────────────────────────────────────────────────────
 })
 
 // Clean up data when a tab is closed
 chrome.tabs.onRemoved.addListener(async (tabId) => {
+
   try {
     const tabs = await chrome.tabs.query({})
     const activeUrls = new Set(tabs.map((t) => t.url).filter(Boolean))

@@ -20,6 +20,13 @@ import Brand from '../../components/Header/Brand';
 import ItemBtn from '../../components/ItemBtn';
 import { Move, Copy } from 'lucide-react';
 import logo from '../../assets/logo.svg';
+import UnifiedSearch from '../../components/Search';
+import { useSelector, useDispatch } from 'react-redux';
+import type { AppDispatch, RootState } from '../../store/store';
+import { toggleDrawer, setProviderStatus } from '../../store/aiSlice';
+import { AIDrawer } from '../AI/AIDrawer';
+import { AIProviderBadge } from '../AI/AIProviderBadge';
+import { getAIService } from '../../ai/AIService';
 import {
     getTree,
     searchBookmarks,
@@ -45,6 +52,8 @@ export default function BookmarksMain() {
     const [bookmarks, setBookmarks] = useState<BookmarkNode[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const dispatch = useDispatch<AppDispatch>();
+    const { drawerOpen, isLoading: aiLoading, status } = useSelector((s: RootState) => s.ai);
 
     // Modal State
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -87,15 +96,55 @@ export default function BookmarksMain() {
             });
         }
     };
+    const { regex: isRegex, searchIn = { title: true, url: true } } = useSelector((state: any) => state.search || { regex: false, searchIn: { title: true, url: true } });
+
+    const filterTree = (nodes: BookmarkNode[], query: string, isRegex: boolean, searchIn: any): BookmarkNode[] => {
+        const result: BookmarkNode[] = [];
+        let searchRegex: RegExp | null = null;
+        if (isRegex) {
+            try { searchRegex = new RegExp(query, 'i'); } catch (e) {}
+        }
+        const q = query.toLowerCase();
+
+        for (const node of nodes) {
+            let matches = false;
+
+            if (isRegex && searchRegex) {
+                if (searchIn?.title && node.title && searchRegex.test(node.title)) matches = true;
+                if (!matches && searchIn?.url && node.url && searchRegex.test(node.url)) matches = true;
+            } else {
+                if (searchIn?.title && node.title && node.title.toLowerCase().includes(q)) matches = true;
+                if (!matches && searchIn?.url && node.url && node.url.toLowerCase().includes(q)) matches = true;
+            }
+
+            if (matches) {
+                result.push(node);
+            } else if (node.children) {
+                const filteredChildren = filterTree(node.children, query, isRegex, searchIn);
+                if (filteredChildren.length > 0) {
+                    result.push({ ...node, children: filteredChildren });
+                }
+            }
+        }
+        return result;
+    };
+
     const fetchBookmarks = async () => {
         setLoading(true);
         try {
             if (searchQuery) {
-                const results = await searchBookmarks(searchQuery);
-                setBookmarks(results);
+                // If it's a simple query across both fields, use the fast native search
+                if (!isRegex && searchIn?.title && searchIn?.url) {
+                    const results = await searchBookmarks(searchQuery);
+                    setBookmarks(results);
+                } else {
+                    // Otherwise we need to filter the whole tree manually
+                    const tree = await getTree();
+                    const rootNodes = tree[0]?.children || [];
+                    setBookmarks(filterTree(rootNodes, searchQuery, isRegex, searchIn));
+                }
             } else {
                 const tree = await getTree();
-                // The root node is usually a single empty node containing 'Bookmarks Bar', 'Other Bookmarks', etc.
                 setBookmarks(tree[0]?.children || []);
             }
         } catch (error) {
@@ -106,12 +155,25 @@ export default function BookmarksMain() {
     };
 
     useEffect(() => {
+        const checkAI = async () => {
+            try {
+                const service = await getAIService()
+                const status = await service.getStatus()
+                dispatch(setProviderStatus(status))
+            } catch (e) {
+                dispatch(setProviderStatus({ connected: false, error: 'AI Service unavailable' }))
+            }
+        }
+        checkAI()
+    }, [dispatch])
+
+    useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
             fetchBookmarks();
         }, 300);
 
         return () => clearTimeout(delayDebounceFn);
-    }, [searchQuery]);
+    }, [searchQuery, isRegex]);
 
     const handleExport = async () => {
         const jsonStr = await exportBookmarks();
@@ -524,26 +586,33 @@ export default function BookmarksMain() {
                 currentPage="bookmarks"
                 collapsed={sidebarCollapsed}
                 onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+                onAIClick={() => dispatch(toggleDrawer())}
+                aiEnabled={status?.connected}
             />
             <div className="flex flex-col flex-1 min-h-0">
-                <header className="bg-gradient-to-t from-cyan-500 to-blue-500 p-1 transition-all duration-200 ease-in-out">
-                    <section className="flex w-full overflow-hidden items-center">
-                        <div className="flex-none flex items-center">
+                <header className="bg-gradient-to-t from-cyan-500 to-blue-500 p-2 transition-all duration-200 ease-in-out">
+                    <section className="flex items-center justify-between gap-4 w-full">
+                        <div className="flex-none flex items-center shrink-0">
                             <div className="mr-2">
                                 <SidebarToggleButton onClick={() => setSidebarCollapsed(!sidebarCollapsed)} />
                             </div>
                             <div className="hidden sm:block">{Brand(logo)}</div>
+                            <span className="text-white font-semibold text-lg ml-4">Bookmarks</span>
                         </div>
 
-                        <div className="flex-1 ml-4 min-w-0 flex items-center pr-2">
-                            <Input
-                                placeholder="Search bookmarks..."
-                                prefix={<SearchOutlined className="text-gray-400" />}
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full !ml-auto !ms-auto rounded-md border-0"
-                                allowClear
-                            />
+                        <div className="flex-1 flex justify-end items-center pr-2">
+                            <div className="w-full max-w-xl">
+                                <UnifiedSearch
+                                    isReduxConnected={false}
+                                    placeholder="Search bookmarks..."
+                                    value={searchQuery}
+                                    onChange={setSearchQuery}
+                                    onSearch={setSearchQuery}
+                                    showTabFilters={false}
+                                    foundCount={bookmarks.length}
+                                    className="w-full !ml-0 rounded-md border-0"
+                                />
+                            </div>
                         </div>
                     </section>
 
@@ -810,6 +879,20 @@ export default function BookmarksMain() {
                         </div>
                     </div>
                 </Modal>
+            </div>
+
+            <AIDrawer
+                open={drawerOpen}
+                onClose={() => dispatch(toggleDrawer())}
+                isLoading={aiLoading}
+            />
+
+            <div className="fixed bottom-4 right-4 z-50">
+                <AIProviderBadge
+                    onClick={() => dispatch(toggleDrawer())}
+                    status={status}
+                    active={drawerOpen}
+                />
             </div>
         </div>
     );

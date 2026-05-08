@@ -3,12 +3,14 @@ import logger from 'redux-logger'
 import tabReducer from './tabSlice'
 import configReducer from './configSlice'
 import searchReducer from './searchSlice'
+import aiReducer from './aiSlice'
 
 const store = configureStore({
   reducer: {
     tabs: tabReducer,
     config: configReducer,
-    search: searchReducer
+    search: searchReducer,
+    ai: aiReducer
   },
   middleware: (getDefaultMiddleware) => {
     const middleware = getDefaultMiddleware()

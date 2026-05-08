@@ -13,6 +13,8 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+MAGENTA='\033[1;35m'
+CYAN='\033[1;36m'
 NC='\033[0m' # No Color
 
 # Logging function
@@ -62,10 +64,19 @@ fi
 
 # Function to perform sync
 sync_changes() {
-    if rsync -av --delete "$SOURCE" "$DEST" > /dev/null 2>&1; then
-        log_success "Synced changes at $(date '+%H:%M:%S')"
+    SYNC_TIME=$(date '+%H:%M:%S')
+    SYNC_HASH=$(date +%s%N | md5sum | head -c 8)
+
+    echo "{\"hash\": \"$SYNC_HASH\", \"time\": \"$SYNC_TIME\"}" > "${SOURCE}sync-hash.json"
+
+    RSYNC_EXIT=0
+    rsync -av --delete "$SOURCE" "$DEST" > /dev/null 2>&1 || RSYNC_EXIT=$?
+
+    # Code 24 = Partial transfer due to vanished source files (normal during builds)
+    if [ "$RSYNC_EXIT" -eq 0 ] || [ "$RSYNC_EXIT" -eq 24 ]; then
+        log_success "Synced changes at $SYNC_TIME | Hash: ${MAGENTA}▶ ${SYNC_HASH} ◀${NC}"
     else
-        log_error "Sync failed at $(date '+%H:%M:%S')"
+        log_error "Sync failed at $SYNC_TIME (Exit code: $RSYNC_EXIT)"
     fi
 }
 
@@ -73,11 +84,11 @@ sync_changes() {
 if command -v inotifywait >/dev/null 2>&1; then
     log_success "Using inotifywait for efficient file watching..."
     log "Watching for changes in $SOURCE"
-    
+
     # Watch for file system events
     while true; do
         if inotifywait -r -e modify,create,delete,move "$SOURCE" \
-            --exclude '.*\.swp.*|.*\.tmp.*|.*~|.*\.log.*' 2>/dev/null; then
+            --exclude '.*\.swp.*|.*\.tmp.*|.*~|.*\.log.*|sync-hash\.json' 2>/dev/null; then
             sync_changes
         else
             sleep 1
@@ -86,7 +97,7 @@ if command -v inotifywait >/dev/null 2>&1; then
 else
     log_warning "inotifywait not found, using polling method"
     log_warning "Install inotify-tools for better performance: sudo apt install inotify-tools"
-    
+
     # Use polling as fallback
     log "Polling for changes every 1 second..."
     while true; do

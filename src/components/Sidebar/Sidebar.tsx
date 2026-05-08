@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Menu, Button } from 'antd'
 import { LayoutGrid, Folder, Settings, Menu as MenuIcon, X, BookmarkPlus } from 'lucide-react'
 import type { MenuProps } from 'antd'
@@ -7,6 +7,8 @@ interface SidebarProps {
   currentPage: 'tabs' | 'sessions' | 'settings' | 'bookmarks' | 'lists'
   collapsed?: boolean
   onToggle?: () => void
+  onAIClick?: () => void
+  aiEnabled?: boolean
 }
 
 export function SidebarToggleButton({ onClick }: { onClick: () => void }) {
@@ -30,9 +32,33 @@ const browser = chrome
 export default function Sidebar({
   currentPage,
   collapsed: externalCollapsed,
-  onToggle
+  onToggle,
+  onAIClick,
+  aiEnabled = false
 }: SidebarProps) {
   const [internalCollapsed, setInternalCollapsed] = useState(true)
+  const [syncHash, setSyncHash] = useState<{hash: string, time: string} | null>(null)
+
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'production') {
+      const checkHash = () => {
+        fetch('/sync-hash.json?t=' + Date.now())
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.hash) {
+              setSyncHash(data)
+            }
+          })
+          .catch(() => {
+            // Ignore fetch errors
+          })
+      }
+      checkHash()
+      const interval = setInterval(checkHash, 2000)
+      return () => clearInterval(interval)
+    }
+  }, [])
+
   const collapsed =
     externalCollapsed !== undefined ? externalCollapsed : internalCollapsed
 
@@ -109,13 +135,36 @@ export default function Sidebar({
             theme="dark"
           />
 
-          <Menu
-            mode="inline"
-            selectedKeys={[currentPage]}
-            items={settingsItems}
-            className="!bg-transparent !border-0 pb-4"
-            theme="dark"
-          />
+          <div className="flex flex-col gap-1 pb-4">
+            {/* AI Button */}
+            <button
+              onClick={onAIClick}
+              className={`
+                mx-3 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all
+                ${aiEnabled
+                  ? 'bg-gradient-to-r from-blue-500/30 to-purple-500/30 text-white border border-white/20 hover:from-blue-500/40 hover:to-purple-500/40'
+                  : 'text-white/60 hover:bg-white/10 hover:text-white'
+                }
+              `}
+              title="AI Assistant"
+            >
+              <span className="text-base">🤖</span>
+              <span>AI Assistant</span>
+              {aiEnabled && (
+                <span className="ml-auto text-[9px] px-1.5 py-0.5 bg-blue-400/30 text-blue-200 rounded-full">
+                  ON
+                </span>
+              )}
+            </button>
+
+            <Menu
+              mode="inline"
+              selectedKeys={[currentPage]}
+              items={settingsItems}
+              className="!bg-transparent !border-0"
+              theme="dark"
+            />
+          </div>
         </div>
 
         {/* Footer */}
@@ -123,6 +172,11 @@ export default function Sidebar({
           <div className="text-white font-semibold text-sm">Excited Gem</div>
           <div className="text-white/60 text-xs mt-1">
             v{browser.runtime.getManifest().version}
+            {syncHash && (
+              <span className="ml-2 px-1.5 py-0.5 bg-green-500/20 text-green-300 rounded" title={`Synced at ${syncHash.time}`}>
+                {syncHash.hash}
+              </span>
+            )}
           </div>
         </div>
       </div>

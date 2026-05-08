@@ -41,10 +41,19 @@ import Sidebar, { SidebarToggleButton } from '../components/Sidebar'
 import Brand from '../components/Header/Brand'
 import logo from '../assets/logo.svg'
 import store from '../store/store'
+import { useSelector } from 'react-redux'
 import { analytics } from '../utils/analytics'
 import { usePageTracking } from '../components/Analytics/usePageTracking'
+import UnifiedSearch from '../components/Search'
 import 'antd/dist/reset.css'
 import '../styles/index.css'
+
+import { useDispatch } from 'react-redux'
+import type { AppDispatch, RootState } from '../store/store'
+import { toggleDrawer, setProviderStatus } from '../store/aiSlice'
+import { AIDrawer } from '../components/AI/AIDrawer'
+import { AIProviderBadge } from '../components/AI/AIProviderBadge'
+import { getAIService } from '../ai/AIService'
 
 interface TabData {
   url: string
@@ -59,7 +68,7 @@ interface SessionData {
   }
 }
 
-const { Search } = Input
+// removed local Search
 
 function SessionsPageContent() {
   const [sessions, setSessions] = useState<SessionData[]>([])
@@ -80,6 +89,10 @@ function SessionsPageContent() {
   const [editingSessionId, setEditingSessionId] = useState<number | null>(null)
   const [editSessionName, setEditSessionName] = useState('')
 
+  const dispatch = useDispatch<AppDispatch>()
+  const { regex: isRegex } = useSelector((state: any) => state.search || { regex: false })
+  const { drawerOpen, isLoading: aiLoading, status } = useSelector((s: RootState) => s.ai)
+
   usePageTracking('/sessions', 'Sessions')
 
   const fetchSessions = async () => {
@@ -92,6 +105,19 @@ function SessionsPageContent() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    const checkAI = async () => {
+      try {
+        const service = await getAIService()
+        const status = await service.getStatus()
+        dispatch(setProviderStatus(status))
+      } catch (e) {
+        dispatch(setProviderStatus({ connected: false, error: 'AI Service unavailable' }))
+      }
+    }
+    checkAI()
+  }, [dispatch])
 
   const handleSaveCurrentSession = async () => {
     setSaveLoading(true)
@@ -216,25 +242,37 @@ function SessionsPageContent() {
     }
 
     const query = value.toLowerCase()
+
+    let searchRegex: RegExp | null = null
+    if (isRegex) {
+      try {
+        searchRegex = new RegExp(value, 'i')
+      } catch (e) { /* invalid regex */ }
+    }
+
     const filtered = sessions.filter((session) => {
-      if (
-        searchFilters.sessionName &&
-        session.name?.toLowerCase().includes(query)
-      ) {
-        return true
+      // Name filter
+      if (searchFilters.sessionName) {
+        if (isRegex && searchRegex && session.name) {
+          if (searchRegex.test(session.name)) return true
+        } else if (session.name?.toLowerCase().includes(query)) {
+          return true
+        }
       }
 
+      // Tab Url or Title filter
       if (searchFilters.tabUrl || searchFilters.tabTitle) {
         return Object.values(session.windows).some((tabs) =>
           tabs.some((tab) => {
-            if (searchFilters.tabUrl && tab.url.toLowerCase().includes(query))
-              return true
-            if (
-              searchFilters.tabTitle &&
-              tab.title.toLowerCase().includes(query)
-            )
-              return true
-            return false
+            if (isRegex && searchRegex) {
+              if (searchFilters.tabUrl && searchRegex.test(tab.url)) return true
+              if (searchFilters.tabTitle && searchRegex.test(tab.title)) return true
+              return false
+            } else {
+              if (searchFilters.tabUrl && tab.url.toLowerCase().includes(query)) return true
+              if (searchFilters.tabTitle && tab.title.toLowerCase().includes(query)) return true
+              return false
+            }
           })
         )
       }
@@ -262,7 +300,7 @@ function SessionsPageContent() {
     if (searchQuery) {
       handleSearch(searchQuery)
     }
-  }, [searchFilters])
+  }, [searchFilters, isRegex])
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleString('en-US', {
@@ -342,18 +380,20 @@ function SessionsPageContent() {
         currentPage="sessions"
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        onAIClick={() => dispatch(toggleDrawer())}
+        aiEnabled={status?.connected}
       />
       <div className="flex flex-col flex-1">
         {/* Header matching Tabs page structure */}
         <header className="bg-gradient-to-t from-cyan-500 to-blue-500 p-2 transition-all duration-200 ease-in-out">
-          <section className="flex items-center justify-between gap-4">
-            <div className="flex items-center shrink-0">
+          <section className="flex items-center justify-between gap-4 w-full">
+            <div className="flex-none flex items-center shrink-0">
               <div className="mr-2">
                 <SidebarToggleButton
                   onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
                 />
               </div>
-              {Brand(logo)}
+              <div className="hidden sm:block">{Brand(logo)}</div>
               <div className="flex items-center ml-4">
                 <span className="text-white font-semibold text-lg">
                   Sessions
@@ -366,51 +406,54 @@ function SessionsPageContent() {
               </div>
             </div>
 
-            <div className="flex-1 max-w-xl">
-              <Search
-                placeholder="Search sessions..."
-                allowClear
-                onSearch={handleSearch}
-                onChange={(e) => handleSearch(e.target.value)}
-                prefix={<SearchIcon size={16} className="text-gray-400" />}
-                suffix={
-                  <Popover
-                    content={searchFilterContent}
-                    trigger="click"
-                    placement="bottomRight"
-                  >
-                    <Button
-                      type="text"
-                      size="small"
-                      className="text-gray-400 hover:text-blue-500 flex items-center"
-                    >
-                      Search in
-                    </Button>
-                  </Popover>
-                }
-                className="w-full"
-              />
-            </div>
-
-            <div className="shrink-0">
-              <Dropdown
-                menu={{ items: actionItems }}
-                trigger={['click']}
-                placement="bottomRight"
-              >
-                <Button
-                  icon={<MoreHorizontal size={20} className="text-white" />}
-                  type="text"
-                  className="flex items-center justify-center hover:bg-white/10"
+            <div className="flex-1 flex justify-end items-center gap-4 pr-2">
+              <div className="flex-none flex items-center shrink-0">
+                <Dropdown
+                  menu={{ items: actionItems }}
+                  trigger={['click']}
+                  placement="bottomRight"
+                >
+                  <Button
+                    icon={<MoreHorizontal size={20} className="text-white" />}
+                    type="text"
+                    className="flex items-center justify-center hover:bg-white/10"
+                  />
+                </Dropdown>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".json"
+                  onChange={handleImport}
+                  style={{ display: 'none' }}
                 />
-              </Dropdown>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".json"
-                onChange={handleImport}
-                style={{ display: 'none' }}
-              />
+              </div>
+
+              <div className="w-full max-w-xl">
+                <UnifiedSearch
+                  isReduxConnected={false}
+                  placeholder="Search sessions..."
+                  onSearch={handleSearch}
+                  onChange={handleSearch}
+                  showTabFilters={false}
+                  foundCount={filteredSessions.length}
+                  extraSuffix={
+                    <Popover
+                      content={searchFilterContent}
+                      trigger="click"
+                      placement="bottomRight"
+                    >
+                      <Button
+                        type="text"
+                        size="small"
+                        className="text-gray-400 hover:text-blue-500 flex items-center"
+                      >
+                        Search in
+                      </Button>
+                    </Popover>
+                  }
+                  className="w-full !ml-0"
+                />
+              </div>
             </div>
           </section>
         </header>
@@ -575,7 +618,21 @@ function SessionsPageContent() {
               }}
             />
           )}
-        </div>
+      </div>
+
+      <AIDrawer
+        open={drawerOpen}
+        onClose={() => dispatch(toggleDrawer())}
+        isLoading={aiLoading}
+      />
+
+      <div className="fixed bottom-4 right-4 z-50">
+        <AIProviderBadge
+          onClick={() => dispatch(toggleDrawer())}
+          status={status}
+          active={drawerOpen}
+        />
+      </div>
       </div>
     </div>
   )

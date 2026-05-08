@@ -245,7 +245,6 @@ export const AITestModal: React.FC<AITestModalProps> = ({
         "\n\nIMPORTANT: YOU ARE BEING WATCHED. DO NOT, UNDER ANY CIRCUMSTANCES, GENERATE A NUMBERED LIST OF TABS IN YOUR RESPONSE. THE SYSTEM WILL ALREADY RENDER THEM AS INTERACTIVE TABS BELOW YOUR MESSAGE. Just give a very brief summary and say 'Here are the tabs:'."
       
       status = status ? `${status} + tab list` : `Listed ${limitedTabs.length} tabs`
-    }
 
     setContextStatus(status)
     return { context, tabs: fetchedTabs, totalFound: fetchList.length }

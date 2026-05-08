@@ -3,15 +3,8 @@
 // import { registerMenus, setTabCountInBadge } from "./components/browserActions.jsx";
 // const {  setTabCountInBadge,updateTabs } = require('./components/browserActions.js');
 // import './defaultPreferences';
-<<<<<<< HEAD
-var browser = require("webextension-polyfill");
-import {log} from './components/general';
-import {preferences} from './defaultPreferences';
-import {getTabs, openExcitedGemPage, setBadge,setTabCountInBadge} from "./components/browserActions";
-=======
 // import browser from "@/node_modules/webextension-polyfill/dist/browser-polyfill.js";
 // import * as browser from "webextension-polyfill";
->>>>>>> plasmo
 
 // import { getTabs, setBadge, setTabCountInBadge } from "./browserActions.ts"
 // import { preferences } from "./defaultPreferences"
@@ -56,22 +49,6 @@ import {getTabs, openExcitedGemPage, setBadge,setTabCountInBadge} from "./compon
 
 /* Events */
 ///////////
-<<<<<<< HEAD
-browser.runtime.onInstalled.addListener(() => {
-  // console.info("Excited Gem Installed!");
-  // if (NODE_ENV == 'development') browser.storage.local.clear(console.log("cleared")); //Previous data being removed for development version
-  let jsonObj = {};
-  jsonObj['preferences'] = preferences;
-  browser.storage.local.set(jsonObj).then(result => {
-    browser.storage.local.get('preferences').then(result => {
-    });
-  });
-  getTabs().then((tabs)=> setBadge(tabs.length));
-});
-browser.tabs.onRemoved.addListener((tabId) => {
-  // browser.tabs.get(homepageOpened.id, () => {
-  //   if (browser.runtime.lastError) {
-=======
 chrome.runtime.onInstalled.addListener(() => {
   // let jsonObj = {}
   // jsonObj["preferences"] = preferences
@@ -84,7 +61,6 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.tabs.onRemoved.addListener((tabId) => {
   // chrome.tabs.get(homepageOpened.id, () => {
   //   if (chrome.runtime.lastError) {
->>>>>>> plasmo
   //     setHomePageOpened(null);
   //     console.log(chrome.runtime.lastError.message);
   //   } else {
@@ -108,17 +84,6 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 
 /* Browser Actions */
 /////////////////////
-<<<<<<< HEAD
-browser.browserAction.onClicked.addListener(tab => {
-  console.info("Extension Page opening");
-  browser.tabs.create({ url: browser.extension.getURL('tabs.html'), pinned: true })
-  .then(tab => window.homepageOpened = tab);
-  // openExcitedGemPage();
-});
-
-
-=======
->>>>>>> plasmo
 
 chrome.action.onClicked.addListener((tab) => {
   console.info('Extension Page opening')

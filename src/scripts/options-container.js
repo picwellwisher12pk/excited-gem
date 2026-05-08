@@ -20,12 +20,12 @@ function getOptions() {
     pref.filterCase = items.pref.filterCase;
     pref.sortAnimation = items.pref.sortAnimation;
 
-    $('.option-case-sensitive input').prop(('checked': pref.filterCase));
+    $('.option-case-sensitive input').prop('checked', pref.filterCase);
 
   if (pref.filterType == 'regex') {
-    $('.option-regex input').prop(('checked': true));
+    $('.option-regex input').prop('checked', true);
   } else {
-    $('.option-regex input').prop(('checked': false));
+    $('.option-regex input').prop('checked', false);
   }
 });
 }
@@ -62,7 +62,7 @@ function restore_options() {
     console.log(items);
     $('#filter-type-option-id').val(items.pref.filterType);
     $('#sort-animation-option-id').val(items.pref.sortAnimation);
-    $('#filterCase-option-id').prop(('checked': items.pref.filterCase));
+    $('#filterCase-option-id').prop('checked', items.pref.filterCase);
 });
 }
 document.addEventListener('DOMContentLoaded', restore_options);

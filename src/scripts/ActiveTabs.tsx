@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 
 // import { profilerCallback } from "/src/scripts/general"
 import store from '../store/store'
@@ -16,6 +16,12 @@ import Navigation from '../components/Header/Navigation'
 import Search from '../components/Search'
 import Sidebar from '../components/Sidebar'
 import { usePageTracking } from '../components/Analytics/usePageTracking'
+import { AIDrawer } from '../components/AI/AIDrawer'
+import { AIProviderBadge } from '../components/AI/AIProviderBadge'
+import { toggleDrawer, setProviderStatus } from '../store/aiSlice'
+import type { AppDispatch, RootState } from '../store/store'
+import { getAIService } from '../ai/AIService'
+import { useEffect } from 'react'
 
 export async function updateTabs(getTabs, store) {
   const tabs = await getTabs(store.getState().tabs.selectedWindow)
@@ -179,9 +185,24 @@ chrome.windows.getCurrent().then((window) => {
 const ActiveTabs = () => {
   usePageTracking('/tabs', 'Active Tabs')
   console.log('ActiveTabs rendered')
+  const dispatch = useDispatch<AppDispatch>()
   // @ts-ignore
-  const { tabs } = useSelector((state) => state.tabs)
+  const { tabs } = useSelector((state: any) => state.tabs)
+  const { drawerOpen, settings: aiSettings, status, isLoading: aiLoading } = useSelector((state: RootState) => state.ai)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
+  useEffect(() => {
+    const checkAI = async () => {
+      try {
+        const service = await getAIService()
+        const status = await service.getStatus()
+        dispatch(setProviderStatus(status))
+      } catch (e) {
+        dispatch(setProviderStatus({ connected: false, error: 'AI Service unavailable' }))
+      }
+    }
+    checkAI()
+  }, [dispatch])
+
   const navigation = useMemo(
     () => <Navigation tabCount={tabs.length} />,
     [tabs]
@@ -192,17 +213,38 @@ const ActiveTabs = () => {
         currentPage="tabs"
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        onAIClick={() => dispatch(toggleDrawer())}
+        aiEnabled={status?.connected}
       />
       <div className="flex flex-col flex-1">
-        <Header sidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}>
-          <Navigation tabCount={tabs.length} />
+        <Header
+          sidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          navigation={<Navigation tabCount={tabs.length} />}
+        >
           <Search />
         </Header>
         <div className="flex-1 min-h-0 relative overflow-hidden">
           <TabWindowWrapper />
         </div>
       </div>
+
+      {/* AI Drawer */}
+      <AIDrawer
+        open={drawerOpen}
+        onClose={() => dispatch(toggleDrawer())}
+        isLoading={aiLoading}
+      />
+
+      {/* Floating AI trigger button */}
+      <div className="fixed bottom-4 right-4 z-50">
+        <AIProviderBadge
+          onClick={() => dispatch(toggleDrawer())}
+          status={status}
+          active={drawerOpen}
+        />
+      </div>
     </div>
   )
 }
 export default ActiveTabs
+

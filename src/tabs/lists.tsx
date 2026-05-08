@@ -38,12 +38,20 @@ import Sidebar, { SidebarToggleButton } from '../components/Sidebar'
 import Brand from '../components/Header/Brand'
 import logo from '../assets/logo.svg'
 import store from '../store/store'
+import { useSelector } from 'react-redux'
 import { analytics } from '../utils/analytics'
 import { usePageTracking } from '../components/Analytics/usePageTracking'
+import UnifiedSearch from '../components/Search'
 import 'antd/dist/reset.css'
 import '../styles/index.css'
 
-const { Search } = Input
+import { useDispatch } from 'react-redux'
+import type { AppDispatch, RootState } from '../store/store'
+import { toggleDrawer, setProviderStatus } from '../store/aiSlice'
+import { AIDrawer } from '../components/AI/AIDrawer'
+import { AIProviderBadge } from '../components/AI/AIProviderBadge'
+import { getAIService } from '../ai/AIService'
+
 const browser = chrome
 
 interface TabData {
@@ -332,6 +340,8 @@ function ListsPageContent() {
     const [loading, setLoading] = useState(false)
     const [activeTab, setActiveTab] = useState('extension')
     const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
+    const dispatch = useDispatch<AppDispatch>()
+    const { drawerOpen, isLoading: aiLoading, status } = useSelector((s: RootState) => s.ai)
 
     usePageTracking('/lists', 'Lists')
 
@@ -348,20 +358,48 @@ function ListsPageContent() {
         }
     }
 
+    const { regex: isRegex } = useSelector((state: any) => state.search || { regex: false })
+
+    useEffect(() => {
+        const checkAI = async () => {
+            try {
+                const service = await getAIService()
+                const status = await service.getStatus()
+                dispatch(setProviderStatus(status))
+            } catch (e) {
+                dispatch(setProviderStatus({ connected: false, error: 'AI Service unavailable' }))
+            }
+        }
+        checkAI()
+    }, [dispatch])
+
     useEffect(() => { fetchAll() }, [])
 
     const handleSearch = (value: string) => {
         const q = value.toLowerCase()
         const filter = (libs: LibraryData[]) => {
             if (!q) return libs
+            
+            let searchRegex: RegExp | null = null
+            if (isRegex) {
+                try {
+                    searchRegex = new RegExp(value, 'i')
+                } catch(e) { /* invalid regex */ }
+            }
+            
             return libs.filter(
-                (lib) =>
-                    lib.name.toLowerCase().includes(q) ||
+                (lib) => {
+                    if (isRegex && searchRegex) {
+                        return searchRegex.test(lib.name) ||
+                            lib.lists.some(list => searchRegex?.test(list.name) || list.tabs.some(t => searchRegex?.test(t.url) || searchRegex?.test(t.title)))
+                    }
+                    return lib.name.toLowerCase().includes(q) ||
                     lib.lists.some(
                         (list) =>
                             list.name.toLowerCase().includes(q) ||
                             list.tabs.some((t) => t.url.toLowerCase().includes(q) || t.title.toLowerCase().includes(q))
                     )
+                }
             )
         }
         setFilteredExt(filter(extLibraries))
@@ -377,29 +415,33 @@ function ListsPageContent() {
                 currentPage="lists"
                 collapsed={sidebarCollapsed}
                 onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+                onAIClick={() => dispatch(toggleDrawer())}
+                aiEnabled={status?.connected}
             />
             <div className="flex flex-col flex-1">
                 {/* Header */}
                 <header className="bg-gradient-to-t from-cyan-500 to-blue-500 p-2 transition-all duration-200 ease-in-out">
-                    <section className="flex items-center justify-between gap-4">
-                        <div className="flex items-center shrink-0">
+                    <section className="flex items-center justify-between gap-4 w-full">
+                        <div className="flex-none flex items-center shrink-0">
                             <div className="mr-2">
                                 <SidebarToggleButton onClick={() => setSidebarCollapsed(!sidebarCollapsed)} />
                             </div>
-                            {Brand(logo)}
+                            <div className="hidden sm:block">{Brand(logo)}</div>
                             <span className="text-white font-semibold text-lg ml-4">Lists</span>
                         </div>
-                        <div className="flex-1 max-w-xl">
-                            <Search
-                                placeholder="Search libraries, lists, URLs..."
-                                allowClear
-                                onChange={(e) => handleSearch(e.target.value)}
-                                onSearch={handleSearch}
-                                prefix={<SearchIcon size={16} className="text-gray-400" />}
-                                className="w-full"
-                            />
+                        <div className="flex-1 flex justify-end items-center pr-2">
+                            <div className="w-full max-w-xl">
+                                <UnifiedSearch
+                                    isReduxConnected={false}
+                                    placeholder="Search libraries, lists, URLs..."
+                                    onChange={handleSearch}
+                                    onSearch={handleSearch}
+                                    showTabFilters={false}
+                                    foundCount={filteredExt.length + filteredBm.length}
+                                    className="w-full !ml-0"
+                                />
+                            </div>
                         </div>
-                        <div className="shrink-0 w-8" />
                     </section>
                 </header>
 
@@ -455,6 +497,20 @@ function ListsPageContent() {
                         ]}
                     />
                 </div>
+            </div>
+
+            <AIDrawer
+                open={drawerOpen}
+                onClose={() => dispatch(toggleDrawer())}
+                isLoading={aiLoading}
+            />
+
+            <div className="fixed bottom-4 right-4 z-50">
+                <AIProviderBadge
+                    onClick={() => dispatch(toggleDrawer())}
+                    status={status}
+                    active={drawerOpen}
+                />
             </div>
         </div>
     )

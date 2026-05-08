@@ -1,6 +1,6 @@
-import { Input, } from 'antd'
+import { Input } from 'antd'
 import { debounce } from 'lodash'
-import React, { memo, useCallback, useEffect, useState } from 'react'
+import React, { memo, useCallback, useEffect, useState, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Pin, Volume2, VolumeX } from 'lucide-react'
 import ErrorBoundary from '../scripts/ErrorBoundary'
@@ -13,21 +13,58 @@ import {
 
 const { Search: AntSearch } = Input
 
-const Search = () => {
-  const dispatch = useDispatch()
-  const { filteredTabs } = useSelector((state) => state.tabs)
+export interface SearchProps {
+  // If true, uses standard Redux slice (used tightly by Tabs page).
+  isReduxConnected?: boolean
 
-  //Global States
-  const { searchTerm, pinnedSearch, audibleSearch, searchIn, regex } =
-    useSelector((state) => state.search)
-  //Refs
-  const searchField = React.useRef()
-  //Local States
-  const [placeholder, setPlaceholder] = useState(() =>
-    doPlaceholder(searchIn, regex)
+  // Used only when isReduxConnected = false
+  value?: string
+  onChange?: (val: string) => void
+  onSearch?: (val: string) => void
+  placeholder?: string
+  foundCount?: number
+  showTabFilters?: boolean
+  extraSuffix?: React.ReactNode
+
+  // General styling overrides
+  className?: string
+}
+
+const Search: React.FC<SearchProps> = ({
+  isReduxConnected = true,
+  value,
+  onChange,
+  onSearch,
+  placeholder: propPlaceholder,
+  foundCount,
+  showTabFilters = true,
+  extraSuffix,
+  className = ''
+}) => {
+  const dispatch = useDispatch()
+  const searchField = useRef<any>(null)
+
+  // Redux States (only strictly relevant if isReduxConnected)
+  // We use optional chaining or defaults below just in case.
+  const reduxTabs = useSelector((state: any) => state.tabs?.filteredTabs || [])
+  const reduxSearch = useSelector(
+    (state: any) => state.search || {
+      searchTerm: '',
+      pinnedSearch: false,
+      audibleSearch: false,
+      searchIn: { title: true, url: true },
+      regex: false
+    }
   )
+
+  const { searchTerm, pinnedSearch, audibleSearch, searchIn, regex } =
+    reduxSearch
+
+  // Local States
+  const [internalPlaceholder, setInternalPlaceholder] = useState('')
   const [searchBehavior, setSearchBehavior] = useState('debounce')
 
+  // Check storage for search behavior preference
   useEffect(() => {
     chrome.storage.local.get(['searchBehavior'], (result) => {
       if (result.searchBehavior) {
@@ -36,120 +73,154 @@ const Search = () => {
     })
   }, [])
 
+  // Sync placeholder if using Redux
   useEffect(() => {
-    setPlaceholder(doPlaceholder(searchIn, regex))
-  }, [searchIn])
-  useEffect(() => {}, [regex])
+    if (isReduxConnected) {
+      setInternalPlaceholder(doPlaceholder(searchIn, regex))
+    }
+  }, [searchIn, regex, isReduxConnected])
+
+  // Sync empty search term back to DOM manually for Redux mode
   useEffect(() => {
-    if (searchTerm === '') {
-      const inputSearch = document.getElementById('search-field')
-      // @ts-ignore
-      inputSearch.value = ''
+    if (isReduxConnected && searchTerm === '') {
+      if (searchField.current && searchField.current.input) {
+        searchField.current.input.value = ''
+      }
     }
-  }, [searchTerm])
+  }, [searchTerm, isReduxConnected])
 
-  const handleKeyUp = useCallback((event) => {
-    const { value } = event.target
-    if (value === '' || event.key === 'Escape') {
-      // @ts-ignore
-      searchField.current.input.value = ''
-      dispatch(updateSearchTerm(''))
-      return
-    }
-  }, [])
+  const handleKeyUp = useCallback(
+    (event: any) => {
+      const val = event.target.value
+      if (val === '' || event.key === 'Escape') {
+        if (searchField.current && searchField.current.input) {
+          searchField.current.input.value = ''
+        }
+        if (isReduxConnected) {
+          dispatch(updateSearchTerm(''))
+        }
+        if (onChange) onChange('')
+        if (onSearch) onSearch('')
+        return
+      }
+    },
+    [dispatch, isReduxConnected, onChange, onSearch]
+  )
 
-  const debouncedUpdate = useCallback(
-    debounce((value) => {
-      dispatch(updateSearchTerm(value))
+  const debouncedReduxUpdate = useCallback(
+    debounce((val) => {
+      dispatch(updateSearchTerm(val))
     }, 300),
     []
   )
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    if (isReduxConnected) {
+      if (searchBehavior === 'debounce') {
+        debouncedReduxUpdate(val)
+      }
+    } else {
+      if (onChange) onChange(val)
+    }
+  }
+
+  const handleSearchCommit = (val: string) => {
+    if (isReduxConnected) {
+      dispatch(updateSearchTerm(val))
+    }
+    if (onSearch) onSearch(val)
+  }
+
+  // Derived values for UI
+  const displayValue = isReduxConnected ? undefined : value // Let AntSearch manage its own uncontrolled state if value is undefined
+  const displayPlaceholder = isReduxConnected
+    ? internalPlaceholder
+    : propPlaceholder
+  const displayFoundCount = isReduxConnected ? reduxTabs.length : foundCount
+  const hasSearchContent = isReduxConnected
+    ? !!searchTerm
+    : !!value && value.length > 0
+
+  // Regex logic is globally controlled by Redux settings
+  const isRegexActive = regex
+
   return (
     <ErrorBoundary>
-      <div className="flex-1 ml-4 min-w-0 flex items-center gap-2 overflow-hidden">
+      <div
+        className={`flex-1 ml-4 min-w-0 flex items-center gap-2 overflow-hidden ${className}`}
+      >
         <AntSearch
           className="flex-1 w-full !ml-auto !ms-auto"
-          id="search-field"
+          id={isReduxConnected ? 'search-field' : undefined}
           ref={searchField}
+          // Only pass value if we are strictly controlled from parent
+          {...(!isReduxConnected && value !== undefined ? { value } : {})}
           onKeyUp={handleKeyUp}
           prefix={
-            regex ? (
+            isRegexActive ? (
               <span className="text-zinc-300 hidden sm:inline">/</span>
             ) : (
-              <span className="text-white hidden sm:inline">/</span>
+              <span className="text-transparent hidden sm:inline">/</span>
             )
           }
           suffix={
             <div className="flex items-center">
-              {searchTerm && (
+              {hasSearchContent && displayFoundCount !== undefined && (
                 <span className="text-zinc-400 max-w-[100px] truncate inline-block align-middle mr-2 hidden sm:inline-block">
-                  {filteredTabs.length + ' found'}
+                  {displayFoundCount + ' found'}
                 </span>
               )}
-              {regex && <span className="text-zinc-300 mr-2">/gi</span>}
+              {isRegexActive && (
+                <span className="text-zinc-300 mr-2">/gi</span>
+              )}
 
-              <div className="flex items-center gap-2 border-l border-zinc-200 pl-2 ml-1">
-                <button
-                  className="!border-0 flex align-items-center bg-transparent cursor-pointer p-0"
-                  type="button"
-                  aria-label={
-                    audibleSearch ? 'Show all tabs' : 'Filter audible only'
-                  }
-                  title={
-                    audibleSearch ? 'Show all tabs' : 'Filter audible only'
-                  }
-                  onClick={() => dispatch(toggleAudible())}
-                >
-                  {audibleSearch ? (
-                    <Volume2
-                      size={16}
-                      className="text-[#0487cf]"
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <VolumeX
-                      size={16}
-                      className="text-[#0487cf]"
-                      aria-hidden="true"
-                    />
-                  )}
-                </button>
+              {/* Extra Suffix for page-specific injects (like "Search in") */}
+              {extraSuffix}
 
-                <button
-                  className="!border-0 bg-transparent cursor-pointer flex align-items-center p-0"
-                  type="button"
-                  aria-label={
-                    pinnedSearch ? 'Show all tabs' : 'Filter pinned only'
-                  }
-                  title={pinnedSearch ? 'Show all tabs' : 'Filter pinned only'}
-                  onClick={() => dispatch(togglePinned())}
-                >
-                  {pinnedSearch ? (
-                    <Pin
-                      size={16}
-                      className="text-[#0487cf] fill-current"
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <Pin
-                      size={16}
-                      className="text-[#0487cf]"
-                      aria-hidden="true"
-                    />
-                  )}
-                </button>
-              </div>
+              {/* Redux Tab Filters */}
+              {showTabFilters && isReduxConnected && (
+                <div className="flex items-center gap-2 border-l border-zinc-200 pl-2 ml-1">
+                  <button
+                    className="!border-0 flex align-items-center bg-transparent cursor-pointer p-0"
+                    type="button"
+                    title={
+                      audibleSearch ? 'Show all tabs' : 'Filter audible only'
+                    }
+                    onClick={() => dispatch(toggleAudible())}
+                  >
+                    {audibleSearch ? (
+                      <Volume2 size={16} className="text-[#0487cf]" />
+                    ) : (
+                      <VolumeX size={16} className="text-[#0487cf]" />
+                    )}
+                  </button>
+
+                  <button
+                    className="!border-0 bg-transparent cursor-pointer flex align-items-center p-0"
+                    type="button"
+                    title={
+                      pinnedSearch ? 'Show all tabs' : 'Filter pinned only'
+                    }
+                    onClick={() => dispatch(togglePinned())}
+                  >
+                    {pinnedSearch ? (
+                      <Pin
+                        size={16}
+                        className="text-[#0487cf] fill-current"
+                      />
+                    ) : (
+                      <Pin size={16} className="text-[#0487cf]" />
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           }
-          placeholder={placeholder}
+          placeholder={displayPlaceholder}
           autoFocus={true}
-          onChange={(e) => {
-            if (searchBehavior === 'debounce') {
-              debouncedUpdate(e.target.value)
-            }
-          }}
-          onSearch={(value) => dispatch(updateSearchTerm(value))}
+          onChange={handleChange}
+          onSearch={handleSearchCommit}
         />
       </div>
     </ErrorBoundary>

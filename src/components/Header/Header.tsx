@@ -181,8 +181,9 @@ export default function Header({
   allMuted = false,
   allPinned = false,
   processSelectedTabs = () => { },
-  sidebarToggle
-}: Readonly<HeaderProps>) {
+  sidebarToggle,
+  navigation
+}: Readonly<HeaderProps & { navigation?: ReactNode }>) {
   const dispatch = useDispatch()
   const { selectedTabs, tabs, filteredTabs } = useSelector(
     (state: { tabs: TabState }) => state.tabs
@@ -236,17 +237,22 @@ export default function Header({
   )
 
   return (
-    <header className="bg-gradient-to-t from-cyan-500 to-blue-500 p-1 transition-all duration-200 ease-in-out">
-      <section className="flex w-full overflow-hidden items-center">
-        <div className="flex-none flex items-center">
+    <header className="bg-gradient-to-t from-cyan-500 to-blue-500 p-2 transition-all duration-200 ease-in-out">
+      <section className="flex items-center justify-between gap-4 w-full">
+        <div className="flex-none flex items-center shrink-0">
           {sidebarToggle && (
             <div className="mr-2">
               <SidebarToggleButton onClick={sidebarToggle} />
             </div>
           )}
           <div className="hidden sm:block">{Brand(logo)}</div>
+          {navigation && <div className="ml-4 flex items-center">{navigation}</div>}
         </div>
-        {children}
+        <div className="flex-1 flex justify-end items-center pr-2">
+          <div className="w-full max-w-xl">
+            {children}
+          </div>
+        </div>
       </section>
       <section
         className="flex flex-row justify-between items-center mt-1"
