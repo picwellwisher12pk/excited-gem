@@ -133,8 +133,12 @@ export class TabActionExecutor {
 
         case 'save_session':
           // Delegate to extension's session system via message
-          await browser.runtime.sendMessage({ type: 'AI_SAVE_SESSION', name: action.name })
-          return { success: true, message: `Saved session "${action.name}".` }
+          await browser.runtime.sendMessage({ 
+            type: 'AI_SAVE_SESSION', 
+            name: action.name,
+            tabIds: action.tabIds 
+          })
+          return { success: true, message: `Saved session "${action.name}" with ${action.tabIds?.length || 'all'} tab(s).` }
 
         case 'restore_session':
           await browser.runtime.sendMessage({ type: 'AI_RESTORE_SESSION', sessionName: action.sessionName })
@@ -148,6 +152,10 @@ export class TabActionExecutor {
         case 'delete_session':
           await browser.runtime.sendMessage({ type: 'AI_DELETE_SESSION', sessionName: action.sessionName })
           return { success: true, message: `Deleted session "${action.sessionName}".` }
+
+        case 'rename_session':
+          await browser.runtime.sendMessage({ type: 'AI_RENAME_SESSION', oldName: action.oldName, newName: action.newName })
+          return { success: true, message: `Renamed session from "${action.oldName}" to "${action.newName}".` }
 
         case 'save_to_list':
           await browser.runtime.sendMessage({ type: 'AI_SAVE_TO_LIST', tabIds: action.tabIds, listName: action.listName })

@@ -274,8 +274,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const sessions = result.sessions ?? {}
       const sessionName = message.name || `Session ${new Date().toLocaleDateString()}`
       chrome.tabs.query({}).then((tabs) => {
+        const targetTabs = message.tabIds 
+          ? tabs.filter((t) => message.tabIds.includes(t.id))
+          : tabs
+
         const byWindow: Record<number, any[]> = {}
-        tabs.forEach((t) => {
+        targetTabs.forEach((t) => {
           if (t.windowId && t.url) {
             if (!byWindow[t.windowId]) byWindow[t.windowId] = []
             byWindow[t.windowId].push({ url: t.url, title: t.title ?? '' })
@@ -335,6 +339,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const keyToDelete = Object.keys(sessions).find((k) => sessions[k].name === message.sessionName)
       if (keyToDelete) {
         delete sessions[keyToDelete]
+        chrome.storage.local.set({ sessions })
+        sendResponse({ success: true })
+      } else {
+        sendResponse({ success: false, error: 'Session not found' })
+      }
+    })
+    return true
+  }
+
+  if (message.type === 'AI_RENAME_SESSION') {
+    chrome.storage.local.get(['sessions'], (result) => {
+      const sessions = result.sessions ?? {}
+      const keyToRename = Object.keys(sessions).find((k) => sessions[k].name === message.oldName)
+      if (keyToRename) {
+        sessions[keyToRename].name = message.newName
         chrome.storage.local.set({ sessions })
         sendResponse({ success: true })
       } else {

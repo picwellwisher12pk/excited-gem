@@ -30,6 +30,7 @@ export type ActionType =
   | 'restore_session'
   | 'list_sessions'
   | 'delete_session'
+  | 'rename_session'
   | 'save_to_list'
   // Bookmarks
   | 'bookmark_tabs'
@@ -108,6 +109,7 @@ export interface OpenNewWindowWithTabs extends BaseAction {
 export interface SaveSession extends BaseAction {
   type: 'save_session'
   name: string
+  tabIds?: number[]
 }
 
 export interface RestoreSession extends BaseAction {
@@ -122,6 +124,12 @@ export interface ListSessions extends BaseAction {
 export interface DeleteSession extends BaseAction {
   type: 'delete_session'
   sessionName: string
+}
+
+export interface RenameSession extends BaseAction {
+  type: 'rename_session'
+  oldName: string
+  newName: string
 }
 
 export interface SaveToList extends BaseAction {
@@ -201,10 +209,11 @@ Available action types and their fields:
 - collapse_tab_group / expand_tab_group: { groupId: number }
 - ungroup_tabs: { tabIds: number[] }
 - open_new_window_with_tabs: { tabIds: number[], incognito?: boolean }
-- save_session: { name: string }
+- save_session: { name: string, tabIds?: number[] }
 - restore_session: { sessionName: string }
 - list_sessions: {}
 - delete_session: { sessionName: string }
+- rename_session: { oldName: string, newName: string }
 - save_to_list: { tabIds: number[], listName: string }
 - bookmark_tabs: { tabIds: number[], folderName?: string }
 - list_bookmarks: { query?: string }

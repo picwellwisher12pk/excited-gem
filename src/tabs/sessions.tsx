@@ -626,7 +626,7 @@ function SessionsPageContent() {
         isLoading={aiLoading}
       />
 
-      <div className="fixed bottom-4 right-4 z-50">
+      <div className="fixed bottom-4 right-4 z-30">
         <AIProviderBadge
           onClick={() => dispatch(toggleDrawer())}
           status={status}
