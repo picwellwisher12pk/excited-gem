@@ -37,33 +37,54 @@ const PROVIDER_LABELS: Record<ProviderType, string> = {
 interface AIProviderBadgeProps {
   size?: 'sm' | 'md'
   showModel?: boolean
+  onClick?: () => void
+  active?: boolean
+  status?: ProviderStatus | null
 }
 
-export function AIProviderBadge({ size = 'sm', showModel = true }: AIProviderBadgeProps) {
-  const { settings, connectionStatus } = useSelector((s: RootState) => s.ai)
+import type { ProviderStatus } from '../../ai/providers/BaseProvider'
+
+export function AIProviderBadge({ 
+  size = 'sm', 
+  showModel = true,
+  onClick,
+  active,
+  status: statusProp
+}: AIProviderBadgeProps) {
+  const { settings, status: statusStore } = useSelector((s: RootState) => s.ai)
   const { providerType, model, enabled } = settings
 
-  if (!enabled) return null
+  // Use prop if provided, else fallback to store
+  const currentStatus = statusProp !== undefined ? statusProp : statusStore
+
+  // If not enabled, we still show the badge if it's meant to be a trigger button,
+  // but with a grayscale/disabled look.
+  const isEnabled = enabled
 
   const icon = PROVIDER_ICONS[providerType] ?? '🤖'
   const label = PROVIDER_LABELS[providerType] ?? providerType
   const modelShort = model ? (model.length > 18 ? model.slice(0, 15) + '…' : model) : '—'
-  const isConnected = connectionStatus?.connected ?? null
+  const isConnected = currentStatus?.connected ?? null
 
   return (
     <div
+      onClick={onClick}
       className={`
-        inline-flex items-center gap-1 rounded-full border
-        ${size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-3 py-1 text-xs'}
-        ${isConnected === true
+        inline-flex items-center gap-1.5 rounded-full border shadow-sm
+        ${size === 'sm' ? 'px-2.5 py-1 text-[10px]' : 'px-3.5 py-1.5 text-xs'}
+        ${!isEnabled
+          ? 'bg-gray-50 border-gray-200 text-gray-500 grayscale'
+          : isConnected === true
           ? 'bg-green-50 border-green-200 text-green-700'
           : isConnected === false
           ? 'bg-red-50 border-red-200 text-red-600'
           : 'bg-blue-50 border-blue-200 text-blue-600'
         }
-        font-medium transition-colors
+        ${onClick ? 'cursor-pointer hover:shadow-md active:scale-95' : ''}
+        ${active ? 'ring-2 ring-blue-400 ring-offset-2 ring-offset-white' : ''}
+        font-medium transition-all duration-200
       `}
-      title={`AI: ${label} · ${model}`}
+      title={isConnected === false ? `AI Error: ${currentStatus?.error}` : `AI: ${label} · ${model}`}
     >
       <span>{icon}</span>
       <span>{label}</span>
