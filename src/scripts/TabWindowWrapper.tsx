@@ -1,4 +1,4 @@
-import { List } from 'antd'
+
 import React, { useEffect, useRef } from 'react'
 import ContentLoader from 'react-content-loader'
 import { useDispatch, useSelector } from 'react-redux'
@@ -13,9 +13,9 @@ import { SimpleFixedSizeList } from '~/components/SimpleFixedSizeList';
 import { Tab } from '~/components/Tab/Tab'
 import { GroupHeader } from '~/components/Tab/GroupHeader'
 import { TabGroupHeader } from '~/components/Tab/TabGroupHeader'
-import { SortableTabs } from '~/components/Tab/SortableTabs'
 import { asyncFilterTabs, getCurrentWindow } from './general'
-import { updateFilteredTabs } from '~/store/tabSlice'
+import { updateFilteredTabs, selectAllTabs, clearSelectedTabs, toggleSelectionMode } from '~/store/tabSlice'
+import { batchRemoveTabs } from '~/utils/bulkOperations'
 // @ts-ignore
 import { saveSession } from '~/components/getsetSessions'
 import { useResponsive } from '~/hooks/useResponsive';
@@ -332,6 +332,38 @@ function TabList() {
       chrome.tabGroups.onRemoved.removeListener(onGroupUpdated)
     }
   }, [])
+
+  // Global Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable) {
+        if (e.key === 'Escape') {
+          target.blur()
+        }
+        return
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
+        e.preventDefault()
+        dispatch(toggleSelectionMode(true))
+        dispatch(selectAllTabs())
+      } else if (e.key === 'Escape') {
+        dispatch(clearSelectedTabs())
+        dispatch(toggleSelectionMode(false))
+      } else if ((e.key === 'Delete' || e.key === 'Backspace') && selectedTabs.length > 0) {
+        e.preventDefault()
+        if (confirm(`Close ${selectedTabs.length} selected tabs?`)) {
+          batchRemoveTabs(selectedTabs)
+          dispatch(clearSelectedTabs())
+          dispatch(toggleSelectionMode(false))
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [dispatch, selectedTabs])
 
   const displayItems = React.useMemo(() => {
     // 1. Filter tabs based on selectedWindow

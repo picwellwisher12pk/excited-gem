@@ -6,7 +6,6 @@ import store from '~/store/store'
 
 import 'antd/dist/reset.css'
 import '~/styles/index.css'
-import '~/styles/index.css'
 import '~/styles/accessibility.css'
 import { StrictMode } from 'react'
 import { ConfigProvider } from "antd";

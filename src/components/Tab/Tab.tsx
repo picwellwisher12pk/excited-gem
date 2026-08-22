@@ -1,15 +1,13 @@
-import { List, Button, Tooltip } from 'antd'
-import type { CheckboxChangeEvent } from 'antd/es/checkbox';
-import { CloseOutlined, PlayCircleOutlined, PauseCircleOutlined } from '@ant-design/icons'
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import parse from 'html-react-parser'
+import { List, Button, } from 'antd'
+import { PlayCircleOutlined, PauseCircleOutlined } from '@ant-design/icons'
+import React, { useState, useEffect, useRef, } from 'react'
 import { controlYouTubeVideo } from '~/services/tabService';
 import { useDispatch, useSelector } from 'react-redux'
 import { Pin, Volume2, VolumeX, X, Moon } from 'lucide-react'
 import { toggleSelectionMode, updateSelectedTabs } from '~/store/tabSlice'
 import ItemBtn from '../ItemBtn'
 import { TabIcon } from './TabIcon'
-import { markSearchedTerm, renderAudioIcon } from './helpers'
+import { HighlightedText } from './helpers'
 import { TabContextMenu } from './ContextMenu'
 import { faviconCache } from '~/utils/faviconCache'
 // @ts-ignore
@@ -219,6 +217,10 @@ export const Tab = React.forwardRef<HTMLDivElement, TabProps>(({
     remove(id)
   }, [id, remove])
 
+  const handlePinTab = React.useCallback(() => {
+    togglePinTab(id, pinned)
+  }, [id, pinned, togglePinTab])
+
   // Memoized values
   const markedTitle = React.useMemo(() => {
     if (!title) return ' '
@@ -288,18 +290,27 @@ export const Tab = React.forwardRef<HTMLDivElement, TabProps>(({
                 className="truncate font-semibold shrink-0"
                 style={{ opacity: discarded || isLoading ? 0.7 : 1 }}
                 title={url}>
-                {parse(markedTitle)}
+                <HighlightedText
+                  text={title}
+                  highlight={searchIn.title ? searchTerm : ''}
+                />
               </span>
               {/* Mobile: Show URL below title */}
               <span className="text-xs text-slate-400 truncate w-full text-left sm:hidden block leading-none">
-                {parse(markedUrl)}
+                <HighlightedText
+                  text={url}
+                  highlight={searchIn.url ? searchTerm : ''}
+                />
               </span>
               {/* Desktop: Show URL next to title (hidden on mobile) */}
               <button
                 className="text-xs text-slate-400 truncate w-full text-left hover:text-slate-600 transition-colors hidden sm:block bg-transparent border-0 cursor-pointer p-0"
                 title={url}
                 onClick={handleTabClick}>
-                {parse(markedUrl)}
+                <HighlightedText
+                  text={url}
+                  highlight={searchIn.url ? searchTerm : ''}
+                />
               </button>
             </div>
             {/* YouTube Video Controls */}

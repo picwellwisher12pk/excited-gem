@@ -1,11 +1,11 @@
-import { Input, message } from 'antd'
+import { Input, } from 'antd'
 import { debounce } from 'lodash'
 import React, { memo, useCallback, useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Pin, PinOff, Volume2, VolumeX } from 'lucide-react'
+import { Pin, Volume2, VolumeX } from 'lucide-react'
 import ErrorBoundary from '~/scripts/ErrorBoundary'
 import { makePlaceholder as doPlaceholder } from '~/scripts/general'
-import { toggleAudible, togglePinned, toggleRegex, toggleSearchIn, updateSearchTerm } from '~/store/searchSlice'
+import { toggleAudible, togglePinned, updateSearchTerm } from '~/store/searchSlice'
 
 const { Search: AntSearch } = Input
 

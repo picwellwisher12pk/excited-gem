@@ -1,5 +1,5 @@
 import { Button, Input, Modal, Select, List, Typography, Space, Avatar } from 'antd'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useSelector } from 'react-redux'
 
 import { saveSession } from '../getsetSessions'

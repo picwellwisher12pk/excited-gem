@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { removeSessions } from '~/components/getsetSessions';
 
 // Helper function to convert timestamp to readable date

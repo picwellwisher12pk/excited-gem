@@ -1,5 +1,4 @@
 import { Checkbox } from 'antd'
-import React from 'react'
 // @ts-ignore
 import Loading from 'react:/src/icons/spinner-third.svg'
 

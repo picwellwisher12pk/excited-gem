@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { CustomScroll } from 'react-custom-scroll'
 import { useSelector } from 'react-redux'
 
 // import { profilerCallback } from "/src/scripts/general"
@@ -93,13 +92,19 @@ export async function updateTabs(getTabs, store) {
   store.dispatch(updateFilteredTabs(processed))
 }
 
+import debounce from 'lodash/debounce'
+
+export const debouncedUpdateTabs = debounce(() => {
+  updateTabs(getTabs, store)
+}, 150, { maxWait: 500, leading: false, trailing: true })
+
 // Listen to tab events
-chrome.tabs.onRemoved.addListener(() => updateTabs(getTabs, store))
-chrome.tabs.onDetached.addListener(() => updateTabs(getTabs, store))
-chrome.tabs.onCreated.addListener(() => updateTabs(getTabs, store))
-chrome.tabs.onAttached.addListener(() => updateTabs(getTabs, store))
-chrome.tabs.onUpdated.addListener(() => updateTabs(getTabs, store))
-chrome.tabs.onMoved.addListener(() => updateTabs(getTabs, store))
+chrome.tabs.onRemoved.addListener(debouncedUpdateTabs)
+chrome.tabs.onDetached.addListener(debouncedUpdateTabs)
+chrome.tabs.onCreated.addListener(debouncedUpdateTabs)
+chrome.tabs.onAttached.addListener(debouncedUpdateTabs)
+chrome.tabs.onUpdated.addListener(debouncedUpdateTabs)
+chrome.tabs.onMoved.addListener(debouncedUpdateTabs)
 
 // Listen to store changes for selectedWindow
 let previousSelectedWindow = store.getState().tabs.selectedWindow
@@ -108,25 +113,18 @@ store.subscribe(() => {
   if (currentSelectedWindow !== previousSelectedWindow) {
     console.log('Selected window changed:', previousSelectedWindow, '->', currentSelectedWindow)
     previousSelectedWindow = currentSelectedWindow
-    updateTabs(getTabs, store)
+    debouncedUpdateTabs()
   }
 })
 
 // Listen for YouTube info changes in storage
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'local') {
-    if (changes.youtubeInfoMap) {
-      const newValue = changes.youtubeInfoMap.newValue;
-      if (newValue) {
-        // console.log('DEBUG: Storage changed youtubeInfoMap:', newValue);
-        updateTabs(getTabs, store);
-      }
-    }
-    if (changes.youtubeApiCache) {
-      updateTabs(getTabs, store);
+    if (changes.youtubeInfoMap || changes.youtubeApiCache) {
+      debouncedUpdateTabs()
     }
   }
-});
+})
 
 // Check and listen for YouTube permission
 const checkYouTubePermission = () => {

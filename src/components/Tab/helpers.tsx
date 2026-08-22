@@ -6,24 +6,50 @@ import VolumeIcon from 'react:/src/icons/volume.svg'
 
 import ItemBtn from '../ItemBtn'
 
-
-
-
-
 export const iconHeight: number = 16
 
 export const grayIconStyle: object = { height: iconHeight, fill: 'gray' }
 export const blueIconStyle: object = { height: iconHeight, fill: '#0487cf' }
 
-export function markSearchedTerm(value: string, searchTerm: string) {
-  if (!searchTerm) return value
-  try {
-    const regex: RegExp = new RegExp(searchTerm, 'gi')
-    return value.replace(regex, '<mark>$&</mark>')
-  } catch (e) {
-    console.error('Bad Regular Expressions:', e, searchTerm)
-    return value
+/**
+ * Pure React Substring Highlighter component without HTML parser overhead.
+ */
+export const HighlightedText: React.FC<{ text: string; highlight?: string; className?: string }> = ({
+  text,
+  highlight,
+  className
+}) => {
+  if (!text) return null
+  if (!highlight || !highlight.trim()) {
+    return <span className={className}>{text}</span>
   }
+
+  try {
+    const escaped = highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const regex = new RegExp(`(${escaped})`, 'gi')
+    const parts = text.split(regex)
+
+    return (
+      <span className={className}>
+        {parts.map((part, i) => {
+          if (regex.test(part)) {
+            return (
+              <mark key={i} className="bg-yellow-200 text-slate-900 rounded-sm px-0.5 font-medium">
+                {part}
+              </mark>
+            )
+          }
+          return <span key={i}>{part}</span>
+        })}
+      </span>
+    )
+  } catch {
+    return <span className={className}>{text}</span>
+  }
+}
+
+export function markSearchedTerm(value: string, searchTerm: string) {
+  return value
 }
 
 export function renderAudioIcon(audible, mutedInfo) {
@@ -61,7 +87,6 @@ const renderActionButtons = ({
       </ItemBtn>
     </>
   ) : (
-    //Non-Active Tabs only get a remove button on action bar for now.
     <ItemBtn onClick={handleRemove} />
   )
 }

@@ -2,7 +2,6 @@ import {FontAwesomeIcon as FA} from "@fortawesome/react-fontawesome";
 import {faVolumeOff} from '@fortawesome/free-solid-svg-icons/faVolumeOff';
 import {faVolumeMute} from '@fortawesome/free-solid-svg-icons/faVolumeMute';
 import {faVolumeUp} from '@fortawesome/free-solid-svg-icons/faVolumeUp';
-import React from "react";
 
 const VolumeIcon = (props) => {
   let audioIcon;

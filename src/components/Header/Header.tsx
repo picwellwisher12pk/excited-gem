@@ -3,12 +3,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import type { ReactNode } from 'react'
 import {
-  RefreshCw,
   Pin,
   VolumeX,
   X,
   Move,
-  Volume2,
   Save,
   Moon,
   ChevronDown
@@ -22,7 +20,6 @@ import { MoveModal } from '~/components/Modals/Move'
 import { SaveModal } from '~/components/Modals/Save'
 import WindowSelector from '~/components/WindowSelector'
 import Brand from './Brand'
-import MenuItemButton from './MenuItemButton'
 import Selection from './Selection'
 import SortButton from './SortButton'
 import Btn from '~/components/Btn'

@@ -1,4 +1,5 @@
 import { saveTabs, saveURLs } from '~/components/getsetSessions'
+import { batchRemoveTabs, batchMoveTabs, batchUpdateTabs, batchDiscardTabs } from '~/utils/bulkOperations'
 
 
 export const HOMEPAGEURL = chrome.runtime.getURL('/tabs/home.html')
@@ -381,111 +382,80 @@ export function santizeTabs(tabs, ignoredUrlPatterns) {
 //   }
 //   return true;
 // }
-export function processTabs(action, selection, state, setState) {
-  console.log(
-    '🚀 ~ file: general.js ~ line 377 ~ processTabs ~ action, selection, state, setState',
-    action,
-    selection,
-    state,
-    setState
-  )
-
+export async function processTabs(action, selection, state, setState) {
   const selectedTabs = {}
   state
-    .filter((tab) => selection.includes(tab.id))
+    ?.filter((tab) => selection.includes(tab.id))
     .forEach((tab) => {
       selectedTabs[tab.id] = tab
     })
+
+  const numericIds = selection.map(Number)
+
   switch (action) {
-    case 'closeSelected':
+    case 'closeSelected': {
       let message = 'Are you sure you want to close selected tabs'
-      //State is Tabs here
-      selection.length === state.length &&
-        (message =
-          'Are you sure you want to close all the tabs? This will also close this window.')
+      if (state && selection.length === state.length) {
+        message = 'Are you sure you want to close all the tabs? This will also close this window.'
+      }
       const userPermission = confirm(message)
       if (!userPermission) return false
-      chrome.tabs.remove(selection)
-      setState()
+      await batchRemoveTabs(numericIds)
+      if (typeof setState === 'function') setState()
       break
-    case 'toNewWindow':
-      let targetWindow = chrome.windows.create()
-      targetWindow.then((windowInfo) => {
-        chrome.tabs.move(selection, { windowId: windowInfo.id, index: 0 })
-      })
+    }
+    case 'toNewWindow': {
+      if (numericIds.length === 0) break
+      const firstTab = numericIds[0]
+      const otherTabs = numericIds.slice(1)
+      const windowInfo = await chrome.windows.create({ tabId: firstTab, focused: true })
+      if (otherTabs.length > 0 && windowInfo?.id) {
+        await batchMoveTabs(otherTabs, { windowId: windowInfo.id, index: -1 })
+      }
       break
+    }
     case 'toSession':
       saveTabs(
         selection.map((selectedTab) =>
-          state.tabs.find((o) => selectedTab === o.id)
-        )
+          state.tabs?.find((o) => selectedTab === o.id) || state.find?.((o) => selectedTab === o.id)
+        ).filter(Boolean)
       )
       break
     case 'save':
-      console.log(selection, selectedTab)
       saveURLs(
         selection.map((selectedTab) =>
-          state.tabs.find((o) => selectedTab === o.id)
-        )
+          state.tabs?.find((o) => selectedTab === o.id) || state.find?.((o) => selectedTab === o.id)
+        ).filter(Boolean)
       )
       break
     case 'pinSelected':
-      for (let tabId of selection)
-        chrome.tabs.update(parseInt(tabId), { pinned: true })
+      await batchUpdateTabs(numericIds, { pinned: true })
       break
     case 'unpinSelected':
-      for (let tabId of selection)
-        chrome.tabs.update(parseInt(tabId), { pinned: false })
+      await batchUpdateTabs(numericIds, { pinned: false })
       break
-    case 'togglePinSelected':
-      for (let tabId of selection)
-        chrome.tabs.update(parseInt(tabId), {
-          pinned: !selectedTabs[tabId].pinned ? true : false
-        })
+    case 'togglePinSelected': {
+      const toPin = numericIds.filter(id => !selectedTabs[id]?.pinned)
+      const toUnpin = numericIds.filter(id => selectedTabs[id]?.pinned)
+      if (toPin.length > 0) await batchUpdateTabs(toPin, { pinned: true })
+      if (toUnpin.length > 0) await batchUpdateTabs(toUnpin, { pinned: false })
       break
-
-    //Mute
+    }
     case 'muteSelected':
-      for (let tabId of selection)
-        chrome.tabs.update(parseInt(tabId), { muted: true })
+      await batchUpdateTabs(numericIds, { muted: true })
       break
     case 'unmuteSelected':
-      for (let tabId of selection)
-        chrome.tabs.update(parseInt(tabId), { muted: false })
+      await batchUpdateTabs(numericIds, { muted: false })
       break
-    case 'toggleMuteSelected':
-      for (let tabId of selection)
-        chrome.tabs.update(parseInt(tabId), {
-          muted: !selectedTabs[tabId].mutedInfo.muted ? true : false
-        })
+    case 'toggleMuteSelected': {
+      const toMute = numericIds.filter(id => !selectedTabs[id]?.mutedInfo?.muted)
+      const toUnmute = numericIds.filter(id => selectedTabs[id]?.mutedInfo?.muted)
+      if (toMute.length > 0) await batchUpdateTabs(toMute, { muted: true })
+      if (toUnmute.length > 0) await batchUpdateTabs(toUnmute, { muted: false })
       break
-
-    // Discard
+    }
     case 'discardSelected':
-      for (let tabId of selection)
-        chrome.tabs.discard(parseInt(tabId))
-      break
-
-    //Selection
-    case 'selectAll':
-      setState({ selectedTabs: filterTabs().map((tab) => tab.id) })
-      addClass(
-        document.querySelectorAll('#selection-action'),
-        'selection-active'
-      )
-      break
-    case 'selectNone':
-      setState({ selectedTabs: [] })
-      removeClass(
-        document.querySelectorAll('#selection-action'),
-        'selection-active'
-      )
-      break
-    case 'invertSelection':
-      let inverted = props.tabs
-        .filter((tab) => !props.selectedTabs.includes(tab.id))
-        .map((tab) => tab.id)
-      setState({ selectedTabs: inverted })
+      await batchDiscardTabs(numericIds)
       break
   }
 }

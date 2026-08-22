@@ -1,4 +1,4 @@
-import React from 'react'
+
 // @ts-ignore
 import ThumbtackActiveIcon from 'react:/src/icons/thumbtack-active.svg'
 // @ts-ignore

@@ -1,8 +1,11 @@
 import { Badge } from 'antd'
 import React, { memo } from 'react'
 
-const Navigation = ({ tabCount }) => {
-  console.log('navigation')
+interface NavigationProps {
+  tabCount?: number
+}
+
+const Navigation: React.FC<NavigationProps> = ({ tabCount = 0 }) => {
   return (
     <div className="flex-none hidden sm:block" id="navbarNav">
       <div className="flex justify-start w-auto mb-0">
@@ -11,11 +14,11 @@ const Navigation = ({ tabCount }) => {
             overflowCount={999}
             offset={[5, -3]}
             count={tabCount}
-            color={tabCount > 50 ? 'orange' : 'green '}
+            color={tabCount > 50 ? 'orange' : 'green'}
             size="small"
             className="!border-0">
             <a
-              className=" text-white font-weight-bold"
+              className="text-white font-semibold hover:text-white"
               href="/tabs/home.html"
               id="go-to-tabs">
               Tabs

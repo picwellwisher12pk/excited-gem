@@ -11,7 +11,8 @@ import {
     X,
     ChevronDown,
     ChevronUp,
-    MoreHorizontal
+    MoreHorizontal,
+    FileText
 } from 'lucide-react';
 // @ts-ignore
 import { getSessions, saveSessions, removeSessions, removeTab, exportSessions, importSessions } from '~/components/getsetSessions';
@@ -22,7 +23,6 @@ import store from '~/store/store';
 import { analytics } from '~/utils/analytics';
 import { usePageTracking } from '~/components/Analytics/usePageTracking';
 import 'antd/dist/reset.css';
-import '~/styles/index.css';
 import '~/styles/index.css';
 
 interface TabData {
@@ -125,6 +125,19 @@ function SessionsPageContent() {
         } catch (error) {
             message.error('Failed to export sessions');
         }
+    };
+
+    const handleExportSessionMarkdown = (session: SessionData, e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        const lines: string[] = [`# ${session.name || 'Unnamed Session'} (${formatDate(session.created)})`];
+        Object.entries(session.windows).forEach(([winId, tabs], idx) => {
+            lines.push(`\n## Window ${idx + 1}`);
+            tabs.forEach(t => {
+                lines.push(`- [${(t.title || t.url).replace(/[\[\]]/g, '')}](${t.url})`);
+            });
+        });
+        navigator.clipboard.writeText(lines.join('\n'));
+        message.success('Copied session as Markdown to clipboard');
     };
 
     const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -351,6 +364,14 @@ function SessionsPageContent() {
                                                 <Tag color="green">{totalTabs} tabs</Tag>
                                             </div>
                                             <Space size="small">
+                                                <Tooltip title="Copy as Markdown">
+                                                    <Button
+                                                        size="small"
+                                                        icon={<FileText size={16} />}
+                                                        onClick={(e) => handleExportSessionMarkdown(session, e)}
+                                                        className="flex items-center justify-center"
+                                                    />
+                                                </Tooltip>
                                                 <Tooltip title="Restore all">
                                                     <Button
                                                         type="primary"
