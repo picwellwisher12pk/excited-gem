@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-
 import { getAllWindows, getCurrentWindow } from '../scripts/general'
 import { updateSelectedWindow } from '../store/tabSlice'
 import { ChevronDown } from 'lucide-react'
@@ -8,12 +7,12 @@ import Btn from '../components/Btn'
 
 export default function WindowSelector() {
   const dispatch = useDispatch()
-  const { selectedWindow } = useSelector((state) => state.tabs)
-  const [allWindows, setAllWindows] = useState([])
+  const { selectedWindow } = useSelector((state: any) => state.tabs)
+  const [allWindows, setAllWindows] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [currentWindow, setCurrentWindow] = useState({})
+  const [currentWindow, setCurrentWindow] = useState<any>({})
   const [isOpen, setIsOpen] = useState(false)
-  const dropdownRef = useRef(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   async function getWindows() {
     const allWindows = await getAllWindows()
@@ -28,8 +27,11 @@ export default function WindowSelector() {
   }, [])
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false)
       }
     }
@@ -43,13 +45,13 @@ export default function WindowSelector() {
     }
   }, [isOpen])
 
-  const setWindow = (window) => {
-    dispatch(updateSelectedWindow(window))
+  const setWindow = (win: any) => {
+    dispatch(updateSelectedWindow(win))
     setIsOpen(false)
   }
 
-  const totalTabCount = allWindows.reduce(function (total, window) {
-    return total + window.tabs.length
+  const totalTabCount = allWindows.reduce(function (total, win) {
+    return total + (win.tabs?.length || 0)
   }, 0)
 
   const optionAll = {
@@ -67,12 +69,12 @@ export default function WindowSelector() {
   }
 
   const options = allWindows
-    .filter((window) => currentWindow.id !== window.id)
-    .map(window => ({
-      key: window.id,
+    .filter((win) => currentWindow.id !== win.id)
+    .map((win) => ({
+      key: win.id,
       label: 'Window',
-      count: window.tabs.length,
-      onClick: () => setWindow(window.id)
+      count: win.tabs?.length || 0,
+      onClick: () => setWindow(win.id)
     }))
 
   if (allWindows.length <= 1) return null
@@ -92,16 +94,18 @@ export default function WindowSelector() {
         isCurrent: true
       }
     }
-    const window = allWindows.find(w => w.id === selectedWindow)
-    return window ? {
-      label: 'Window',
-      count: window.tabs.length,
-      isCurrent: false
-    } : {
-      label: selectedWindow,
-      count: 0,
-      isCurrent: false
-    }
+    const win = allWindows.find((w) => w.id === selectedWindow)
+    return win
+      ? {
+          label: 'Window',
+          count: win.tabs?.length || 0,
+          isCurrent: false
+        }
+      : {
+          label: selectedWindow,
+          count: 0,
+          isCurrent: false
+        }
   }
 
   return (
@@ -113,7 +117,7 @@ export default function WindowSelector() {
       >
         <div className="flex justify-between items-center flex-1">
           <div className="flex items-center">
-            <span className="inline-block w-2 h-2 rounded-full mb-[1px] mr-2"></span>
+            <span className="inline-block w-2 h-2 rounded-full mb-[1px] mr-2" />
             <span>
               {getCurrentDisplay().label}
               {getCurrentDisplay().isCurrent && (
@@ -121,16 +125,25 @@ export default function WindowSelector() {
               )}
             </span>
           </div>
-          <small className={`${getCurrentDisplay().count > 50 ? '!text-orange-600' : '!text-green-500'
-            }`}>
-            {getCurrentDisplay().count} tab{getCurrentDisplay().count !== 1 && 's'}
+          <small
+            className={`${
+              getCurrentDisplay().count > 50
+                ? '!text-orange-600'
+                : '!text-green-500'
+            }`}
+          >
+            {getCurrentDisplay().count} tab
+            {getCurrentDisplay().count !== 1 && 's'}
           </small>
         </div>
         <ChevronDown size={14} className="ml-2 text-zinc-500 flex-shrink-0" />
       </Btn>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50" style={{ width: 200 }}>
+        <div
+          className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50"
+          style={{ width: 200 }}
+        >
           <div className="max-h-64 overflow-y-auto">
             {/* All Windows Option */}
             <div
@@ -139,10 +152,16 @@ export default function WindowSelector() {
             >
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
-                  <span className="inline-block w-2 h-2 rounded-full mb-[1px] mr-2"></span>
+                  <span className="inline-block w-2 h-2 rounded-full mb-[1px] mr-2" />
                   <span>All Windows</span>
                 </div>
-                <small className={totalTabCount > 50 ? '!text-orange-600' : '!text-green-500'}>
+                <small
+                  className={
+                    totalTabCount > 50
+                      ? '!text-orange-600'
+                      : '!text-green-500'
+                  }
+                >
                   {totalTabCount} tab{totalTabCount > 1 && 's'}
                 </small>
               </div>
@@ -155,17 +174,26 @@ export default function WindowSelector() {
             >
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
-                  <span className="inline-block w-2 h-2 rounded-full mb-[1px] mr-2 bg-green-500"></span>
-                  <span>Window <small className="text-gray-400">(current)</small></span>
+                  <span className="inline-block w-2 h-2 rounded-full mb-[1px] mr-2 bg-green-500" />
+                  <span>
+                    Window <small className="text-gray-400">(current)</small>
+                  </span>
                 </div>
-                <small className={currentWindow.tabs?.length > 50 ? '!text-orange-600' : '!text-green-500'}>
-                  {currentWindow.tabs?.length || 0} tab{(currentWindow.tabs?.length || 0) > 1 && 's'}
+                <small
+                  className={
+                    (currentWindow.tabs?.length || 0) > 50
+                      ? '!text-orange-600'
+                      : '!text-green-500'
+                  }
+                >
+                  {currentWindow.tabs?.length || 0} tab
+                  {(currentWindow.tabs?.length || 0) > 1 && 's'}
                 </small>
               </div>
             </div>
 
             {/* Other Windows */}
-            {options.map(option => (
+            {options.map((option) => (
               <div
                 key={option.key}
                 className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
@@ -173,10 +201,16 @@ export default function WindowSelector() {
               >
                 <div className="flex justify-between items-center">
                   <div className="flex items-center">
-                    <span className="inline-block w-2 h-2 rounded-full mb-[1px] mr-2"></span>
+                    <span className="inline-block w-2 h-2 rounded-full mb-[1px] mr-2" />
                     <span>Window</span>
                   </div>
-                  <small className={option.count > 50 ? '!text-orange-600' : '!text-lime-700'}>
+                  <small
+                    className={
+                      option.count > 50
+                        ? '!text-orange-600'
+                        : '!text-lime-700'
+                    }
+                  >
                     {option.count} tab{option.count > 1 && 's'}
                   </small>
                 </div>

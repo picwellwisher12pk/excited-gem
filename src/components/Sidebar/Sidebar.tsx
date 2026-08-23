@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Menu, Button } from 'antd'
-import { LayoutGrid, Folder, Settings, Menu as MenuIcon, X, BookmarkPlus } from 'lucide-react'
+import {
+  LayoutGrid,
+  Folder,
+  Settings,
+  Menu as MenuIcon,
+  X,
+  BookmarkPlus
+} from 'lucide-react'
 import type { MenuProps } from 'antd'
 
 interface SidebarProps {
@@ -37,14 +44,17 @@ export default function Sidebar({
   aiEnabled = false
 }: SidebarProps) {
   const [internalCollapsed, setInternalCollapsed] = useState(true)
-  const [syncHash, setSyncHash] = useState<{hash: string, time: string} | null>(null)
+  const [syncHash, setSyncHash] = useState<{
+    hash: string
+    time: string
+  } | null>(null)
 
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production') {
       const checkHash = () => {
         fetch('/sync-hash.json?t=' + Date.now())
-          .then(res => res.json())
-          .then(data => {
+          .then((res) => res.json())
+          .then((data) => {
             if (data && data.hash) {
               setSyncHash(data)
             }
@@ -113,8 +123,9 @@ export default function Sidebar({
 
       {/* Sidebar */}
       <div
-        className={`fixed left-0 top-0 h-full bg-gradient-to-b from-blue-600 to-indigo-600 shadow-lg transition-transform duration-300 z-40 ${collapsed ? '-translate-x-full' : 'translate-x-0'
-          } flex flex-col`}
+        className={`fixed left-0 top-0 h-full bg-gradient-to-b from-blue-600 to-indigo-600 shadow-lg transition-transform duration-300 z-40 ${
+          collapsed ? '-translate-x-full' : 'translate-x-0'
+        } flex flex-col`}
         style={{ width: '240px' }}
       >
         <div className="flex justify-between items-center p-4 border-b border-white/20">
@@ -141,9 +152,10 @@ export default function Sidebar({
               onClick={onAIClick}
               className={`
                 mx-3 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all
-                ${aiEnabled
-                  ? 'bg-gradient-to-r from-blue-500/30 to-purple-500/30 text-white border border-white/20 hover:from-blue-500/40 hover:to-purple-500/40'
-                  : 'text-white/60 hover:bg-white/10 hover:text-white'
+                ${
+                  aiEnabled
+                    ? 'bg-gradient-to-r from-blue-500/30 to-purple-500/30 text-white border border-white/20 hover:from-blue-500/40 hover:to-purple-500/40'
+                    : 'text-white/60 hover:bg-white/10 hover:text-white'
                 }
               `}
               title="AI Assistant"
@@ -173,7 +185,10 @@ export default function Sidebar({
           <div className="text-white/60 text-xs mt-1">
             v{browser.runtime.getManifest().version}
             {syncHash && (
-              <span className="ml-2 px-1.5 py-0.5 bg-green-500/20 text-green-300 rounded" title={`Synced at ${syncHash.time}`}>
+              <span
+                className="ml-2 px-1.5 py-0.5 bg-green-500/20 text-green-300 rounded"
+                title={`Synced at ${syncHash.time}`}
+              >
                 {syncHash.hash}
               </span>
             )}

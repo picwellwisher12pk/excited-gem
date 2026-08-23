@@ -3,9 +3,9 @@ import { faVolumeOff } from '@fortawesome/free-solid-svg-icons/faVolumeOff'
 import { faVolumeMute } from '@fortawesome/free-solid-svg-icons/faVolumeMute'
 import { faVolumeUp } from '@fortawesome/free-solid-svg-icons/faVolumeUp'
 
-const VolumeIcon = (props) => {
+const VolumeIcon = (props: any) => {
   let audioIcon
-  let { audible, mutedInfo } = props
+  const { audible, mutedInfo } = props
   audible && console.log('sound', props)
   if (!audible)
     audioIcon = (

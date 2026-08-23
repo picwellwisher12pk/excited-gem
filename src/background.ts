@@ -1,6 +1,8 @@
 import { getTabs, setBadge, setTabCountInBadge } from './scripts/browserActions'
 import { preferences } from './scripts/defaultPreferences'
 import { extractVideoId, parseIsoDuration } from './utils/youtube'
+import debounce from 'lodash/debounce'
+
 const browser = (typeof window !== 'undefined' ? window.browser : (globalThis as any).browser) || chrome
 
 console.log('DEBUG: Background script loaded')
@@ -365,9 +367,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // ────────────────────────────────────────────────────────────────────────
 })
 
-// Clean up data when a tab is closed
-chrome.tabs.onRemoved.addListener(async (tabId) => {
-
+// Clean up data when tabs are closed (debounced to avoid storage write storms)
+const debouncedCleanupYouTubeInfo = debounce(async () => {
   try {
     const tabs = await chrome.tabs.query({})
     const activeUrls = new Set(tabs.map((t) => t.url).filter(Boolean))
@@ -384,6 +385,10 @@ chrome.tabs.onRemoved.addListener(async (tabId) => {
   } catch (e) {
     console.error('Error cleaning up youtubeVideoInfo', e)
   }
+}, 300)
+
+chrome.tabs.onRemoved.addListener(() => {
+  debouncedCleanupYouTubeInfo()
 })
 
 // Update Action Popup state based on settings

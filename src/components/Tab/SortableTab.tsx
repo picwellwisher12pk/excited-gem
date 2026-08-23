@@ -1,5 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import React from 'react'
 
 interface SortableTabProps {
   tab: { id: number }
@@ -22,8 +23,6 @@ export function SortableTab({ tab, children }: SortableTabProps) {
     opacity: isDragging ? 0.5 : 1,
     cursor: 'grab'
   }
-
-  console.log('🔖 SortableTab rendering tab:', tab.id)
 
   return (
     <div

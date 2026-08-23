@@ -1,4 +1,3 @@
-
 import {
   ChevronDown,
   ChevronRight,
@@ -8,6 +7,7 @@ import {
   MinusCircle
 } from 'lucide-react'
 import { Button, Tooltip } from 'antd'
+import React from 'react'
 
 interface TabGroupHeaderProps {
   id: number

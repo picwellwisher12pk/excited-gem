@@ -48,13 +48,14 @@ const Search: React.FC<SearchProps> = ({
   // We use optional chaining or defaults below just in case.
   const reduxTabs = useSelector((state: any) => state.tabs?.filteredTabs || [])
   const reduxSearch = useSelector(
-    (state: any) => state.search || {
-      searchTerm: '',
-      pinnedSearch: false,
-      audibleSearch: false,
-      searchIn: { title: true, url: true },
-      regex: false
-    }
+    (state: any) =>
+      state.search || {
+        searchTerm: '',
+        pinnedSearch: false,
+        audibleSearch: false,
+        searchIn: { title: true, url: true },
+        regex: false
+      }
   )
 
   const { searchTerm, pinnedSearch, audibleSearch, searchIn, regex } =
@@ -171,9 +172,7 @@ const Search: React.FC<SearchProps> = ({
                   {displayFoundCount + ' found'}
                 </span>
               )}
-              {isRegexActive && (
-                <span className="text-zinc-300 mr-2">/gi</span>
-              )}
+              {isRegexActive && <span className="text-zinc-300 mr-2">/gi</span>}
 
               {/* Extra Suffix for page-specific injects (like "Search in") */}
               {extraSuffix}
@@ -205,10 +204,7 @@ const Search: React.FC<SearchProps> = ({
                     onClick={() => dispatch(togglePinned())}
                   >
                     {pinnedSearch ? (
-                      <Pin
-                        size={16}
-                        className="text-[#0487cf] fill-current"
-                      />
+                      <Pin size={16} className="text-[#0487cf] fill-current" />
                     ) : (
                       <Pin size={16} className="text-[#0487cf]" />
                     )}

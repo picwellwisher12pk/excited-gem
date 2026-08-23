@@ -30,7 +30,8 @@ dist/
 keys.json
 
 # TypeScript
-.tsbuildinfo
+*.tsbuildinfo
+diff.txt
 
 # Editor and System Files
 ._*

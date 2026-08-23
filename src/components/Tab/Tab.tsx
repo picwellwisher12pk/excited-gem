@@ -1,17 +1,20 @@
-import { List, Button, } from 'antd'
+import { List, Button } from 'antd'
 import {
   PlayCircleOutlined,
   PauseCircleOutlined
 } from '@ant-design/icons'
-import React, { useState, useEffect, useRef, } from 'react'
-import parse from 'html-react-parser'
+import React, { useState, useEffect, useRef } from 'react'
 import { controlYouTubeVideo } from '../../services/tabService'
 import { useDispatch, useSelector } from 'react-redux'
 import { Pin, Volume2, VolumeX, X, Moon } from 'lucide-react'
-import { toggleSelectionMode, updateSelectedTabs, selectTabRange } from '../../store/tabSlice'
+import {
+  toggleSelectionMode,
+  updateSelectedTabs,
+  selectTabRange
+} from '../../store/tabSlice'
 import ItemBtn from '../../components/ItemBtn'
 import { TabIcon } from './TabIcon'
-import { markSearchedTerm, } from './helpers'
+import { HighlightedText } from './helpers'
 import { TabContextMenu } from './ContextMenu'
 import { faviconCache } from '../../utils/faviconCache'
 // @ts-ignore
@@ -35,7 +38,7 @@ export interface TabProps {
   id: number
   title: string
   url: string
-  active: boolean // Add active prop
+  active: boolean
   selected: boolean
   pinned: boolean
   discarded: boolean
@@ -53,10 +56,11 @@ export interface TabProps {
   groupColor?: string
   isGrouped?: boolean
   discardTab?: (id: number) => void
-  youtubeInfo?: YouTubeInfo // Added youtubeInfo to TabProps
-  isCompact?: boolean // Add isCompact prop
-  isSelectionMode?: boolean // Add isSelectionMode prop
-  hideUrl?: boolean // Add hideUrl prop
+  youtubeInfo?: YouTubeInfo
+  isCompact?: boolean
+  isSelectionMode?: boolean
+  hideUrl?: boolean
+  style?: React.CSSProperties
 }
 
 interface SearchState {
@@ -92,21 +96,21 @@ export const Tab = React.forwardRef<HTMLDivElement, TabProps>(
       youtubeInfo,
       isCompact = false,
       hideUrl = false,
-      ...props // For dragging props
+      ...props
     },
     ref
   ) => {
-    // Long Press Logic
     const longPressTimer = useRef<any>(null)
+    const dispatch = useDispatch()
+    const { isSelectionMode } = useSelector((state: any) => state.tabs)
 
-    const handlePointerDown = (e: React.PointerEvent) => {
-      if (isSelectionMode || !isCompact) return // Only trigger on compact mode when not yet in selection mode
+    const handlePointerDown = () => {
+      if (isSelectionMode || !isCompact) return
 
-      // Start timer
       longPressTimer.current = setTimeout(() => {
         dispatch(toggleSelectionMode(true))
         dispatch(updateSelectedTabs({ id, selected: true }))
-      }, 500) // 500ms long press
+      }, 500)
     }
 
     const handlePointerUp = () => {
@@ -123,10 +127,6 @@ export const Tab = React.forwardRef<HTMLDivElement, TabProps>(
       }
     }
 
-    // ... existing code ...
-    // console.log('📌 Tab component rendering:', id, title);
-
-    const dispatch = useDispatch()
     const { searchTerm, searchIn } = useSelector<
       { search: SearchState },
       SearchState
@@ -134,7 +134,7 @@ export const Tab = React.forwardRef<HTMLDivElement, TabProps>(
     const youtubePermissionGranted = useSelector(
       (state: any) => state.tabs.youtubePermissionGranted
     )
-    // Helper function to format time in HH:MM:SS or MM:SS
+
     const formatTime = (seconds: number): string => {
       if (isNaN(seconds)) return '0:00'
       const hrs = Math.floor(seconds / 3600)
@@ -147,7 +147,6 @@ export const Tab = React.forwardRef<HTMLDivElement, TabProps>(
     }
 
     const _ref = React.useRef<HTMLDivElement>(null)
-    // Use forwarded ref if available, else local ref
     const mergeRefs = (el: HTMLDivElement) => {
       // @ts-ignore
       _ref.current = el
@@ -160,9 +159,7 @@ export const Tab = React.forwardRef<HTMLDivElement, TabProps>(
 
     const [seekValue, setSeekValue] = useState<number>(0)
     const [isYouTube, setIsYouTube] = useState<boolean>(false)
-    const { isSelectionMode } = useSelector((state: any) => state.tabs)
 
-    // Update seekValue when youtubeInfo changes
     useEffect(() => {
       if (youtubeInfo) {
         setSeekValue(youtubeInfo.percentage)
@@ -204,7 +201,6 @@ export const Tab = React.forwardRef<HTMLDivElement, TabProps>(
           origins: ['https://*.youtube.com/*', 'http://*.youtube.com/*']
         })
         if (granted) {
-          // Permission granted, background script should handle injection
           console.log('YouTube permission granted')
         }
       } catch (error) {
@@ -212,14 +208,16 @@ export const Tab = React.forwardRef<HTMLDivElement, TabProps>(
       }
     }
 
-    // Event handlers
-    const handleSelectedTabsUpdate = React.useCallback((shiftKey: boolean) => {
-      if (shiftKey) {
-        dispatch(selectTabRange(id))
-      } else {
-        dispatch(updateSelectedTabs({ id, selected: !selected }))
-      }
-    }, [dispatch, id, selected])
+    const handleSelectedTabsUpdate = React.useCallback(
+      (shiftKey: boolean) => {
+        if (shiftKey) {
+          dispatch(selectTabRange(id))
+        } else {
+          dispatch(updateSelectedTabs({ id, selected: !selected }))
+        }
+      },
+      [dispatch, id, selected]
+    )
 
     const handleTabClick = React.useCallback(() => {
       chrome.tabs.update(id, { active: true })
@@ -236,17 +234,6 @@ export const Tab = React.forwardRef<HTMLDivElement, TabProps>(
     const handleRemove = React.useCallback(() => {
       remove(id)
     }, [id, remove])
-
-    // Memoized values
-    const markedTitle = React.useMemo(() => {
-      if (!title) return ' '
-      return searchIn.title ? markSearchedTerm(title, searchTerm) : title
-    }, [searchIn.title, title, searchTerm])
-
-    const markedUrl = React.useMemo(() => {
-      if (!url) return ' '
-      return searchIn.url ? markSearchedTerm(url, searchTerm) : url
-    }, [searchIn.url, url, searchTerm])
 
     const cachedFavicon = React.useMemo(() => {
       return faviconCache.getOrSet(url, favIconUrl)
@@ -313,13 +300,19 @@ export const Tab = React.forwardRef<HTMLDivElement, TabProps>(
                   style={{ opacity: discarded || isLoading ? 0.7 : 1 }}
                   title={url}
                 >
-                  {parse(markedTitle)}
+                  <HighlightedText
+                    text={title}
+                    highlight={searchIn.title ? searchTerm : ''}
+                  />
                 </span>
                 {!hideUrl && (
                   <>
                     {/* Mobile: Show URL below title */}
                     <span className="text-xs text-slate-400 truncate w-full text-left sm:hidden block leading-none">
-                      {parse(markedUrl)}
+                      <HighlightedText
+                        text={url}
+                        highlight={searchIn.url ? searchTerm : ''}
+                      />
                     </span>
                     {/* Desktop: Show URL next to title (hidden on mobile) */}
                     <button
@@ -327,7 +320,10 @@ export const Tab = React.forwardRef<HTMLDivElement, TabProps>(
                       title={url}
                       onClick={handleTabClick}
                     >
-                      {parse(markedUrl)}
+                      <HighlightedText
+                        text={url}
+                        highlight={searchIn.url ? searchTerm : ''}
+                      />
                     </button>
                   </>
                 )}

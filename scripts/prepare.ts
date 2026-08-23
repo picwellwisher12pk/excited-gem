@@ -1,8 +1,7 @@
-// generate stub index.html files for dev entry
 import { execSync } from 'child_process'
 import fs from 'fs-extra'
 import chokidar from 'chokidar'
-import { r, port, isDev, } from './utils'
+import { r, port, isDev } from './utils'
 
 /**
  * Stub index.html to use Vite in development

@@ -1,28 +1,61 @@
 import { useCallback } from 'react'
+import React from 'react'
 import TimesIcon from 'react:/src/icons/times.svg'
 import VolumeOffIcon from 'react:/src/icons/volume-off.svg'
 import VolumeSlashIcon from 'react:/src/icons/volume-slash.svg'
 import VolumeIcon from 'react:/src/icons/volume.svg'
-
-import ItemBtn from '../../components/ItemBtn'
+import ItemBtn from '../ItemBtn'
 
 export const iconHeight: number = 16
 
 export const grayIconStyle: object = { height: iconHeight, fill: 'gray' }
 export const blueIconStyle: object = { height: iconHeight, fill: '#0487cf' }
 
-export function markSearchedTerm(value: string, searchTerm: string) {
-  if (!searchTerm) return value
+/**
+ * Pure React Substring Highlighter component without HTML parser overhead.
+ */
+export const HighlightedText: React.FC<{
+  text: string
+  highlight?: string
+  className?: string
+}> = ({ text, highlight, className }) => {
+  if (!text) return null
+  if (!highlight || !highlight.trim()) {
+    return <span className={className}>{text}</span>
+  }
+
   try {
-    const regex: RegExp = new RegExp(searchTerm, 'gi')
-    return value.replace(regex, '<mark>$&</mark>')
-  } catch (e) {
-    console.error('Bad Regular Expressions:', e, searchTerm)
-    return value
+    const escaped = highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const regex = new RegExp(`(${escaped})`, 'gi')
+    const parts = text.split(regex)
+
+    return (
+      <span className={className}>
+        {parts.map((part, i) => {
+          if (regex.test(part)) {
+            return (
+              <mark
+                key={i}
+                className="bg-yellow-200 text-slate-900 rounded-sm px-0.5 font-medium"
+              >
+                {part}
+              </mark>
+            )
+          }
+          return <span key={i}>{part}</span>
+        })}
+      </span>
+    )
+  } catch {
+    return <span className={className}>{text}</span>
   }
 }
 
-export function renderAudioIcon(audible, mutedInfo) {
+export function markSearchedTerm(value: string, searchTerm: string) {
+  return value
+}
+
+export function renderAudioIcon(audible: boolean, mutedInfo: any) {
   if (mutedInfo?.muted) return <VolumeSlashIcon style={grayIconStyle} />
   if (!audible) return <VolumeOffIcon style={grayIconStyle} />
   if (audible) return <VolumeIcon style={blueIconStyle} />
@@ -38,11 +71,14 @@ const renderActionButtons = ({
   removeTab,
   iconPinned,
   audible
-}) => {
-  const handlePinTab = useCallback(() => togglePinTab(id), [id])
-  const handleMuteTab = useCallback(() => toggleMuteTab(id, audible), [id])
-  const handleCloseTab = useCallback(() => closeTab(id), [id])
-  const handleRemove = useCallback(() => removeTab(id), [id])
+}: any) => {
+  const handlePinTab = useCallback(() => togglePinTab(id), [id, togglePinTab])
+  const handleMuteTab = useCallback(
+    () => toggleMuteTab(id, audible),
+    [id, audible, toggleMuteTab]
+  )
+  const handleCloseTab = useCallback(() => closeTab(id), [id, closeTab])
+  const handleRemove = useCallback(() => removeTab(id), [id, removeTab])
 
   return activeTab ? (
     <>
@@ -57,7 +93,6 @@ const renderActionButtons = ({
       </ItemBtn>
     </>
   ) : (
-    //Non-Active Tabs only get a remove button on action bar for now.
     <ItemBtn onClick={handleRemove} />
   )
 }

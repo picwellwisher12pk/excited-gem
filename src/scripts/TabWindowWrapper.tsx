@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react'
 import ContentLoader from 'react-content-loader'
 import { useDispatch, useSelector } from 'react-redux'
@@ -26,12 +25,17 @@ import { Tab } from '../components/Tab/Tab'
 import { GroupHeader } from '../components/Tab/GroupHeader'
 import { TabGroupHeader } from '../components/Tab/TabGroupHeader'
 import { asyncFilterTabs, getCurrentWindow } from './general'
-import { updateFilteredTabs } from '../store/tabSlice'
+import {
+  updateFilteredTabs,
+  selectAllTabs,
+  clearSelectedTabs,
+  toggleSelectionMode
+} from '../store/tabSlice'
 import { setRegex, setSearchIn } from '../store/searchSlice'
+import { batchRemoveTabs } from '../utils/bulkOperations'
 // @ts-ignore
 import { saveSession } from '../components/getsetSessions'
 import { useResponsive } from '../hooks/useResponsive'
-
 
 const MyLoader = ({ width }: { width: number }) => (
   <ContentLoader
@@ -44,7 +48,6 @@ const MyLoader = ({ width }: { width: number }) => (
   >
     {[...Array(10)].map((_, i) => {
       const height = 20
-      const radius = height / 2
       return (
         <g key={i}>
           <rect
@@ -71,7 +74,7 @@ const MyLoader = ({ width }: { width: number }) => (
 
 function useTabOperations() {
   return {
-    moveTab: (itemId: string, dragIndex: number, index: number) => {
+    moveTab: (itemId: string, _dragIndex: number, index: number) => {
       chrome.tabs.move(Number(itemId), { index })
     },
     remove: (itemId: number) => {
@@ -93,7 +96,11 @@ const Row = ({
   index,
   style,
   data
-}: { index: number; style: React.CSSProperties; data: any }) => {
+}: {
+  index: number
+  style: React.CSSProperties
+  data: any
+}) => {
   const {
     displayItems,
     collapsedGroups,
@@ -110,7 +117,7 @@ const Row = ({
     handleSaveTabGroup,
     handleDiscardTabGroup,
     handleCloseTabGroup,
-    handleFocusTabGroup, // Restore handleFocusTabGroup
+    handleFocusTabGroup,
     isCompact,
     isSelectionMode
   } = data
@@ -201,6 +208,8 @@ const Row = ({
         activeTab={true}
         selected={selectedTabs.includes(item.id)}
         tabActionButtons={tabActionButtonsSetting}
+        isCompact={isCompact}
+        isSelectionMode={isSelectionMode}
         {...tabOperations}
       />
     </div>
@@ -211,7 +220,7 @@ function TabList() {
   const dispatch = useDispatch()
   const { tabs, filteredTabs, selectedTabs, selectedWindow, isSelectionMode } =
     useSelector((state: RootState) => state.tabs)
-  const { isCompact } = useResponsive() // Add useResponsive
+  const { isCompact } = useResponsive()
   const searchState = useSelector((state: RootState) => state.search)
   const tabOperations = useTabOperations()
   const [isLoading, setIsLoading] = React.useState(false)
@@ -245,7 +254,6 @@ function TabList() {
   const toggleGroup = (windowId: number | string) => {
     setCollapsedGroups((prev) => {
       const next = new Set(prev)
-      // @ts-ignore
       if (next.has(windowId)) next.delete(windowId)
       else next.add(windowId)
       return next
@@ -357,10 +365,8 @@ function TabList() {
           setGroupedTabsSetting(changes.groupedTabs.newValue)
         if (changes.tabActionButtons)
           setTabActionButtonsSetting(changes.tabActionButtons.newValue)
-        if (changes.regex)
-          dispatch(setRegex(changes.regex.newValue))
-        if (changes.searchIn)
-          dispatch(setSearchIn(changes.searchIn.newValue))
+        if (changes.regex) dispatch(setRegex(changes.regex.newValue))
+        if (changes.searchIn) dispatch(setSearchIn(changes.searchIn.newValue))
       }
     }
     chrome.storage.onChanged.addListener(handleStorageChange)
@@ -383,7 +389,46 @@ function TabList() {
       chrome.tabGroups.onCreated.removeListener(onGroupUpdated)
       chrome.tabGroups.onRemoved.removeListener(onGroupUpdated)
     }
-  }, [])
+  }, [dispatch])
+
+  // Global Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      if (
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'TEXTAREA' ||
+        target?.isContentEditable
+      ) {
+        if (e.key === 'Escape') {
+          target.blur()
+        }
+        return
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
+        e.preventDefault()
+        dispatch(toggleSelectionMode(true))
+        dispatch(selectAllTabs())
+      } else if (e.key === 'Escape') {
+        dispatch(clearSelectedTabs())
+        dispatch(toggleSelectionMode(false))
+      } else if (
+        (e.key === 'Delete' || e.key === 'Backspace') &&
+        selectedTabs.length > 0
+      ) {
+        e.preventDefault()
+        if (confirm(`Close ${selectedTabs.length} selected tabs?`)) {
+          batchRemoveTabs(selectedTabs)
+          dispatch(clearSelectedTabs())
+          dispatch(toggleSelectionMode(false))
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [dispatch, selectedTabs])
 
   const displayItems = React.useMemo(() => {
     // 1. Filter tabs based on selectedWindow
@@ -444,8 +489,6 @@ function TabList() {
       const currentGroupId =
         tab.groupId && tab.groupId !== -1 ? tab.groupId : -1
 
-      // Check if we need to insert a group header
-      // We insert if the group ID changed OR if we just switched windows (even if group ID happens to be same integer, which is unlikely across windows but safe to check)
       if (
         currentGroupId !== lastGroupId ||
         (showWindowHeader && tab.windowId !== lastWindowId)
@@ -495,7 +538,6 @@ function TabList() {
     const filterAndUpdate = async () => {
       try {
         setIsLoading(true)
-        console.log('🔄 Starting filter with tabs:', tabs.length)
         const filtered = await asyncFilterTabs(
           {
             searchTerm: searchState.searchTerm,
@@ -509,16 +551,9 @@ function TabList() {
           },
           tabs
         )
-        console.log(
-          '🔍 Filtered tabs result:',
-          filtered?.length,
-          'Original tabs:',
-          tabs.length
-        )
         dispatch(updateFilteredTabs(filtered || tabs))
       } catch (error) {
         console.error('❌ Error filtering tabs:', error)
-        // Fallback to showing all tabs if filter fails
         dispatch(updateFilteredTabs(tabs))
       } finally {
         setIsLoading(false)
@@ -532,13 +567,6 @@ function TabList() {
     }
   }, [searchState, tabs, dispatch])
 
-  console.log(
-    '📋 TabList render - filteredTabs:',
-    filteredTabs,
-    'length:',
-    filteredTabs?.length
-  )
-
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
@@ -546,30 +574,21 @@ function TabList() {
     const activeId = active.id
     const overId = over.id
 
-    // Find the items in displayItems to get their metadata (windowId, etc.)
     const activeItem = displayItems.find((item) => item.id === activeId)
     const overItem = displayItems.find((item) => item.id === overId)
 
     if (!activeItem || !overItem) return
 
-    // If dragging a header, do nothing for now (or implement window reordering later)
     if (activeItem.type === 'header' || activeItem.type === 'tab-group-header')
       return
 
-    // Determine target window and index
     let targetWindowId = overItem.windowId
     let targetIndex = -1
 
     if (overItem.type === 'header') {
-      // Dropped on a window header -> move to start of that window
       targetWindowId = overItem.windowId
       targetIndex = 0
     } else if (overItem.type === 'tab-group-header') {
-      // Dropped on a group header -> move to start of that group
-      // For simplicity, we'll just move to the window of that group for now,
-      // finding the exact index inside a group requires more logic about group ranges.
-      // Let's just treat it as moving to that window.
-      // Ideally we find the first tab in that group and insert before it.
       const firstTabInGroup = filteredTabs.find(
         (t: any) => t.groupId === overItem.groupId
       )
@@ -577,41 +596,27 @@ function TabList() {
         targetWindowId = firstTabInGroup.windowId
         targetIndex = firstTabInGroup.index
       } else {
-        // Empty group?
-        targetWindowId = overItem.windowId // Fallback
+        targetWindowId = overItem.windowId
       }
     } else {
-      // Dropped on another tab
       targetWindowId = overItem.windowId
       targetIndex = overItem.index
     }
 
-    // Optimistic UI Update (Local State)
     const oldIndex = filteredTabs.findIndex((tab: any) => tab.id === activeId)
     const newIndex = filteredTabs.findIndex((tab: any) => tab.id === overId)
 
-    // Note: arrayMove works for reordering within the same list.
-    // For cross-window, we might need to remove from one place and insert in another if we want full optimistic UI.
-    // However, since we trigger chrome.tabs.move, the extension will receive an onMoved/onDetached/onAttached event
-    // which will trigger a re-fetch/re-render.
-    // So strictly speaking, we might not *need* to update local state if the chrome event is fast enough.
-    // But for smoothness, let's try to update local state if it's the same window.
     if (activeItem.windowId === targetWindowId) {
       const newTabs = arrayMove(filteredTabs, oldIndex, newIndex)
       dispatch(updateFilteredTabs(newTabs))
     }
 
-    // Perform Browser Action
     if (activeItem.windowId !== targetWindowId) {
-      // Moving to a different window
       chrome.tabs.move(Number(activeId), {
         windowId: targetWindowId,
         index: targetIndex
       })
-      // Also need to update the windowId in our local state to prevent jumpiness before refetch?
-      // Actually, let's rely on the chrome event listener to refresh the list.
     } else {
-      // Same window reorder
       chrome.tabs.move(Number(activeId), { index: targetIndex })
     }
   }
@@ -638,8 +643,8 @@ function TabList() {
       handleDiscardTabGroup,
       handleCloseTabGroup,
       handleFocusTabGroup,
-      isCompact, // Add isCompact
-      isSelectionMode // Add isSelectionMode
+      isCompact,
+      isSelectionMode
     }),
     [
       displayItems,
@@ -670,7 +675,7 @@ function TabList() {
                 ref={listRef}
                 height={height}
                 itemCount={displayItems?.length || 0}
-                itemSize={50} // Approximate height of a tab item
+                itemSize={50}
                 width={width}
                 itemData={itemData}
               >

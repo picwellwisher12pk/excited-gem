@@ -1,7 +1,17 @@
-import { Button, Checkbox, List, Modal, Typography, Space, Tooltip } from 'antd'
+import {
+  Button,
+  Checkbox,
+  List,
+  Modal,
+  Typography,
+  Space,
+  Tooltip,
+  Progress
+} from 'antd'
 import React, { useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { ExternalLink } from 'lucide-react'
+import { batchRemoveTabs } from '../../utils/bulkOperations'
 
 const { Text, Title } = Typography
 
@@ -16,15 +26,22 @@ export const DuplicateTabsModal: React.FC<DuplicateTabsModalProps> = ({
 }) => {
   const { tabs } = useSelector((state: any) => state.tabs)
   const [selectedTabIds, setSelectedTabIds] = useState<number[]>([])
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [progress, setProgress] = useState<{ current: number; total: number }>({
+    current: 0,
+    total: 0
+  })
 
   // Group tabs by URL
   const duplicates = useMemo(() => {
     const urlGroups: Record<string, any[]> = {}
     tabs.forEach((tab: any) => {
-      if (!urlGroups[tab.url]) {
-        urlGroups[tab.url] = []
+      if (tab?.url) {
+        if (!urlGroups[tab.url]) {
+          urlGroups[tab.url] = []
+        }
+        urlGroups[tab.url].push(tab)
       }
-      urlGroups[tab.url].push(tab)
     })
 
     // Filter only those with > 1 occurrence
@@ -34,23 +51,32 @@ export const DuplicateTabsModal: React.FC<DuplicateTabsModalProps> = ({
   }, [tabs])
 
   const handleCloseSelected = async () => {
-    if (selectedTabIds.length === 0) return
-    await chrome.tabs.remove(selectedTabIds)
-    setSelectedTabIds([])
-    // The tabs list will update automatically via Redux/listeners
+    if (selectedTabIds.length === 0 || isProcessing) return
+    try {
+      setIsProcessing(true)
+      setProgress({ current: 0, total: selectedTabIds.length })
+      await batchRemoveTabs(selectedTabIds, (current, total) => {
+        setProgress({ current, total })
+      })
+      setSelectedTabIds([])
+    } catch (error) {
+      console.error('Failed to close duplicate tabs:', error)
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   const handleSelectAllDuplicates = () => {
-    // Select all duplicates except the first one of each group (to keep one)
+    if (isProcessing) return
     const idsToSelect: number[] = []
     duplicates.forEach(({ tabs }) => {
-      // Skip the first one, select the rest
       tabs.slice(1).forEach((tab) => idsToSelect.push(tab.id))
     })
     setSelectedTabIds(idsToSelect)
   }
 
   const handleSelectAll = () => {
+    if (isProcessing) return
     const idsToSelect: number[] = []
     duplicates.forEach(({ tabs }) => {
       tabs.forEach((tab) => idsToSelect.push(tab.id))
@@ -59,10 +85,16 @@ export const DuplicateTabsModal: React.FC<DuplicateTabsModalProps> = ({
   }
 
   const toggleSelection = (id: number) => {
+    if (isProcessing) return
     setSelectedTabIds((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     )
   }
+
+  const progressPercent =
+    progress.total > 0
+      ? Math.round((progress.current / progress.total) * 100)
+      : 0
 
   return (
     <Modal
@@ -70,36 +102,62 @@ export const DuplicateTabsModal: React.FC<DuplicateTabsModalProps> = ({
         <Space>
           <Title level={4} style={{ margin: 0 }}>
             Duplicate Tabs
-          </Title>{' '}
+          </Title>
           <Text type="secondary">({duplicates.length} groups found)</Text>
         </Space>
       }
       open={visible}
-      onCancel={onClose}
+      onCancel={() => {
+        if (!isProcessing) onClose()
+      }}
       width={800}
       footer={
-        <div className="flex justify-end gap-2">
-          <Button key="close" onClick={onClose}>
-            Done
-          </Button>
-          <Button key="keep-one" onClick={handleSelectAllDuplicates}>
-            Select All Duplicates (Keep 1st)
-          </Button>
-          <Button key="select-all" onClick={handleSelectAll}>
-            Select All
-          </Button>
-          <Button
-            key="remove"
-            type="primary"
-            danger
-            disabled={selectedTabIds.length === 0}
-            onClick={handleCloseSelected}
-          >
-            Close Selected ({selectedTabIds.length})
-          </Button>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="w-full sm:w-auto text-left">
+            {isProcessing && (
+              <span className="text-xs text-blue-600 font-medium">
+                Closing {progress.current} of {progress.total} tabs...
+              </span>
+            )}
+          </div>
+          <div className="flex justify-end gap-2 w-full sm:w-auto">
+            <Button key="close" onClick={onClose} disabled={isProcessing}>
+              Done
+            </Button>
+            <Button
+              key="keep-one"
+              onClick={handleSelectAllDuplicates}
+              disabled={isProcessing}
+            >
+              Select Duplicates (Keep 1st)
+            </Button>
+            <Button
+              key="select-all"
+              onClick={handleSelectAll}
+              disabled={isProcessing}
+            >
+              Select All
+            </Button>
+            <Button
+              key="remove"
+              type="primary"
+              danger
+              loading={isProcessing}
+              disabled={selectedTabIds.length === 0}
+              onClick={handleCloseSelected}
+            >
+              Close Selected ({selectedTabIds.length})
+            </Button>
+          </div>
         </div>
       }
     >
+      {isProcessing && (
+        <div className="mb-4">
+          <Progress percent={progressPercent} status="active" />
+        </div>
+      )}
+
       {duplicates.length === 0 ? (
         <div className="text-center py-10 text-gray-500">
           No duplicate tabs found.
@@ -126,6 +184,7 @@ export const DuplicateTabsModal: React.FC<DuplicateTabsModalProps> = ({
                       <div className="flex items-center gap-3 overflow-hidden">
                         <Checkbox
                           checked={selectedTabIds.includes(tab.id)}
+                          disabled={isProcessing}
                           onChange={() => toggleSelection(tab.id)}
                         />
                         {tab.favIconUrl && (
@@ -148,6 +207,7 @@ export const DuplicateTabsModal: React.FC<DuplicateTabsModalProps> = ({
                           <Button
                             type="text"
                             size="small"
+                            disabled={isProcessing}
                             icon={<ExternalLink size={12} />}
                             onClick={() => {
                               chrome.windows.update(tab.windowId, {

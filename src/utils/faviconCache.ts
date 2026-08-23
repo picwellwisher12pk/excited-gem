@@ -1,3 +1,12 @@
+/**
+ * Singleton bounded LRU Favicon Cache by domain.
+ * Ensures that all tabs belonging to the same domain (e.g. YouTube, GitHub) share a single cached favicon.
+ */
+
+import debounce from 'lodash/debounce'
+
+const MAX_CACHE_SIZE = 500
+
 export class FaviconCache {
   private static instance: FaviconCache
   private cache: Map<string, string>
@@ -28,43 +37,78 @@ export class FaviconCache {
     }
   }
 
-  private saveToStorage() {
+  private debouncedSaveToStorage = debounce(() => {
     try {
       const obj = Object.fromEntries(this.cache)
       sessionStorage.setItem('favicon_cache', JSON.stringify(obj))
     } catch (e) {
       console.error('Failed to save favicon cache', e)
     }
+  }, 500)
+
+  public extractDomain(url: string): string | null {
+    try {
+      if (!url) return null
+      const parsed = new URL(url)
+      if (
+        parsed.protocol.startsWith('chrome') ||
+        parsed.protocol.startsWith('edge') ||
+        parsed.protocol.startsWith('about')
+      ) {
+        return parsed.protocol.replace(':', '')
+      }
+      return parsed.hostname.toLowerCase()
+    } catch {
+      return null
+    }
   }
 
   public get(url: string): string | undefined {
-    try {
-      const domain = new URL(url).hostname
-      return this.cache.get(domain)
-    } catch {
-      return undefined
+    const domain = this.extractDomain(url)
+    if (!domain) return undefined
+
+    if (this.cache.has(domain)) {
+      // Refresh LRU position
+      const val = this.cache.get(domain)!
+      this.cache.delete(domain)
+      this.cache.set(domain, val)
+      return val
     }
+    return undefined
   }
 
   public set(url: string, faviconUrl: string) {
-    try {
-      const domain = new URL(url).hostname
-      if (domain && faviconUrl && !this.cache.has(domain)) {
-        this.cache.set(domain, faviconUrl)
-        this.saveToStorage()
-      }
-    } catch {
-      // Ignore invalid URLs
+    const domain = this.extractDomain(url)
+    if (!domain || !faviconUrl) return
+
+    // Maintain bounded LRU capacity
+    if (this.cache.size >= MAX_CACHE_SIZE && !this.cache.has(domain)) {
+      const oldestKey = this.cache.keys().next().value
+      if (oldestKey) this.cache.delete(oldestKey)
     }
+
+    this.cache.delete(domain)
+    this.cache.set(domain, faviconUrl)
+    this.debouncedSaveToStorage()
   }
 
-  public getOrSet(url: string, faviconUrl: string): string {
+  public getOrSet(url: string, faviconUrl?: string): string {
     const cached = this.get(url)
     if (cached) {
       return cached
     }
-    this.set(url, faviconUrl)
-    return faviconUrl
+
+    const domain = this.extractDomain(url)
+    const finalFavicon =
+      faviconUrl ||
+      (domain && !domain.startsWith('chrome')
+        ? `https://www.google.com/s2/favicons?domain=${domain}&sz=32`
+        : '')
+
+    if (finalFavicon) {
+      this.set(url, finalFavicon)
+    }
+    return finalFavicon
   }
 }
 

@@ -1,16 +1,22 @@
 import { Badge } from 'antd'
-import { memo } from 'react'
+import React, { memo } from 'react'
 import { useSelector } from 'react-redux'
 
-const Navigation = ({ tabCount }) => {
-  const { selectedWindow, tabs } = useSelector((state) => state.tabs)
+interface NavigationProps {
+  tabCount?: number
+}
+
+const Navigation: React.FC<NavigationProps> = ({ tabCount = 0 }) => {
+  const { selectedWindow, tabs } = useSelector((state: any) => state.tabs)
 
   // Show current window tab count if 'current' is selected, otherwise show total filtered tabs
-  const displayTabCount = selectedWindow === 'current'
-    ? tabs.filter(tab => tab.windowId === chrome.windows?.WINDOW_ID_CURRENT).length
-    : tabCount
+  const displayTabCount =
+    selectedWindow === 'current'
+      ? tabs.filter(
+          (tab: any) => tab.windowId === chrome.windows?.WINDOW_ID_CURRENT
+        ).length
+      : tabCount
 
-  console.log('navigation', { tabCount, displayTabCount, selectedWindow })
   return (
     <div className="flex-none hidden sm:block" id="navbarNav">
       <div className="flex justify-start w-auto mb-0">
@@ -19,12 +25,12 @@ const Navigation = ({ tabCount }) => {
             overflowCount={999}
             offset={[5, -3]}
             count={displayTabCount}
-            color={displayTabCount > 50 ? 'orange' : 'green '}
+            color={displayTabCount > 50 ? 'orange' : 'green'}
             size="small"
             className="!border-0"
           >
             <a
-              className=" text-white font-weight-bold"
+              className="text-white font-semibold hover:text-white"
               href="/tabs/home.html"
               id="go-to-tabs"
             >

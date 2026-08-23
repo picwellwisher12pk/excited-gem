@@ -1,5 +1,3 @@
-// import "react-devtools";
-
 import { Provider } from 'react-redux'
 import ActiveTabs from '../scripts/ActiveTabs'
 import store from '../store/store'
@@ -24,8 +22,6 @@ function Home() {
           }}
         >
           <ActiveTabs />
-          {/* <PersistGate loading={null} persistor={persistor}>
-        </PersistGate> */}
         </ConfigProvider>
       </Provider>
     </StrictMode>

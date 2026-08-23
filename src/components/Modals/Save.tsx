@@ -10,14 +10,13 @@ import {
 } from 'antd'
 import { useState } from 'react'
 import { useSelector } from 'react-redux'
-
 import { saveSession } from '../../components/getsetSessions'
 
 const { Option } = Select
 const { Text } = Typography
 
 const children = []
-export const SaveModal = (props) => {
+export const SaveModal = (props: any) => {
   const { tabs } = useSelector((state: any) => state.tabs)
   const [loading, setLoading] = useState(false)
   const [title, setTitle] = useState('')
@@ -35,15 +34,15 @@ export const SaveModal = (props) => {
     setLoading(true)
     try {
       const tabsToSave = props.selectedTabs
-        .map((id) => {
-          const tab = tabs.find((t) => t.id === id)
+        .map((id: number) => {
+          const tab = tabs.find((t: any) => t.id === id)
           return tab
             ? {
-              url: tab.url,
-              title: tab.title,
-              windowId: tab.windowId || 0,
-              favIconUrl: tab.favIconUrl
-            }
+                url: tab.url,
+                title: tab.title,
+                windowId: tab.windowId || 0,
+                favIconUrl: tab.favIconUrl
+              }
             : null
         })
         .filter(Boolean)
@@ -58,7 +57,7 @@ export const SaveModal = (props) => {
   }
 
   const selectedTabsData = props.selectedTabs
-    .map((id) => tabs.find((t) => t.id === id))
+    .map((id: number) => tabs.find((t: any) => t.id === id))
     .filter(Boolean)
 
   return (

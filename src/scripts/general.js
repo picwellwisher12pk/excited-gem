@@ -1,4 +1,10 @@
 import { saveTabs, saveURLs } from '../components/getsetSessions'
+import {
+  batchRemoveTabs,
+  batchMoveTabs,
+  batchUpdateTabs,
+  batchDiscardTabs
+} from '../utils/bulkOperations'
 
 export const HOMEPAGEURL = chrome.runtime.getURL('/tabs/home.html')
 let refinedTabs
@@ -66,37 +72,9 @@ export function saveData(data, message = 'Data saved') {
         title: 'Data saved',
         message: message
       },
-      () =>
-      // notificationId
-      { }
+      () => {}
     )
   })
-}
-
-// Warn if overriding existing method
-if (Array.prototype.equals)
-  console.warn(
-    "Overriding existing Array.prototype.equals. Possible causes: New API defines the method, there's a framework conflict or you've got double inclusions in your code."
-  )
-// attach the .equals method to Array's prototype to call it on any array
-Array.prototype.equals = (array) => {
-  // if the other array is a falsy value, return
-  if (!array) return false
-
-  // compare lengths - can save a lot of time
-  if (this.length !== array.length) return false
-
-  for (var i = 0, l = this.length; i < l; i++) {
-    // Check if we have nested arrays
-    if (this[i] instanceof Array && array[i] instanceof Array) {
-      // recurse into the nested arrays
-      if (!this[i].equals(array[i])) return false
-    } else if (this[i] !== array[i]) {
-      // Warning - two different object instances will never be equal: {x:20} != {x:20}
-      return false
-    }
-  }
-  return true
 }
 
 export function arraysAreIdentical(arr1, arr2) {
@@ -109,19 +87,6 @@ export function arraysAreIdentical(arr1, arr2) {
   return true
 }
 
-//Takes an array of object and make an plain array out of for a given property
-// export function objectToArray(array, property) {
-//     let newArray = [];
-//     for (let i = 0; i < array.length; i++) {
-//         newArray.push(array[i][property]);
-//     }
-//     return newArray;
-// }
-// //Takes an array of object and make an plain array out of for a given property
-// export function propertyToArray(array, property) {
-//     objectToArray(array, property);
-// }
-//Takes an array of object and make an plain array out of for a given property
 export function propertyToArray(array, property) {
   let newArray = []
   for (let i = 0; i < array.length; i++) {
@@ -130,27 +95,10 @@ export function propertyToArray(array, property) {
   return newArray
 }
 
-// Hide method from for-in loops
-Object.defineProperty(Array.prototype, 'equals', { enumerable: false })
-
-// module.exports = general;
 export function hasClass2(elem, className) {
   return elem.className.split(' ').indexOf(className) > -1
 }
 
-// export function getCurrentURL() {
-//   let currentURL = '';
-//   currentURL = window.location.pathname;
-//   if (currentURL.indexOf('session') > -1) {
-//     return 'sessions';
-//   }
-//   if (currentURL.indexOf('options') > -1) {
-//     return 'options';
-//   }
-//   if (currentURL.indexOf('tabs') > -1) {
-//     return 'tabs';
-//   }
-// }
 export function setValue(object, path, value) {
   var a = path.split('.')
   var o = object
@@ -192,21 +140,6 @@ export function log() {
   }
 }
 
-// export function log(){
-//   log.history = log.history || [];   // store logs to an array for reference
-//   log.history.push(arguments);
-//   if(console){
-//     log( Array.prototype.slice.call(arguments) );
-//   }
-// }
-
-// export function highlightCurrentNavLink() {
-//   var currentPage = getCurrentURL();
-//   if (currentPage == 'tabs') $('ul.nav.navbar-nav li.tabs').toggleClass('active');
-//   if (currentPage == 'options') $('ul.nav.navbar-nav li.options').toggleClass('active');
-//   if (currentPage == 'sessions') $('ul.nav.navbar-nav li.sessions').toggleClass('active');
-// }
-
 export function timeConverter(UNIX_timestamp) {
   var date = new Date(UNIX_timestamp)
   var options = {
@@ -220,9 +153,6 @@ export function timeConverter(UNIX_timestamp) {
   }
   return date.toLocaleDateString('en-US', options)
 }
-
-// Hide method from for-in loops
-Object.defineProperty(Array.prototype, 'equals', { enumerable: false })
 
 function quicksort(sortby, array) {
   log('quicksort array', array)
@@ -271,247 +201,109 @@ export function sortTabs(sortby, tabs) {
   })
 }
 
-/*function runQuery(query){
-  let query = 'table#searchResult tbody td';
-  chrome.runtime.sendMessage(query);
-  return query;
-}*/
 export function santizeTabs(tabs, ignoredUrlPatterns) {
   refinedTabs = tabs.filter((tab) => {
-    ignoredUrlPatterns
     let url = tab.url
     let pattern = new RegExp(ignoredUrlPatterns.join('|'), 'i')
-    // log(url,pattern,matched);
     return url.match(pattern) == null
   })
   return refinedTabs
 }
 
-// state = { ...props };
-// state = {
-//   selectedTabs: [],
-//   allMuted: false,
-//   allSelected: false,
-//   allPinned: false,
-// };
-
-// closeTab = closeTab.bind(this);
-// toggleMute = toggleMute.bind(this);
-// isAllMuted = isAllMuted.bind(this);
-// onDragEnd = onDragEnd.bind(this);
-// updateSelectedTabs = updateSelectedTabs.bind(this);
-// setPreferences = setPreferences.bind(this);
-// processSelectedTabs = processSelectedTabs.bind(this);
-// togglePin = togglePin.bind(this);
-
-// componentDidMount(a, b) {
-//   setState({ allMuted: isAllMuted() });
-//   setState({ allPinned: isAllPinned() });
-//   setState({ allSelected: isAllSelected() });
-//   setState({ preferences: props.preferences });
-// }
-
-//Creating SelectedTabs status
-// updateSelectedTabs(id, selected) {
-//   let tempArray = props.selectedTabs;
-//   !selected ? tempArray.splice(tempArray.indexOf(id), 1) : tempArray.push(id);
-//   tempArray.length > 0
-//     ? addClass(document.querySelector('#selection-action'), 'selection-active')
-//     : removeClass(document.querySelector('#selection-action'), 'selection-active');
-//   props.updateSelectedTabsAction(tempArray);
-// }
-// isAllSelected() {
-//   for (let tab of props.tabs) {
-//     if (!tab.checked) return false;
-//   }
-//   return true;
-// }
-//Close
-
-//Pinned
-// const pinTab = (tabId) => {
-//   console.info("pinning");
-//   chrome.tabs.update(tabId, {pinned: true});
-//   getTabs().then(
-//     (tabs) => {
-//       setState({tabs});
-//     },
-//     (error) => log(`Error: ${error}`)
-//   );
-// };
-// const unpinTab = (tabId) => {
-//   console.info("unpinning");
-//   chrome.tabs.update(tabId, {pinned: false});
-//   getTabs().then(
-//     (tabs) => {
-//       setState({tabs});
-//     },
-//     (error) => log(`Error: ${error}`)
-//   );
-// };
-// const togglePin = (tabId) => {
-//   let tabTemp = props.tabs.filter((tab) => tab.id === tabId);
-//   tabTemp[0].pinned ? unpinTab(tabId) : pinTab(tabId);
-// };
-// isAllPinned() {
-//   for (let tab of props.tabs) {
-//     if (!tab.pinned) return false;
-//   }
-//   return true;
-// }
-//Muted or Not
-// muteTab(id) {
-//   chrome.tabs.update(parseInt(id), { muted: true });
-// }
-// unmuteTab(id) {
-//   chrome.tabs.update(parseInt(id), { muted: false });
-// }
-// const toggleMute = (id) => {
-//   chrome.tabs.get(id).then((tab) => {
-//     chrome.tabs.update(parseInt(id), {muted: !tab.mutedInfo.muted});
-//   });
-//   props.updateActiveTabs();
-// };
-// isAllMuted() {
-//   // const tabs = props.tabs.then(tabs => tabs);
-//   for (let tab of props.tabs) {
-//     if (!tab.mutedInfo.muted) return false;
-//   }
-//   return true;
-// }
-export function processTabs(action, selection, state, setState) {
-  console.log(
-    '🚀 ~ file: general.js ~ line 377 ~ processTabs ~ action, selection, state, setState',
-    action,
-    selection,
-    state,
-    setState
-  )
-
+export async function processTabs(action, selection, state, setState) {
   const selectedTabs = {}
   state
-    .filter((tab) => selection.includes(tab.id))
+    ?.filter((tab) => selection.includes(tab.id))
     .forEach((tab) => {
       selectedTabs[tab.id] = tab
     })
+
+  const numericIds = selection.map(Number)
+
   switch (action) {
-    case 'closeSelected':
+    case 'closeSelected': {
       let message = 'Are you sure you want to close selected tabs'
-      //State is Tabs here
-      selection.length === state.length &&
-        (message =
-          'Are you sure you want to close all the tabs? This will also close this window.')
+      if (state && selection.length === state.length) {
+        message =
+          'Are you sure you want to close all the tabs? This will also close this window.'
+      }
       const userPermission = confirm(message)
       if (!userPermission) return false
-      chrome.tabs.remove(selection)
-      setState()
+      await batchRemoveTabs(numericIds)
+      if (typeof setState === 'function') setState()
       break
-    case 'toNewWindow':
-      let targetWindow = chrome.windows.create()
-      targetWindow.then((windowInfo) => {
-        chrome.tabs.move(selection, { windowId: windowInfo.id, index: 0 })
+    }
+    case 'toNewWindow': {
+      if (numericIds.length === 0) break
+      const firstTab = numericIds[0]
+      const otherTabs = numericIds.slice(1)
+      const windowInfo = await chrome.windows.create({
+        tabId: firstTab,
+        focused: true
       })
+      if (otherTabs.length > 0 && windowInfo?.id) {
+        await batchMoveTabs(otherTabs, { windowId: windowInfo.id, index: -1 })
+      }
       break
+    }
     case 'toSession':
       saveTabs(
-        selection.map((selectedTab) =>
-          state.tabs.find((o) => selectedTab === o.id)
-        )
+        selection
+          .map(
+            (selectedTab) =>
+              state.tabs?.find((o) => selectedTab === o.id) ||
+              state.find?.((o) => selectedTab === o.id)
+          )
+          .filter(Boolean)
       )
       break
     case 'save':
-      console.log(selection, selectedTab)
       saveURLs(
-        selection.map((selectedTab) =>
-          state.tabs.find((o) => selectedTab === o.id)
-        )
+        selection
+          .map(
+            (selectedTab) =>
+              state.tabs?.find((o) => selectedTab === o.id) ||
+              state.find?.((o) => selectedTab === o.id)
+          )
+          .filter(Boolean)
       )
       break
     case 'pinSelected':
-      for (let tabId of selection)
-        chrome.tabs.update(parseInt(tabId), { pinned: true })
+      await batchUpdateTabs(numericIds, { pinned: true })
       break
     case 'unpinSelected':
-      for (let tabId of selection)
-        chrome.tabs.update(parseInt(tabId), { pinned: false })
+      await batchUpdateTabs(numericIds, { pinned: false })
       break
-    case 'togglePinSelected':
-      for (let tabId of selection)
-        chrome.tabs.update(parseInt(tabId), {
-          pinned: !selectedTabs[tabId].pinned ? true : false
-        })
+    case 'togglePinSelected': {
+      const toPin = numericIds.filter((id) => !selectedTabs[id]?.pinned)
+      const toUnpin = numericIds.filter((id) => selectedTabs[id]?.pinned)
+      if (toPin.length > 0) await batchUpdateTabs(toPin, { pinned: true })
+      if (toUnpin.length > 0) await batchUpdateTabs(toUnpin, { pinned: false })
       break
-
-    //Mute
+    }
     case 'muteSelected':
-      for (let tabId of selection)
-        chrome.tabs.update(parseInt(tabId), { muted: true })
+      await batchUpdateTabs(numericIds, { muted: true })
       break
     case 'unmuteSelected':
-      for (let tabId of selection)
-        chrome.tabs.update(parseInt(tabId), { muted: false })
+      await batchUpdateTabs(numericIds, { muted: false })
       break
-    case 'toggleMuteSelected':
-      for (let tabId of selection)
-        chrome.tabs.update(parseInt(tabId), {
-          muted: !selectedTabs[tabId].mutedInfo.muted ? true : false
-        })
+    case 'toggleMuteSelected': {
+      const toMute = numericIds.filter(
+        (id) => !selectedTabs[id]?.mutedInfo?.muted
+      )
+      const toUnmute = numericIds.filter(
+        (id) => selectedTabs[id]?.mutedInfo?.muted
+      )
+      if (toMute.length > 0) await batchUpdateTabs(toMute, { muted: true })
+      if (toUnmute.length > 0) await batchUpdateTabs(toUnmute, { muted: false })
       break
-
-    // Discard
+    }
     case 'discardSelected':
-      for (let tabId of selection) chrome.tabs.discard(parseInt(tabId))
-      break
-
-    //Selection
-    case 'selectAll':
-      setState({ selectedTabs: filterTabs().map((tab) => tab.id) })
-      addClass(
-        document.querySelectorAll('#selection-action'),
-        'selection-active'
-      )
-      break
-    case 'selectNone':
-      setState({ selectedTabs: [] })
-      removeClass(
-        document.querySelectorAll('#selection-action'),
-        'selection-active'
-      )
-      break
-    case 'invertSelection':
-      let inverted = props.tabs
-        .filter((tab) => !props.selectedTabs.includes(tab.id))
-        .map((tab) => tab.id)
-      setState({ selectedTabs: inverted })
+      await batchDiscardTabs(numericIds)
       break
   }
 }
 
-// setPreferences(prefSection, key, value) {
-//   chrome.storage.local.get('preferences').then(result => {
-//     let jsonObj = result;
-//     jsonObj['preferences'][prefSection][key] = value;
-//     chrome.storage.local.set(jsonObj).then(() => {
-//       chrome.notifications.create(
-//         'reminder',
-//         {
-//           type: 'basic',
-//           iconUrl: '../images/logo.png',
-//           title: 'Settings Saved',
-//           message: 'Search settings updated',
-//         },
-//         function(notificationId) {}
-//       );
-//     });
-//   });
-// }
-
-/**
- * Given a search term, audible search, pinned search, and search in, return a
- * filtered list of tabs
- * @param tabs - The array of tabs to filter.
- * @returns A promise that resolves to an array of filtered tabs.
- */
 export const asyncFilterTabs = async (
   { searchTerm, audibleSearch, pinnedSearch, searchIn },
   { ignoreCase, regex },
@@ -531,12 +323,6 @@ export const asyncFilterTabs = async (
   })
 }
 
-/**
- * If the search term is empty, return all tabs. If the search term is not empty,
- * filter the tabs by whether they match the search term in the title or the URL
- * @param tabs - The list of tabs to filter.
- * @returns The filtered tabs.
- */
 export const filterTabs = (
   { searchTerm, audibleSearch, pinnedSearch, searchIn },
   { ignoreCase, regex },
@@ -546,8 +332,6 @@ export const filterTabs = (
     const isAudible = audibleSearch ? audible === true : true
     const isPinned = pinnedSearch ? pinned === true : true
     if (regex) {
-      /* If the search term is found in the title or the URL, and the site is
-      audible and pinned, return true. */
       try {
         let regexTest = new RegExp(searchTerm, ignoreCase ? 'i' : '')
         if (searchIn.title && regexTest.test(title) && isAudible && isPinned)
@@ -555,7 +339,6 @@ export const filterTabs = (
         if (searchIn.url && regexTest.test(url) && isAudible && isPinned)
           return true
       } catch (error) {
-        // Silently fail during typing for invalid regex
         return false
       }
     } else {
@@ -575,12 +358,7 @@ export const filterTabs = (
 
   return filteredTabs
 }
-/**
- * It takes a search term, a list of searchIn options, and a list of tabs, and
- * returns a list of tabs that match the search term
- * @param tabs - The array of tabs to search through.
- * @returns An array of tab objects.
- */
+
 export const reduceTabs = (
   { searchTerm, audibleSearch, pinnedSearch, searchIn },
   { ignoreCase, regex },
@@ -589,7 +367,6 @@ export const reduceTabs = (
   console.time('reduceTabs')
   if (!tabs) return []
 
-  // Pre-calculate search criteria
   let searchRegex
   let lowerSearchTerm
 
@@ -598,7 +375,7 @@ export const reduceTabs = (
       searchRegex = new RegExp(searchTerm, ignoreCase ? 'i' : '')
     } catch (error) {
       console.error('Invalid Regex:', error)
-      return [] // Return empty or original tabs? Returning empty on invalid regex seems safer to indicate error
+      return []
     }
   } else if (ignoreCase) {
     lowerSearchTerm = searchTerm.toLowerCase()
@@ -607,13 +384,9 @@ export const reduceTabs = (
   const reducedTabs = tabs.filter((tab) => {
     const { title, url, audible, pinned } = tab
 
-    // 1. Filter by properties (Audible/Pinned)
-    // Optimization: Check these boolean flags first as they are faster than string matching
     if (audibleSearch && !audible) return false
     if (pinnedSearch && !pinned) return false
 
-    // 2. Filter by Search Term
-    // If no search term, we keep it (assuming the caller handles empty search check, but good to be safe)
     if (!searchTerm) return true
 
     let matchesTitle = false
@@ -621,8 +394,6 @@ export const reduceTabs = (
 
     if (regex) {
       if (searchIn.title) matchesTitle = searchRegex.test(title)
-      // Optimization: If title matched and we don't need to know specifically which one matched, we can stop here.
-      // But if we need to check URL only if title didn't match:
       if (!matchesTitle && searchIn.url) matchesUrl = searchRegex.test(url)
     } else {
       if (ignoreCase) {
@@ -644,14 +415,6 @@ export const reduceTabs = (
 }
 
 export const getMetrics = (compName, mode, actualTime, baseTime) => {
-  // requestAnimationFrame(() => {
-  //   document.getElementById("demo").innerText = `
-  //    ComponnentId: ${compName}
-  //    Mode:         ${mode}
-  //    BaseTime:     ${baseTime}
-  //    ActualTime:   ${actualTime}
-  //   `;
-  // });
   console.log(compName, mode, actualTime, baseTime)
 }
 
@@ -687,6 +450,7 @@ export const profilerCallback = (
     interactions
   )
 }
+
 export const makePlaceholder = (searchIn, regex = false) => {
   let placeholder = 'Search in '
   placeholder += searchIn.title ? 'Titles' : ''

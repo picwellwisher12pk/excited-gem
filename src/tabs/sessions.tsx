@@ -18,13 +18,13 @@ import {
   Save,
   FolderOpen,
   Trash2,
-  Search as SearchIcon,
   Download,
   Upload,
   ChevronDown,
   ChevronUp,
   MoreHorizontal,
   Edit2,
+  FileText,
   X
 } from 'lucide-react'
 // @ts-ignore
@@ -68,13 +68,11 @@ interface SessionData {
   }
 }
 
-// removed local Search
-
 function SessionsPageContent() {
   const [sessions, setSessions] = useState<SessionData[]>([])
   const [filteredSessions, setFilteredSessions] = useState<SessionData[]>([])
-  const [loading, setLoading] = useState(false)
-  const [saveLoading, setSaveLoading] = useState(false)
+  const [_loading, setLoading] = useState(false)
+  const [_saveLoading, setSaveLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedSessions, setExpandedSessions] = useState<Set<number>>(
     new Set()
@@ -90,8 +88,14 @@ function SessionsPageContent() {
   const [editSessionName, setEditSessionName] = useState('')
 
   const dispatch = useDispatch<AppDispatch>()
-  const { regex: isRegex } = useSelector((state: any) => state.search || { regex: false })
-  const { drawerOpen, isLoading: aiLoading, status } = useSelector((s: RootState) => s.ai)
+  const { regex: isRegex } = useSelector(
+    (state: any) => state.search || { regex: false }
+  )
+  const {
+    drawerOpen,
+    isLoading: aiLoading,
+    status
+  } = useSelector((s: RootState) => s.ai)
 
   usePageTracking('/sessions', 'Sessions')
 
@@ -110,10 +114,15 @@ function SessionsPageContent() {
     const checkAI = async () => {
       try {
         const service = await getAIService()
-        const status = await service.getStatus()
-        dispatch(setProviderStatus(status))
-      } catch (e) {
-        dispatch(setProviderStatus({ connected: false, error: 'AI Service unavailable' }))
+        const providerStatus = await service.getStatus()
+        dispatch(setProviderStatus(providerStatus))
+      } catch {
+        dispatch(
+          setProviderStatus({
+            connected: false,
+            error: 'AI Service unavailable'
+          })
+        )
       }
     }
     checkAI()
@@ -126,11 +135,27 @@ function SessionsPageContent() {
       await fetchSessions()
       message.success('Session saved successfully')
       analytics.trackEvent('Sessions', 'Save Session')
-    } catch (error) {
+    } catch {
       message.error('Failed to save session')
     } finally {
       setSaveLoading(false)
     }
+  }
+
+  const formatDate = (timestamp: number) => {
+    return new Date(timestamp).toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  const getTotalTabs = (session: SessionData) => {
+    return Object.values(session.windows).reduce(
+      (sum, tabs) => sum + tabs.length,
+      0
+    )
   }
 
   const handleRestore = (url?: string, sessionData?: SessionData) => {
@@ -170,13 +195,17 @@ function SessionsPageContent() {
       await fetchSessions()
       message.success('Session renamed')
       analytics.trackEvent('Sessions', 'Rename Session')
-    } catch (error) {
+    } catch {
       message.error('Failed to rename session')
     }
     setEditingSessionId(null)
   }
 
-  const startRename = (e: React.MouseEvent, sessionId: number, currentName: string) => {
+  const startRename = (
+    e: React.MouseEvent,
+    sessionId: number,
+    currentName: string
+  ) => {
     e.stopPropagation()
     setEditingSessionId(sessionId)
     setEditSessionName(currentName || 'Unnamed Session')
@@ -206,9 +235,29 @@ function SessionsPageContent() {
       URL.revokeObjectURL(url)
       message.success('Sessions exported')
       analytics.trackEvent('Sessions', 'Export')
-    } catch (error) {
+    } catch {
       message.error('Failed to export sessions')
     }
+  }
+
+  const handleExportSessionMarkdown = (
+    session: SessionData,
+    e?: React.MouseEvent
+  ) => {
+    e?.stopPropagation()
+    const lines: string[] = [
+      `# ${session.name || 'Unnamed Session'} (${formatDate(session.created)})`
+    ]
+    Object.entries(session.windows).forEach(([_winId, tabs], idx) => {
+      lines.push(`\n## Window ${idx + 1}`)
+      tabs.forEach((t) => {
+        lines.push(
+          `- [${(t.title || t.url).replace(/[\[\]]/g, '')}](${t.url})`
+        )
+      })
+    })
+    navigator.clipboard.writeText(lines.join('\n'))
+    message.success('Copied session as Markdown to clipboard')
   }
 
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -223,7 +272,7 @@ function SessionsPageContent() {
         await fetchSessions()
         message.success('Sessions imported successfully')
         analytics.trackEvent('Sessions', 'Import')
-      } catch (error) {
+      } catch {
         message.error('Failed to import sessions')
       }
     }
@@ -247,11 +296,12 @@ function SessionsPageContent() {
     if (isRegex) {
       try {
         searchRegex = new RegExp(value, 'i')
-      } catch (e) { /* invalid regex */ }
+      } catch {
+        /* invalid regex */
+      }
     }
 
     const filtered = sessions.filter((session) => {
-      // Name filter
       if (searchFilters.sessionName) {
         if (isRegex && searchRegex && session.name) {
           if (searchRegex.test(session.name)) return true
@@ -260,17 +310,22 @@ function SessionsPageContent() {
         }
       }
 
-      // Tab Url or Title filter
       if (searchFilters.tabUrl || searchFilters.tabTitle) {
         return Object.values(session.windows).some((tabs) =>
           tabs.some((tab) => {
             if (isRegex && searchRegex) {
               if (searchFilters.tabUrl && searchRegex.test(tab.url)) return true
-              if (searchFilters.tabTitle && searchRegex.test(tab.title)) return true
+              if (searchFilters.tabTitle && searchRegex.test(tab.title))
+                return true
               return false
             } else {
-              if (searchFilters.tabUrl && tab.url.toLowerCase().includes(query)) return true
-              if (searchFilters.tabTitle && tab.title.toLowerCase().includes(query)) return true
+              if (searchFilters.tabUrl && tab.url.toLowerCase().includes(query))
+                return true
+              if (
+                searchFilters.tabTitle &&
+                tab.title.toLowerCase().includes(query)
+              )
+                return true
               return false
             }
           })
@@ -301,22 +356,6 @@ function SessionsPageContent() {
       handleSearch(searchQuery)
     }
   }, [searchFilters, isRegex])
-
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
-
-  const getTotalTabs = (session: SessionData) => {
-    return Object.values(session.windows).reduce(
-      (sum, tabs) => sum + tabs.length,
-      0
-    )
-  }
 
   const searchFilterContent = (
     <div className="p-2">
@@ -513,6 +552,16 @@ function SessionsPageContent() {
                         <Tag color="green">{totalTabs} tabs</Tag>
                       </div>
                       <Space size="small">
+                        <Tooltip title="Copy as Markdown">
+                          <Button
+                            size="small"
+                            icon={<FileText size={16} />}
+                            onClick={(e) =>
+                              handleExportSessionMarkdown(session, e)
+                            }
+                            className="flex items-center justify-center"
+                          />
+                        </Tooltip>
                         <Tooltip title="Restore all">
                           <Button
                             type="primary"
@@ -529,7 +578,13 @@ function SessionsPageContent() {
                           <Button
                             size="small"
                             icon={<Edit2 size={16} />}
-                            onClick={(e) => startRename(e, session.created, session.name || '')}
+                            onClick={(e) =>
+                              startRename(
+                                e,
+                                session.created,
+                                session.name || ''
+                              )
+                            }
                             className="flex items-center justify-center text-gray-500"
                           />
                         </Tooltip>
@@ -625,7 +680,9 @@ function SessionsPageContent() {
           onClose={() => dispatch(toggleDrawer())}
           isLoading={aiLoading}
           onOpenSettings={() => {
-            chrome.tabs.create({ url: chrome.runtime.getURL('tabs/settings.html#ai') })
+            chrome.tabs.create({
+              url: chrome.runtime.getURL('tabs/settings.html#ai')
+            })
           }}
         />
 

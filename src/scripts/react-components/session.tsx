@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { removeSessions } from '../../components/getsetSessions'
 
-// Helper function to convert timestamp to readable date
 function timeConverter(timestamp: number): string {
   const a = new Date(timestamp)
   const months = [
@@ -51,7 +50,6 @@ export default function Session({ data, created, onDelete }: SessionProps) {
     if (url) {
       chrome.tabs.create({ url })
     } else {
-      // Restore all
       Object.values(data.windows)
         .flat()
         .forEach((tab) => {
