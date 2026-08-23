@@ -68,7 +68,8 @@ interface LibraryData {
     id: string
     name: string
     created: number
-    storageType?: 'extension' | 'bookmarks'
+    storageType?: 'extension' | 'bookmarks' | string
+    bookmarkRootId?: string
     lists: ListItem[]
 }
 
@@ -373,7 +374,37 @@ function ListsPageContent() {
         checkAI()
     }, [dispatch])
 
-    useEffect(() => { fetchAll() }, [])
+    useEffect(() => {
+        fetchAll()
+
+        const onStorageChanged = (changes: any, area: string) => {
+            if (area === 'local' && (changes.libraries || changes.urlBank || changes.bookmarkLibraryIds)) {
+                fetchAll()
+            }
+        }
+
+        browser.storage.onChanged.addListener(onStorageChanged)
+
+        if (browser.bookmarks) {
+            const onBmChanged = () => { fetchAll() }
+            browser.bookmarks.onCreated.addListener(onBmChanged)
+            browser.bookmarks.onRemoved.addListener(onBmChanged)
+            browser.bookmarks.onChanged.addListener(onBmChanged)
+            browser.bookmarks.onMoved.addListener(onBmChanged)
+
+            return () => {
+                browser.storage.onChanged.removeListener(onStorageChanged)
+                browser.bookmarks.onCreated.removeListener(onBmChanged)
+                browser.bookmarks.onRemoved.removeListener(onBmChanged)
+                browser.bookmarks.onChanged.removeListener(onBmChanged)
+                browser.bookmarks.onMoved.removeListener(onBmChanged)
+            }
+        }
+
+        return () => {
+            browser.storage.onChanged.removeListener(onStorageChanged)
+        }
+    }, [])
 
     const handleSearch = (value: string) => {
         const q = value.toLowerCase()

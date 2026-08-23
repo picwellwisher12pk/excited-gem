@@ -295,15 +295,16 @@ export async function importSessions(data, merge = true) {
 // ─── LIBRARIES & LISTS ──────────────────────────────────────────────────────
 
 /**
- * Save selected tabs as a new List inside a Library.
+ * Save selected tabs as a new List inside a Library (or append to an existing list).
  *
  * @param {Array<{url,title,windowId?}>} tabs
- * @param {string}  listName        - name for the list (empty = unnamed)
+ * @param {string}  listName        - name for the list (empty = auto-generated)
  * @param {string|null} libraryId   - existing library id, or null to create new
  * @param {string}  newLibraryName  - used when libraryId is null
+ * @param {string|null} targetListId - optional existing list id to append tabs into
  * @returns {Promise<{library, list}>}
  */
-export async function saveList(tabs, listName, libraryId, newLibraryName) {
+export async function saveList(tabs, listName, libraryId, newLibraryName, targetListId) {
   const storage = await getStorage(['urlBank', 'libraries'])
   let urlBank = storage.urlBank || []
   let libraries = storage.libraries || {}
@@ -316,12 +317,49 @@ export async function saveList(tabs, listName, libraryId, newLibraryName) {
     const newId = `lib_${Date.now()}`
     library = {
       id: newId,
-      name: newLibraryName || 'Unnamed Library',
+      name: newLibraryName?.trim() || 'My Library',
       created: Date.now(),
       lists: {}
     }
     libraries[newId] = library
     libraryId = newId
+  }
+
+  const defaultListName =
+    listName?.trim() ||
+    `List - ${new Date().toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric'
+    })} ${new Date().toLocaleTimeString(undefined, {
+      hour: '2-digit',
+      minute: '2-digit'
+    })}`
+
+  // If appending to an existing list
+  if (targetListId && library.lists[targetListId]) {
+    const targetList = library.lists[targetListId]
+    const existingUrlsInList = new Set(
+      targetList.tabs
+        .map((idx) => (urlBank[idx] ? urlBank[idx].url : null))
+        .filter(Boolean)
+    )
+
+    const seenInThisSave = new Set()
+    for (const tab of tabs) {
+      if (!tab.url || seenInThisSave.has(tab.url) || existingUrlsInList.has(tab.url)) continue
+      seenInThisSave.add(tab.url)
+
+      let index = urlBank.findIndex((u) => u.url === tab.url)
+      if (index === -1) {
+        urlBank.push({ url: tab.url, title: tab.title || tab.url })
+        index = urlBank.length - 1
+      }
+      targetList.tabs.push(index)
+    }
+
+    libraries[libraryId] = library
+    await setStorage({ urlBank, libraries })
+    return { library, list: targetList }
   }
 
   // Build a set of URLs already in this library (for dedup across lists)
@@ -344,7 +382,7 @@ export async function saveList(tabs, listName, libraryId, newLibraryName) {
 
     let index = urlBank.findIndex((u) => u.url === tab.url)
     if (index === -1) {
-      urlBank.push({ url: tab.url, title: tab.title })
+      urlBank.push({ url: tab.url, title: tab.title || tab.url })
       index = urlBank.length - 1
     }
     tabIndices.push(index)
@@ -353,7 +391,7 @@ export async function saveList(tabs, listName, libraryId, newLibraryName) {
   const listId = `list_${Date.now()}`
   const newList = {
     id: listId,
-    name: listName || '',
+    name: defaultListName,
     created: Date.now(),
     tabs: tabIndices
   }
@@ -375,9 +413,9 @@ export async function getLists() {
 
   return Object.values(libraries).map((lib) => ({
     ...lib,
-    lists: Object.values(lib.lists).map((list) => ({
+    lists: Object.values(lib.lists || {}).map((list) => ({
       ...list,
-      tabs: list.tabs
+      tabs: (list.tabs || [])
         .map((idx) => urlBank[idx] || { url: 'about:blank', title: 'Missing' })
     }))
   }))
@@ -406,7 +444,7 @@ export async function addTabsToList(tabs, libraryId, listId) {
     existingUrls.add(tab.url)
     let index = urlBank.findIndex((u) => u.url === tab.url)
     if (index === -1) {
-      urlBank.push({ url: tab.url, title: tab.title })
+      urlBank.push({ url: tab.url, title: tab.title || tab.url })
       index = urlBank.length - 1
     }
     list.tabs.push(index)
@@ -427,7 +465,7 @@ export async function removeLibrary(libraryId) {
 export async function removeList(libraryId, listId) {
   const storage = await getStorage(['libraries'])
   const libraries = storage.libraries || {}
-  if (libraries[libraryId]) {
+  if (libraries[libraryId] && libraries[libraryId].lists) {
     delete libraries[libraryId].lists[listId]
   }
   await setStorage({ libraries })
@@ -447,7 +485,7 @@ export async function renameLibrary(libraryId, name) {
 export async function renameTabList(libraryId, listId, name) {
   const storage = await getStorage(['libraries'])
   const libraries = storage.libraries || {}
-  if (libraries[libraryId] && libraries[libraryId].lists[listId]) {
+  if (libraries[libraryId] && libraries[libraryId].lists && libraries[libraryId].lists[listId]) {
     libraries[libraryId].lists[listId].name = name
     await setStorage({ libraries })
   }
@@ -455,53 +493,110 @@ export async function renameTabList(libraryId, listId, name) {
 }
 
 /**
- * Save tabs as Browser Bookmarks.
+ * Helper to safely find or create a child folder under a specific parent ID.
+ * Avoids global search collision and race conditions.
+ */
+async function findOrCreateChildFolder(parentId, name) {
+  const browserApi = window.browser || window.chrome
+  return new Promise((resolve, reject) => {
+    browserApi.bookmarks.getChildren(parentId, (children) => {
+      if (browserApi.runtime.lastError) {
+        // Fallback: try creating directly
+        browserApi.bookmarks.create({ parentId, title: name }, (created) => {
+          if (browserApi.runtime.lastError) return reject(browserApi.runtime.lastError)
+          resolve(created)
+        })
+        return
+      }
+
+      const existing = (children || []).find((c) => !c.url && c.title === name)
+      if (existing) {
+        resolve(existing)
+      } else {
+        browserApi.bookmarks.create({ parentId, title: name }, (created) => {
+          if (browserApi.runtime.lastError) return reject(browserApi.runtime.lastError)
+          resolve(created)
+        })
+      }
+    })
+  })
+}
+
+/**
+ * Save tabs as Browser Bookmarks with deterministic folder hierarchy.
  *
- * Folder hierarchy:  parentBookmarkId → rootFolderName → libraryName → listName → bookmarks
+ * Folder hierarchy:  parentBookmarkId → [optional rootFolderName] → libraryName → listName → bookmarks
  *
  * @param {Array<{url,title}>} tabs
  * @param {string} listName
  * @param {string} libraryName
  * @param {string|null} parentBookmarkId - bookmark folder id (Bookmarks Bar = '1', Other = '2')
- * @param {string} rootFolderName        - top-level grouping folder, default "Excited Gem Lists"
+ * @param {string} rootFolderName        - optional top-level grouping folder
  */
-export async function saveListAsBookmarks(tabs, listName, libraryName, parentBookmarkId, rootFolderName) {
-  const browser = window.browser || window.chrome
-  const seenUrls = new Set()
+export async function saveListAsBookmarks(
+  tabs,
+  listName,
+  libraryName,
+  parentBookmarkId,
+  rootFolderName
+) {
+  const browserApi = window.browser || window.chrome
+  if (!browserApi?.bookmarks) throw new Error('Bookmarks API not available')
 
-  // Find or create a folder by title under a given parent
-  const findOrCreateFolder = (parentId, name) =>
-    new Promise((resolve) => {
-      browser.bookmarks.search({ title: name }, (results) => {
-        const existing = results.find(
-          (r) => r.parentId === parentId && !r.url
-        )
-        if (existing) {
-          resolve(existing)
-        } else {
-          browser.bookmarks.create({ parentId, title: name }, resolve)
-        }
-      })
-    })
-
-  // Bookmarks Bar id='1', Other Bookmarks id='2'
   const anchorId = parentBookmarkId || '1'
+  let parentForLib = anchorId
 
-  // Root grouping folder  →  Library folder  →  List folder
-  const rootFolder = await findOrCreateFolder(anchorId, rootFolderName || 'Excited Gem Lists')
-  const libFolder = await findOrCreateFolder(rootFolder.id, libraryName || 'My Library')
-  const listFolder = await findOrCreateFolder(
-    libFolder.id,
-    listName || `List ${new Date().toLocaleString()}`
-  )
+  if (rootFolderName && rootFolderName.trim()) {
+    const rootFolder = await findOrCreateChildFolder(anchorId, rootFolderName.trim())
+    parentForLib = rootFolder.id
+  }
 
-  for (const tab of tabs) {
-    if (!tab.url || seenUrls.has(tab.url)) continue
-    seenUrls.add(tab.url)
-    await new Promise((resolve) =>
-      browser.bookmarks.create(
-        { parentId: listFolder.id, title: tab.title || tab.url, url: tab.url },
-        resolve
+  const finalLibName = libraryName?.trim() || 'My Library'
+  const libFolder = await findOrCreateChildFolder(parentForLib, finalLibName)
+
+  const finalListName =
+    listName?.trim() ||
+    `List - ${new Date().toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric'
+    })} ${new Date().toLocaleTimeString(undefined, {
+      hour: '2-digit',
+      minute: '2-digit'
+    })}`
+
+  const listFolder = await findOrCreateChildFolder(libFolder.id, finalListName)
+
+  // Track the library folder in storage for guaranteed retrieval
+  const storage = await getStorage(['bookmarkLibraryIds'])
+  const recorded = new Set(storage.bookmarkLibraryIds || [])
+  recorded.add(libFolder.id)
+  await setStorage({ bookmarkLibraryIds: Array.from(recorded) })
+
+  // Deduplicate and batch save bookmarks
+  const seenUrls = new Set()
+  const validTabs = tabs.filter((t) => {
+    if (!t.url || seenUrls.has(t.url)) return false
+    seenUrls.add(t.url)
+    return true
+  })
+
+  // Create bookmarks in parallel chunks of 15 to avoid browser throttling
+  const chunkSize = 15
+  for (let i = 0; i < validTabs.length; i += chunkSize) {
+    const chunk = validTabs.slice(i, i + chunkSize)
+    await Promise.all(
+      chunk.map(
+        (t) =>
+          new Promise((resolve) => {
+            browserApi.bookmarks.create(
+              {
+                parentId: listFolder.id,
+                title: t.title?.trim() || t.url,
+                url: t.url
+              },
+              () => resolve()
+            )
+          })
       )
     )
   }
@@ -510,71 +605,110 @@ export async function saveListAsBookmarks(tabs, listName, libraryName, parentBoo
 }
 
 /**
- * Read lists saved as Browser Bookmarks under the "Excited Gem Lists" root folders.
- *
- * Scans the entire bookmark tree for any folder whose children are all folders
- * (library-level), then reads those as libraries → lists → tabs.
- *
- * Returns data in the same shape as getLists():
- *   [{ id, name, created, storageType:'bookmarks', lists: [{ id, name, created, tabs:[{url,title}] }] }]
+ * Read lists saved as Browser Bookmarks.
+ * Scans both recorded Excited Gem library folders and root folders across the bookmark tree.
  */
 export async function getBookmarkLists(rootFolderName = 'Excited Gem Lists') {
-  const browser = window.browser || window.chrome
-  if (!browser.bookmarks) return []
+  const browserApi = window.browser || window.chrome
+  if (!browserApi?.bookmarks) return []
 
   const tree = await new Promise((resolve) =>
-    browser.bookmarks.getTree(resolve)
+    browserApi.bookmarks.getTree(resolve)
   )
+  if (!tree || tree.length === 0) return []
+
+  const storage = await getStorage(['bookmarkLibraryIds'])
+  const recordedLibIds = new Set(storage.bookmarkLibraryIds || [])
 
   const results = []
+  const seenLibIds = new Set()
 
-  // Walk the entire bookmark tree to find all folders with the target name
-  function findRootFolders(nodes) {
-    const found = []
-    for (const node of nodes) {
-      if (!node.url && node.title === rootFolderName) {
-        found.push(node)
-      }
-      if (node.children) found.push(...findRootFolders(node.children))
-    }
-    return found
-  }
+  // Helper to parse a folder as a Library with subfolder Lists
+  const parseLibraryNode = (libNode) => {
+    if (!libNode || seenLibIds.has(libNode.id)) return null
+    seenLibIds.add(libNode.id)
 
-  const roots = findRootFolders(tree[0]?.children || [])
+    const lists = []
+    const subNodes = libNode.children || []
 
-  for (const root of roots) {
-    // Each child of root is a Library folder
-    const libraryFolders = (root.children || []).filter((n) => !n.url)
+    // 1. Child folders are Lists
+    const listFolders = subNodes.filter((n) => !n.url)
+    for (const list of listFolders) {
+      const tabs = (list.children || [])
+        .filter((n) => !!n.url)
+        .map((n) => ({ url: n.url, title: n.title || n.url }))
 
-    for (const lib of libraryFolders) {
-      const lists = []
-
-      // Each child of lib is a List folder
-      const listFolders = (lib.children || []).filter((n) => !n.url)
-
-      for (const list of listFolders) {
-        const tabs = (list.children || [])
-          .filter((n) => !!n.url)
-          .map((n) => ({ url: n.url, title: n.title }))
-
-        lists.push({
-          id: list.id,
-          name: list.title,
-          created: list.dateAdded || Date.now(),
-          tabs
-        })
-      }
-
-      results.push({
-        id: lib.id,
-        name: lib.title,
-        created: lib.dateAdded || Date.now(),
-        storageType: 'bookmarks',
-        bookmarkRootId: root.id,
-        lists
+      lists.push({
+        id: list.id,
+        name: list.title || 'Unnamed List',
+        created: list.dateAdded || Date.now(),
+        tabs
       })
     }
+
+    // 2. Direct bookmark items under the library (if any) grouped into a "General" list
+    const directBookmarks = subNodes
+      .filter((n) => !!n.url)
+      .map((n) => ({ url: n.url, title: n.title || n.url }))
+
+    if (directBookmarks.length > 0) {
+      lists.unshift({
+        id: `${libNode.id}_direct`,
+        name: 'General',
+        created: libNode.dateAdded || Date.now(),
+        tabs: directBookmarks
+      })
+    }
+
+    if (lists.length === 0) return null
+
+    return {
+      id: libNode.id,
+      name: libNode.title || 'Unnamed Library',
+      created: libNode.dateAdded || Date.now(),
+      storageType: 'bookmarks',
+      lists
+    }
   }
+
+  // 1. Process recorded libraries from storage
+  for (const libId of recordedLibIds) {
+    try {
+      const subTree = await new Promise((resolve) =>
+        browserApi.bookmarks.getSubTree(libId, (nodes) => {
+          if (browserApi.runtime.lastError || !nodes || nodes.length === 0) {
+            resolve(null)
+          } else {
+            resolve(nodes[0])
+          }
+        })
+      )
+      if (subTree) {
+        const parsed = parseLibraryNode(subTree)
+        if (parsed) results.push(parsed)
+      }
+    } catch {
+      // ignore missing/deleted folders
+    }
+  }
+
+  // 2. Walk entire bookmark tree to find root folders (e.g. "Excited Gem Lists")
+  function walkForRoots(nodes) {
+    for (const node of nodes) {
+      if (!node.url) {
+        if (rootFolderName && node.title === rootFolderName) {
+          const libraryFolders = (node.children || []).filter((n) => !n.url)
+          for (const lib of libraryFolders) {
+            const parsed = parseLibraryNode(lib)
+            if (parsed) results.push(parsed)
+          }
+        }
+        if (node.children) walkForRoots(node.children)
+      }
+    }
+  }
+
+  walkForRoots(tree[0]?.children || [])
 
   return results
 }
