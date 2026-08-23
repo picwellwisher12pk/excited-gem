@@ -250,9 +250,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'FETCH_YOUTUBE_API_INFO' && message.videoId) {
     console.log(
       'DEBUG: Background received FETCH_YOUTUBE_API_INFO for',
-      message.videoId
+      message.videoId,
+      'force:',
+      !!message.force
     )
-    fetchYouTubeApiInfo(message.videoId)
+    fetchYouTubeApiInfo(message.videoId, !!message.force)
   }
 
   if (message.type === 'REFRESH_YOUTUBE_DATA') {

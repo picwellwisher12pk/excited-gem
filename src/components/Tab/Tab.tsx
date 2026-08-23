@@ -61,6 +61,7 @@ export interface TabProps {
   isSelectionMode?: boolean
   hideUrl?: boolean
   style?: React.CSSProperties
+  windowId?: number
 }
 
 interface SearchState {
@@ -75,6 +76,7 @@ export const Tab = React.forwardRef<HTMLDivElement, TabProps>(
   (
     {
       id,
+      windowId,
       active,
       activeTab,
       remove,
@@ -219,9 +221,16 @@ export const Tab = React.forwardRef<HTMLDivElement, TabProps>(
       [dispatch, id, selected]
     )
 
-    const handleTabClick = React.useCallback(() => {
+    const handleTabClick = React.useCallback(async () => {
+      if (windowId) {
+        try {
+          await chrome.windows.update(windowId, { focused: true })
+        } catch (err) {
+          console.error('Failed to focus window:', err)
+        }
+      }
       chrome.tabs.update(id, { active: true })
-    }, [id])
+    }, [id, windowId])
 
     const handleMuteTab = React.useCallback(() => {
       toggleMuteTab(id, mutedInfo.muted)
@@ -296,9 +305,10 @@ export const Tab = React.forwardRef<HTMLDivElement, TabProps>(
               />
               <div className="flex flex-auto truncate flex-col justify-center ml-2">
                 <span
-                  className="truncate font-semibold shrink-0"
+                  className="truncate font-semibold shrink-0 cursor-pointer hover:underline"
                   style={{ opacity: discarded || isLoading ? 0.7 : 1 }}
                   title={url}
+                  onClick={handleTabClick}
                 >
                   <HighlightedText
                     text={title}
@@ -308,12 +318,16 @@ export const Tab = React.forwardRef<HTMLDivElement, TabProps>(
                 {!hideUrl && (
                   <>
                     {/* Mobile: Show URL below title */}
-                    <span className="text-xs text-slate-400 truncate w-full text-left sm:hidden block leading-none">
+                    <button
+                      className="text-xs text-slate-400 truncate w-full text-left sm:hidden block leading-none bg-transparent border-0 cursor-pointer p-0 hover:text-slate-600 transition-colors"
+                      title={url}
+                      onClick={handleTabClick}
+                    >
                       <HighlightedText
                         text={url}
                         highlight={searchIn.url ? searchTerm : ''}
                       />
-                    </span>
+                    </button>
                     {/* Desktop: Show URL next to title (hidden on mobile) */}
                     <button
                       className="text-xs text-slate-400 truncate w-full text-left hover:text-slate-600 transition-colors hidden sm:block bg-transparent border-0 cursor-pointer p-0"
