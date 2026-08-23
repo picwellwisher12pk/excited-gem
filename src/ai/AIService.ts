@@ -12,6 +12,7 @@ import { TabContextBuilder, type ContextStrategy, type TabData } from './context
 import { TabActionExecutor } from './actions/TabActionExecutor'
 import { ACTION_SYSTEM_PROMPT, type BrowserAction } from './actions/ActionDefinitions'
 import type { BaseProvider, DiscoveredModel, ProviderStatus, StreamChunk } from './providers/BaseProvider'
+import type { ChatMessage } from '../store/aiSlice'
 
 export type ProviderType =
   | 'gemini-nano'
@@ -140,6 +141,10 @@ export class AIService {
   async testConnection(): Promise<ProviderStatus> {
     if (!this.provider) return { connected: false, error: 'No provider configured.' }
     return this.provider.testConnection()
+  }
+
+  async getStatus(): Promise<ProviderStatus> {
+    return this.testConnection()
   }
 
   /** Discover available models for the current provider */

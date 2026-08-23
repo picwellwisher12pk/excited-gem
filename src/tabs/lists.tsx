@@ -500,9 +500,6 @@ function ListsPageContent() {
             </div>
 
             <AIDrawer
-                open={drawerOpen}
-                onClose={() => dispatch(toggleDrawer())}
-                isLoading={aiLoading}
                 onOpenSettings={() => {
                     chrome.tabs.create({ url: chrome.runtime.getURL('tabs/settings.html#ai') })
                 }}

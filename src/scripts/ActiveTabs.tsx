@@ -221,12 +221,7 @@ const ActiveTabs = () => {
       </div>
 
       {/* AI Drawer */}
-      <AIDrawer
-        open={drawerOpen}
-        onClose={() => dispatch(toggleDrawer())}
-        isLoading={aiLoading}
-        onOpenSettings={openAISettings}
-      />
+      <AIDrawer onOpenSettings={openAISettings} />
 
       {/* Floating AI trigger button */}
       <div className="fixed bottom-4 right-4 z-30">
