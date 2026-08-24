@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.7.0](https://github.com/picwellwisher12pk/excited-gem/compare/v1.6.1...v1.7.0) (2026-08-24)
+
+
+### Features
+
+* **ai:** enhance chat with Markdown rendering, rich tab previews, and capability discovery ([04e9628](https://github.com/picwellwisher12pk/excited-gem/commit/04e9628c4d781c7579ad836ab80e8d7125e78c07))
+* enhance AI session management with selective tab saving and session renaming ([3b74fb4](https://github.com/picwellwisher12pk/excited-gem/commit/3b74fb46af311c0ffb03766aa555159d64144668))
+* expand AI capabilities to manage sessions and bookmarks; implement persistent chat history (memories) ([594d416](https://github.com/picwellwisher12pk/excited-gem/commit/594d416210cabd10e45705668cb665015d27ccea))
+* implement multi-session AI chat history with browse/delete capabilities ([045d9c7](https://github.com/picwellwisher12pk/excited-gem/commit/045d9c7dda71d4ac3094f7d6c76421f8d6b2563f))
+* integrate unified AI Assistant layer with multi-provider support, human-readable tab management UI, and omnipresent drawer access ([c86882f](https://github.com/picwellwisher12pk/excited-gem/commit/c86882f0ae10ed83fa250c0e1e917533d3ab4ee3))
+* **lists:** overhaul Save as List modal, bookmark folder structure, and real-time list sync ([22dfd38](https://github.com/picwellwisher12pk/excited-gem/commit/22dfd386fd3906986d5fd9065b332ccf8b3ae78f))
+* optimize bulk tab actions, debounce event listeners, bound domain favicon cache, and modernize codebase ([c8b7143](https://github.com/picwellwisher12pk/excited-gem/commit/c8b7143f747443b74c09ccb5052e1597021a78db))
+* **routines:** implement routines and macros automation engine with settings dashboard, quick run menus, and tab filter pipeline ([d53d073](https://github.com/picwellwisher12pk/excited-gem/commit/d53d073f923f2cbf75a0bacbbec361f5ff7752fd))
+* **youtube:** enhance YouTube modal defaults, timing refetch, clickable titles, and multi-window activation ([6b68129](https://github.com/picwellwisher12pk/excited-gem/commit/6b68129fdfa9b7b74f194ecf375ad6fbf74930de))
+
+
+### Bug Fixes
+
+* restore AI Assistant button visibility and interactive behavior ([37bca01](https://github.com/picwellwisher12pk/excited-gem/commit/37bca0159383f97177e140962ab12003eca20bd8))
+* **types:** refine AIDrawer props, AIService getStatus alias, and tsconfig excludes ([da74913](https://github.com/picwellwisher12pk/excited-gem/commit/da7491395680bccbfab5201c4435c0293e188e20))
+
 ### [1.6.1](https://github.com/picwellwisher12pk/excited-gem/compare/v1.6.0...v1.6.1) (2026-03-20)
 
 
