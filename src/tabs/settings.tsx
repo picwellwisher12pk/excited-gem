@@ -10,14 +10,11 @@ import {
   Input,
   Button,
   Divider,
-  Collapse,
   Menu,
   Card,
-  Alert
 } from 'antd'
 import {
   KeyOutlined,
-  SettingOutlined,
   BlockOutlined,
   SearchOutlined,
   InfoCircleOutlined,
@@ -25,9 +22,11 @@ import {
   GoogleOutlined,
   CloudSyncOutlined,
   CloudDownloadOutlined,
-  ExperimentOutlined
+  ExperimentOutlined,
+  ThunderboltOutlined
 } from '@ant-design/icons'
-import { loginAndGetProfile, logout, UserProfile } from '../utils/auth'
+import { loginAndGetProfile, logout } from '../utils/auth'
+import type { UserProfile } from '../utils/auth'
 import { backupToDrive, restoreFromDrive } from '../utils/drive'
 import Sidebar, { SidebarToggleButton } from '../components/Sidebar'
 import Brand from '../components/Header/Brand'
@@ -35,10 +34,11 @@ import logo from '../assets/logo.svg'
 import store from '../store/store'
 import { usePageTracking } from '../components/Analytics/usePageTracking'
 import { useDispatch, useSelector } from 'react-redux'
-import { toggleRegex, toggleSearchIn, setRegex, setSearchIn } from '../store/searchSlice'
+import { toggleSearchIn, setRegex, } from '../store/searchSlice'
 import { loadAISettings } from '../store/aiSlice'
 import type { AppDispatch } from '../store/store'
 import { AISettingsPanel } from '../components/AI/AISettingsPanel'
+import RoutinesManager from '../components/Routines/RoutinesManager'
 import 'antd/dist/reset.css'
 import '../styles/index.css'
 
@@ -47,6 +47,7 @@ const browser = chrome
 
 const SETTINGS_CATEGORIES = [
   { key: 'display', label: 'Display Settings', icon: <BlockOutlined /> },
+  { key: 'routines', label: 'Routines & Macros', icon: <ThunderboltOutlined /> },
   { key: 'integrations', label: 'Integrations & Sync', icon: <SyncOutlined /> },
   { key: 'search', label: 'Search Settings', icon: <SearchOutlined /> },
   { key: 'ai', label: 'AI Assistant', icon: <ExperimentOutlined /> },
@@ -301,16 +302,19 @@ function SettingsPageContent() {
               </div>
 
               {/* Display card based on active category */}
-              <Card
-                className="shadow-sm border-gray-200 !rounded-lg overflow-hidden"
-                title={
-                  <div className="py-2">
-                    <Title level={4} className="!mb-0">
-                      {SETTINGS_CATEGORIES.find(c => c.key === activeCategory)?.label}
-                    </Title>
-                  </div>
-                }
-              >
+              {activeCategory === 'routines' ? (
+                <RoutinesManager />
+              ) : (
+                <Card
+                  className="shadow-sm border-gray-200 !rounded-lg overflow-hidden"
+                  title={
+                    <div className="py-2">
+                      <Title level={4} className="!mb-0">
+                        {SETTINGS_CATEGORIES.find(c => c.key === activeCategory)?.label}
+                      </Title>
+                    </div>
+                  }
+                >
                 {activeCategory === 'display' && (
                   <Space direction="vertical" size="large" className="w-full">
                     <div>
@@ -672,6 +676,7 @@ function SettingsPageContent() {
                   </Space>
                 )}
               </Card>
+            )}
             </div>
           </div>
         </div>

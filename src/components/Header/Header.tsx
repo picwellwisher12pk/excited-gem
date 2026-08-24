@@ -27,6 +27,7 @@ import SortButton from './SortButton'
 import Btn from '../../components/Btn'
 import { SidebarToggleButton } from '../../components/Sidebar'
 import MoreActionsMenu from './MoreActionsMenu'
+import { RoutineQuickMenu } from '../Routines/RoutineQuickMenu'
 
 const { Option } = Select
 
@@ -324,6 +325,9 @@ export default function Header({
           </Space>
         )}
         <Space className="mr-1">
+          <div>
+            <RoutineQuickMenu iconOnly useBtn title="Routines & Macros" />
+          </div>
           <div>
             <MoreActionsMenu />
           </div>

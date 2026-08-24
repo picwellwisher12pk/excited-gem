@@ -1,16 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Layout, Typography, Spin, Tree, Button, Space, Input, Dropdown, MenuProps, Modal, Form, Checkbox, List, Tooltip } from 'antd';
+import { Layout, Typography, Spin, Tree, Button, Space, Input, Modal, Form, Checkbox, List, } from 'antd';
 import { SimpleAutoSizer } from '../../components/SimpleAutoSizer';
 import {
     FolderOutlined,
     FileOutlined,
-    SearchOutlined,
     DownloadOutlined,
     UploadOutlined,
     EditOutlined,
     DeleteOutlined,
     PlusOutlined,
-    MoreOutlined,
     CopyOutlined
 } from '@ant-design/icons';
 const { Text, Title } = Typography;
@@ -18,7 +16,7 @@ import { SidebarToggleButton } from '../../components/Sidebar';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import Brand from '../../components/Header/Brand';
 import ItemBtn from '../../components/ItemBtn';
-import { Move, Copy } from 'lucide-react';
+import { Move, } from 'lucide-react';
 import logo from '../../assets/logo.svg';
 import UnifiedSearch from '../../components/Search';
 import { useSelector, useDispatch } from 'react-redux';

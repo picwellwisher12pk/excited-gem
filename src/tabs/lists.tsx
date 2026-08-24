@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Provider } from 'react-redux'
 import {
     Button,
@@ -15,7 +15,6 @@ import {
 import {
     FolderOpen,
     Trash2,
-    Search as SearchIcon,
     ChevronDown,
     ChevronUp,
     Edit2,
@@ -42,6 +41,7 @@ import { useSelector } from 'react-redux'
 import { analytics } from '../utils/analytics'
 import { usePageTracking } from '../components/Analytics/usePageTracking'
 import UnifiedSearch from '../components/Search'
+import { RoutineQuickMenu } from '../components/Routines/RoutineQuickMenu'
 import 'antd/dist/reset.css'
 import '../styles/index.css'
 
@@ -460,7 +460,8 @@ function ListsPageContent() {
                             <div className="hidden sm:block">{Brand(logo)}</div>
                             <span className="text-white font-semibold text-lg ml-4">Lists</span>
                         </div>
-                        <div className="flex-1 flex justify-end items-center pr-2">
+                        <div className="flex-1 flex justify-end items-center gap-3 pr-2">
+                            <RoutineQuickMenu size="middle" buttonText="Routines" />
                             <div className="w-full max-w-xl">
                                 <UnifiedSearch
                                     isReduxConnected={false}

@@ -6,24 +6,21 @@
  * - Streaming shows "thinking" dots until response is formatted
  */
 
-import React, { useState, useEffect, useRef } from 'react'
-import { Button, Tag, Spin, Tooltip } from 'antd'
+import { useEffect, useRef } from 'react'
+import { Button, Tag, Tooltip } from 'antd'
 import ReactMarkdown from 'react-markdown'
 import {
   RobotOutlined,
   CheckOutlined,
   CloseOutlined,
-  LoadingOutlined,
   CopyOutlined,
   WarningOutlined,
-  LinkOutlined,
   SearchOutlined,
   AppstoreOutlined,
   PieChartOutlined,
   AudioMutedOutlined,
   SaveOutlined,
   EditOutlined,
-  ArrowRightOutlined
 } from '@ant-design/icons'
 import { useDispatch, useSelector } from 'react-redux'
 import type { AppDispatch, RootState } from '../../store/store'

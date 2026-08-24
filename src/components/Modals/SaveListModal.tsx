@@ -22,8 +22,6 @@ import {
   CheckCircle2,
   Search,
   X,
-  CheckSquare,
-  Square
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'

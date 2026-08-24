@@ -4,7 +4,7 @@
  */
 
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit'
-import type { AISettings, ProviderType } from '../ai/AIService'
+import type { AISettings, } from '../ai/AIService'
 import { DEFAULT_AI_SETTINGS, AIService, resetAIService } from '../ai/AIService'
 import type { BrowserAction } from '../ai/actions/ActionDefinitions'
 import type { DiscoveredModel, ProviderStatus } from '../ai/providers/BaseProvider'

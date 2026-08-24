@@ -1,4 +1,11 @@
-const browser = window.browser || window.chrome
+const browser =
+  (typeof window !== 'undefined'
+    ? window.browser || window.chrome
+    : typeof globalThis !== 'undefined'
+    ? (globalThis.browser || globalThis.chrome)
+    : typeof chrome !== 'undefined'
+    ? chrome
+    : null)
 
 // Helper to get storage
 async function getStorage(keys) {
@@ -497,7 +504,7 @@ export async function renameTabList(libraryId, listId, name) {
  * Avoids global search collision and race conditions.
  */
 async function findOrCreateChildFolder(parentId, name) {
-  const browserApi = window.browser || window.chrome
+  const browserApi = browser
   return new Promise((resolve, reject) => {
     browserApi.bookmarks.getChildren(parentId, (children) => {
       if (browserApi.runtime.lastError) {
@@ -540,7 +547,7 @@ export async function saveListAsBookmarks(
   parentBookmarkId,
   rootFolderName
 ) {
-  const browserApi = window.browser || window.chrome
+  const browserApi = browser
   if (!browserApi?.bookmarks) throw new Error('Bookmarks API not available')
 
   const anchorId = parentBookmarkId || '1'
@@ -609,7 +616,7 @@ export async function saveListAsBookmarks(
  * Scans both recorded Excited Gem library folders and root folders across the bookmark tree.
  */
 export async function getBookmarkLists(rootFolderName = 'Excited Gem Lists') {
-  const browserApi = window.browser || window.chrome
+  const browserApi = browser
   if (!browserApi?.bookmarks) return []
 
   const tree = await new Promise((resolve) =>

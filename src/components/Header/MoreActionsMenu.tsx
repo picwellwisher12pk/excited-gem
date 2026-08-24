@@ -12,7 +12,8 @@ import {
   Layers,
   MoreVertical,
   RefreshCw,
-  Youtube
+  Youtube,
+  Zap
 } from 'lucide-react'
 
 const MoreActionsMenu = () => {
@@ -171,6 +172,15 @@ const MoreActionsMenu = () => {
       label: 'Export Tabs to Markdown',
       icon: <FileText size={14} />,
       onClick: handleExportMarkdown
+    },
+    {
+      key: 'routines-macros',
+      label: 'Routines & Macros',
+      icon: <Zap size={14} className="text-amber-500 fill-amber-500" />,
+      onClick: () => {
+        window.location.href = '/tabs/settings.html#routines'
+        setIsOpen(false)
+      }
     },
     {
       key: 'force-refresh',

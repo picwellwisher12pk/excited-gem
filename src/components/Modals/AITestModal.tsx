@@ -1,4 +1,4 @@
-import { Button, Input, Drawer, Typography, Space, Spin, Alert, List, Avatar } from 'antd'
+import { Button, Input, Drawer, Typography, Space, Spin, Alert, Avatar } from 'antd'
 import React, { useEffect, useState, useRef } from 'react'
 import { Bot, User, RefreshCw } from 'lucide-react'
 import { Tab } from '../Tab/Tab'

@@ -1,9 +1,4 @@
-/**
- * AIProviderBadge — Small pill showing the active AI provider and model.
- * Shown in the AI drawer header and navigation bar.
- */
 
-import React from 'react'
 import { useSelector } from 'react-redux'
 import type { RootState } from '../../store/store'
 import type { ProviderType } from '../../ai/AIService'

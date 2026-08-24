@@ -3,10 +3,10 @@
  * Full provider setup with auto-discovery, free-form model names, and connection testing.
  */
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Radio, Space, Typography, Input, Button, Slider, Select,
-  Divider, Tag, Spin, Alert, Tooltip, Switch
+  Divider, Tag, Alert, Tooltip, Switch
 } from 'antd'
 import {
   ThunderboltOutlined,
@@ -26,11 +26,8 @@ import type { AppDispatch, RootState } from '../../store/store'
 import {
   saveAISettings, discoverModels as discoverModelsThunk,
   testConnection as testConnectionThunk,
-  updateSettingsField
 } from '../../store/aiSlice'
 import type { AISettings, ProviderType } from '../../ai/AIService'
-import { DEFAULT_AI_SETTINGS } from '../../ai/AIService'
-import type { DiscoveredModel } from '../../ai/providers/BaseProvider'
 
 const { Text, Title } = Typography
 const { Option } = Select

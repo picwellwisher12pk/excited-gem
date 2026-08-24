@@ -45,6 +45,7 @@ import { useSelector } from 'react-redux'
 import { analytics } from '../utils/analytics'
 import { usePageTracking } from '../components/Analytics/usePageTracking'
 import UnifiedSearch from '../components/Search'
+import { RoutineQuickMenu } from '../components/Routines/RoutineQuickMenu'
 import 'antd/dist/reset.css'
 import '../styles/index.css'
 
@@ -445,7 +446,8 @@ function SessionsPageContent() {
               </div>
             </div>
 
-            <div className="flex-1 flex justify-end items-center gap-4 pr-2">
+            <div className="flex-1 flex justify-end items-center gap-3 pr-2">
+              <RoutineQuickMenu size="middle" buttonText="Routines" />
               <div className="flex-none flex items-center shrink-0">
                 <Dropdown
                   menu={{ items: actionItems }}

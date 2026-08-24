@@ -1,6 +1,8 @@
 import { getTabs, setBadge, setTabCountInBadge } from './scripts/browserActions'
 import { preferences } from './scripts/defaultPreferences'
 import { extractVideoId, parseIsoDuration } from './utils/youtube'
+import { getRoutines, syncRoutineAlarms } from './services/routineStorage'
+import { executeRoutine } from './services/routineEngine'
 import debounce from 'lodash/debounce'
 
 const browser = (typeof window !== 'undefined' ? window.browser : (globalThis as any).browser) || chrome
@@ -62,6 +64,41 @@ browser.runtime.onInstalled.addListener(() => {
     browser.storage.local.get('preferences').then((result) => {})
   })
   getTabs('current').then((tabs) => setBadge(tabs.length))
+  syncRoutineAlarms().catch((err) => console.error('Error syncing routine alarms:', err))
+})
+
+// --- Routine Automation Handlers ---
+if (browser.alarms) {
+  browser.alarms.onAlarm.addListener(async (alarm: any) => {
+    if (alarm?.name?.startsWith('routine_alarm_')) {
+      const routineId = alarm.name.replace('routine_alarm_', '')
+      try {
+        const routines = await getRoutines()
+        const routine = routines.find((r) => r.id === routineId)
+        if (routine && routine.enabled) {
+          console.log(`[Routine Alarm] Running "${routine.name}"`)
+          await executeRoutine(routine, { targetScope: routine.targetScope })
+        }
+      } catch (err) {
+        console.error('[Routine Alarm Error]', err)
+      }
+    }
+  })
+}
+
+browser.runtime.onStartup.addListener(async () => {
+  try {
+    const routines = await getRoutines()
+    await syncRoutineAlarms(routines)
+    for (const routine of routines) {
+      if (routine.enabled && routine.triggers?.onStartup) {
+        console.log(`[Routine Startup] Running "${routine.name}"`)
+        await executeRoutine(routine, { targetScope: routine.targetScope })
+      }
+    }
+  } catch (err) {
+    console.error('[Routine Startup Error]', err)
+  }
 })
 browser.tabs.onRemoved.addListener((tabId, removeInfo) => {
   console.log('Excited Gem: Tab Removed/Closed.')
@@ -269,6 +306,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
       })
     })
+  }
+
+  // Handle Routine Run message
+  if (message.type === 'RUN_ROUTINE') {
+    getRoutines().then((routines) => {
+      const routine = routines.find((r) => r.id === message.routineId)
+      if (routine) {
+        executeRoutine(routine, message.context || {}).then((result) => {
+          sendResponse(result)
+        })
+      } else {
+        sendResponse({ success: false, error: 'Routine not found' })
+      }
+    })
+    return true
+  }
+
+  if (message.type === 'SYNC_ROUTINE_ALARMS') {
+    syncRoutineAlarms().then(() => sendResponse({ success: true }))
+    return true
   }
 
   // ─── AI Action Handlers ─────────────────────────────────────────────────

@@ -13,6 +13,7 @@ import type { RootState } from '../store/store'
 import { SaveListModal } from './Modals/SaveListModal'
 import { message } from 'antd'
 import { batchRemoveTabs, batchUpdateTabs } from '../utils/bulkOperations'
+import { RoutineQuickMenu } from './Routines/RoutineQuickMenu'
 
 export function FloatingActionBar() {
   const dispatch = useDispatch()
@@ -137,6 +138,14 @@ export function FloatingActionBar() {
               >
                 <Trash2 size={20} />
               </button>
+              <div className="w-px h-6 bg-slate-600 mx-1" />
+              <RoutineQuickMenu
+                selectedTabIds={selectedTabs.map(Number)}
+                targetScope="selected-tabs"
+                size="small"
+                buttonText="Run Routine"
+                className="!bg-blue-600 !border-blue-600 !text-white hover:!bg-blue-700"
+              />
               <div className="w-px h-6 bg-slate-600 mx-1" />
               <button
                 onClick={handleClose}

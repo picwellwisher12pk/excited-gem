@@ -3,7 +3,7 @@
  * Full-height overlay with glassmorphism header, chat thread, and command bar.
  */
 
-import React, { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { Button, Tooltip } from 'antd'
 import {
   RobotOutlined,
@@ -18,7 +18,6 @@ import { useDispatch, useSelector } from 'react-redux'
 import type { AppDispatch, RootState } from '../../store/store'
 import {
   closeDrawer,
-  clearMessages,
   loadAISettings,
   loadChatHistory,
   createChatSession,
