@@ -16,8 +16,9 @@ import { WindowCard, SortableGridTabItem } from './WindowCard'
 import { getAllWindows, getCurrentWindow } from '../../scripts/general'
 import { updateFilteredTabs } from '../../store/tabSlice'
 import { arrayMove } from '@dnd-kit/sortable'
-import { LayoutGrid, Layers, Plus } from 'lucide-react'
-import { Button } from 'antd'
+import { LayoutGrid, Layers, Plus, EyeOff } from 'lucide-react'
+import { Button, Dropdown } from 'antd'
+import type { MenuProps } from 'antd'
 
 interface WindowGridViewProps {
   tabActionButtonsSetting?: 'always' | 'hover'
@@ -186,11 +187,22 @@ export function WindowGridView({
     }
   }
 
-  const handleCreateNewWindow = () => {
-    chrome.windows.create({ focused: true })
-  }
-
   const windowIds = Array.from(tabsByWindow.keys())
+
+  const newWindowItems: MenuProps['items'] = [
+    {
+      key: 'normal',
+      label: 'New Normal Window',
+      icon: <Plus size={13} />,
+      onClick: () => chrome.windows.create({ focused: true })
+    },
+    {
+      key: 'incognito',
+      label: 'New Incognito Window',
+      icon: <EyeOff size={13} className="text-purple-500" />,
+      onClick: () => chrome.windows.create({ focused: true, incognito: true })
+    }
+  ]
 
   return (
     <div className="h-full flex flex-col bg-slate-100/60 overflow-hidden">
@@ -207,15 +219,16 @@ export function WindowGridView({
           </span>
         </div>
 
-        <Button
-          type="default"
-          size="small"
-          icon={<Plus size={13} />}
-          onClick={handleCreateNewWindow}
-          className="flex items-center gap-1 text-xs font-medium"
-        >
-          New Window
-        </Button>
+        <Dropdown menu={{ items: newWindowItems }} placement="bottomRight">
+          <Button
+            type="default"
+            size="small"
+            icon={<Plus size={13} />}
+            className="flex items-center gap-1 text-xs font-medium"
+          >
+            New Window
+          </Button>
+        </Dropdown>
       </div>
 
       {/* Grid of Window Cards */}
@@ -236,6 +249,10 @@ export function WindowGridView({
               {windowIds.map((winId, index) => {
                 const windowTabs = tabsByWindow.get(winId) || []
                 const isCurrent = winId === currentWindowId
+                const windowObj = windowsList.find((w) => w.id === winId)
+                const isIncognito = Boolean(
+                  windowObj?.incognito || windowTabs.some((t) => t.incognito)
+                )
                 return (
                   <WindowCard
                     key={winId}
@@ -243,6 +260,7 @@ export function WindowGridView({
                     windowIndex={index + 1}
                     tabs={windowTabs}
                     isCurrentWindow={isCurrent}
+                    isIncognito={isIncognito}
                     tabGroups={tabGroups}
                     tabActionButtonsSetting={tabActionButtonsSetting}
                   />
@@ -258,6 +276,7 @@ export function WindowGridView({
                     tab={activeDragTab}
                     isSelected={false}
                     isSelectionMode={false}
+                    isIncognito={Boolean(activeDragTab.incognito)}
                     tabActionButtonsSetting={tabActionButtonsSetting}
                     groupInfo={
                       activeDragTab.groupId && activeDragTab.groupId !== -1
