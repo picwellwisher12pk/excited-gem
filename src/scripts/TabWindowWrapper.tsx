@@ -8,7 +8,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent
+  type DragEndEvent
 } from '@dnd-kit/core'
 import {
   SortableContext,
@@ -36,6 +36,7 @@ import { batchRemoveTabs } from '../utils/bulkOperations'
 // @ts-ignore
 import { saveSession } from '../components/getsetSessions'
 import { useResponsive } from '../hooks/useResponsive'
+import { WindowGridView } from '../components/WindowGrid'
 
 const MyLoader = ({ width }: { width: number }) => (
   <ContentLoader
@@ -226,6 +227,7 @@ function TabList() {
   const [isLoading, setIsLoading] = React.useState(false)
   const listRef = useRef<any>(null)
   const [groupedTabsSetting, setGroupedTabsSetting] = React.useState(true)
+  const [allWindowsViewMode, setAllWindowsViewMode] = React.useState<'grid' | 'list'>('grid')
   const [tabActionButtonsSetting, setTabActionButtonsSetting] = React.useState<
     'always' | 'hover'
   >('hover')
@@ -286,7 +288,9 @@ function TabList() {
       .filter((t: any) => t.windowId === windowId && !t.active)
       .map((t: any) => t.id)
     if (tabsToDiscard.length > 0) {
-      chrome.tabs.discard(tabsToDiscard)
+      tabsToDiscard.forEach((id: number) => {
+        chrome.tabs.discard(id)
+      })
     }
   }
 
@@ -316,7 +320,9 @@ function TabList() {
       .filter((t: any) => t.groupId === groupId && !t.active)
       .map((t: any) => t.id)
     if (tabsToDiscard.length > 0) {
-      chrome.tabs.discard(tabsToDiscard)
+      tabsToDiscard.forEach((id: number) => {
+        chrome.tabs.discard(id)
+      })
     }
   }
 
@@ -351,11 +357,13 @@ function TabList() {
     chrome.tabGroups.onCreated.addListener(onGroupUpdated)
     chrome.tabGroups.onRemoved.addListener(onGroupUpdated)
 
-    chrome.storage.local.get(['groupedTabs', 'tabActionButtons'], (result) => {
+    chrome.storage.local.get(['groupedTabs', 'tabActionButtons', 'allWindowsViewMode'], (result) => {
       if (result.groupedTabs !== undefined)
         setGroupedTabsSetting(result.groupedTabs)
       if (result.tabActionButtons)
         setTabActionButtonsSetting(result.tabActionButtons)
+      if (result.allWindowsViewMode)
+        setAllWindowsViewMode(result.allWindowsViewMode)
     })
 
     // Listen for storage changes
@@ -365,6 +373,8 @@ function TabList() {
           setGroupedTabsSetting(changes.groupedTabs.newValue)
         if (changes.tabActionButtons)
           setTabActionButtonsSetting(changes.tabActionButtons.newValue)
+        if (changes.allWindowsViewMode)
+          setAllWindowsViewMode(changes.allWindowsViewMode.newValue)
         if (changes.regex) dispatch(setRegex(changes.regex.newValue))
         if (changes.searchIn) dispatch(setSearchIn(changes.searchIn.newValue))
       }
@@ -433,11 +443,11 @@ function TabList() {
   const displayItems = React.useMemo(() => {
     // 1. Filter tabs based on selectedWindow
     let tabsToDisplay = filteredTabs
-    if (selectedWindow === 'current') {
+    if ((selectedWindow as any) === 'current') {
       tabsToDisplay = filteredTabs.filter(
         (t: any) => t.windowId === currentWindowId
       )
-    } else if (selectedWindow !== 'all') {
+    } else if ((selectedWindow as any) !== 'all') {
       tabsToDisplay = filteredTabs.filter(
         (t: any) => t.windowId === Number(selectedWindow)
       )
@@ -467,7 +477,7 @@ function TabList() {
     // 3. Build display list
     sortedTabs.forEach((tab: any) => {
       // Window Header (Only if showing all windows AND grouping is enabled)
-      const showWindowHeader = selectedWindow === 'all' && groupedTabsSetting
+      const showWindowHeader = (selectedWindow as any) === 'all' && groupedTabsSetting
 
       if (showWindowHeader && tab.windowId !== lastWindowId) {
         lastWindowId = tab.windowId
@@ -657,6 +667,10 @@ function TabList() {
       isSelectionMode
     ]
   )
+
+  if (String(selectedWindow) === 'all' && allWindowsViewMode === 'grid') {
+    return <WindowGridView tabActionButtonsSetting={tabActionButtonsSetting} />
+  }
 
   return (
     <div className="absolute inset-0 overflow-hidden">

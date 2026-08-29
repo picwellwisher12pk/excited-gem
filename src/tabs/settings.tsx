@@ -75,6 +75,7 @@ function SettingsPageContent() {
     'debounce'
   )
   const [groupedTabs, setGroupedTabs] = useState(true)
+  const [allWindowsViewMode, setAllWindowsViewMode] = useState<'grid' | 'list'>('grid')
   const [tabActionButtons, setTabActionButtons] = useState<'always' | 'hover'>(
     'hover'
   )
@@ -94,6 +95,7 @@ function SettingsPageContent() {
         'tabManagementMode',
         'searchBehavior',
         'groupedTabs',
+        'allWindowsViewMode',
         'tabActionButtons',
         'youtubeApiKey',
         'userProfile',
@@ -109,6 +111,7 @@ function SettingsPageContent() {
           setTabManagementMode(result.tabManagementMode)
         if (result.searchBehavior) setSearchBehavior(result.searchBehavior)
         if (result.groupedTabs !== undefined) setGroupedTabs(result.groupedTabs)
+        if (result.allWindowsViewMode) setAllWindowsViewMode(result.allWindowsViewMode)
         if (result.tabActionButtons)
           setTabActionButtons(result.tabActionButtons)
         if (result.youtubeApiKey) setYoutubeApiKey(result.youtubeApiKey)
@@ -165,6 +168,13 @@ function SettingsPageContent() {
     setGroupedTabs(value)
     browser.storage.local.set({ groupedTabs: value }, () => {
       message.success('Grouped tabs setting saved')
+    })
+  }
+
+  const handleAllWindowsViewModeChange = (value: 'grid' | 'list') => {
+    setAllWindowsViewMode(value)
+    browser.storage.local.set({ allWindowsViewMode: value }, () => {
+      message.success('All Windows view mode saved')
     })
   }
 
@@ -439,6 +449,36 @@ function SettingsPageContent() {
                                 <div className="font-medium">Disabled</div>
                                 <Text type="secondary" className="text-xs">
                                   Show tabs as a flat list
+                                </Text>
+                              </div>
+                            </Radio>
+                          </Space>
+                        </Radio.Group>
+                      </div>
+                    </div>
+                    <div>
+                      <Text strong>All Windows Default View Mode</Text>
+                      <div className="mt-2">
+                        <Radio.Group
+                          value={allWindowsViewMode}
+                          onChange={(e) =>
+                            handleAllWindowsViewModeChange(e.target.value)
+                          }
+                        >
+                          <Space direction="vertical">
+                            <Radio value="grid">
+                              <div>
+                                <div className="font-medium">Windowed Grid View (Recommended)</div>
+                                <Text type="secondary" className="text-xs">
+                                  Display each browser window as a separate interactive tile with local search and drag-and-drop tab movement
+                                </Text>
+                              </div>
+                            </Radio>
+                            <Radio value="list">
+                              <div>
+                                <div className="font-medium">Unified List View</div>
+                                <Text type="secondary" className="text-xs">
+                                  Display all tabs from all windows in a single vertical list
                                 </Text>
                               </div>
                             </Radio>

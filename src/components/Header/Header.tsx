@@ -11,7 +11,9 @@ import {
   Moon,
   ChevronDown,
   Layers,
-  XCircle
+  XCircle,
+  LayoutGrid,
+  List
 } from 'lucide-react'
 
 import logo from '../../assets/logo.svg'
@@ -186,17 +188,34 @@ export default function Header({
   navigation
 }: Readonly<HeaderProps & { navigation?: ReactNode }>) {
   const dispatch = useDispatch()
-  const { selectedTabs, tabs, filteredTabs } = useSelector(
-    (state: { tabs: TabState }) => state.tabs
+  const { selectedTabs, tabs, filteredTabs, selectedWindow } = useSelector(
+    (state: any) => state.tabs
   )
   const [checkedList, setCheckedList] = useState(selectedTabs)
   const [indeterminate, setIndeterminate] = useState(false)
   const [checkAll, setCheckAll] = useState(false)
+  const [allWindowsViewMode, setAllWindowsViewMode] = useState<'grid' | 'list'>('grid')
 
   const [allWindows, setAllWindows] = useState([])
   const [currentWindow, setCurrentWindow] = useState({})
   const [moveModalVisible, setMoveModalVisible] = useState(false)
   const [saveListModalVisible, setSaveListModalVisible] = useState(false)
+
+  useEffect(() => {
+    chrome.storage.local.get(['allWindowsViewMode'], (result) => {
+      if (result.allWindowsViewMode) {
+        setAllWindowsViewMode(result.allWindowsViewMode)
+      }
+    })
+
+    const handleStorageChange = (changes: any, area: string) => {
+      if (area === 'local' && changes.allWindowsViewMode) {
+        setAllWindowsViewMode(changes.allWindowsViewMode.newValue)
+      }
+    }
+    chrome.storage.onChanged.addListener(handleStorageChange)
+    return () => chrome.storage.onChanged.removeListener(handleStorageChange)
+  }, [])
 
   async function getWindows() {
     setAllWindows(await getAllWindows())
@@ -259,14 +278,40 @@ export default function Header({
         className="flex flex-row justify-between items-center mt-1"
         id="selection-action"
       >
-        <div className="flex mb-0 overflow-x-auto sm:overflow-visible no-scrollbar">
+        <div className="flex mb-0 overflow-x-auto sm:overflow-visible no-scrollbar items-center">
           <div className="mr-3 shrink-0">
             <Selection />
           </div>
           <div className="shrink-0 mr-3">{sortButton}</div>
-          <div className="hidden sm:block">
+          <div className="hidden sm:block shrink-0">
             <WindowSelector />
           </div>
+          {(selectedWindow as any) === 'all' && (
+            <div className="shrink-0 ml-1 sm:ml-2">
+              <Btn
+                title={
+                  allWindowsViewMode === 'grid'
+                    ? 'Switch to List View'
+                    : 'Switch to Grid View'
+                }
+                onClick={() => {
+                  const next = allWindowsViewMode === 'grid' ? 'list' : 'grid'
+                  setAllWindowsViewMode(next)
+                  chrome.storage.local.set({ allWindowsViewMode: next })
+                }}
+                className="flex items-center gap-1.5 !px-2.5 shadow-md hover:shadow-sm"
+              >
+                {allWindowsViewMode === 'grid' ? (
+                  <LayoutGrid size={14} className="text-blue-600 mr-1" />
+                ) : (
+                  <List size={14} className="text-blue-600 mr-1" />
+                )}
+                <span className="text-xs font-medium">
+                  {allWindowsViewMode === 'grid' ? 'Grid' : 'List'}
+                </span>
+              </Btn>
+            </div>
+          )}
         </div>
         {selectedTabs.length > 0 && (
           <Space size="small" wrap>
@@ -279,7 +324,7 @@ export default function Header({
               title="Group Selected Tabs"
               onClick={() => {
                 if (selectedTabs.length > 0) {
-                  chrome.tabs.group({ tabIds: selectedTabs })
+                  chrome.tabs.group({ tabIds: selectedTabs.map(Number) })
                 }
               }}
             >
@@ -351,14 +396,14 @@ export default function Header({
         <MoveModal
           selectedTabs={selectedTabs}
           windows={allWindows}
-          currentWindow={currentWindow}
+          currentWindow={currentWindow as any}
           setMoveModalVisible={setMoveModalVisible}
         />
       )}
       {saveListModalVisible && (
         <SaveListModal
           open={saveListModalVisible}
-          selectedTabIds={selectedTabs}
+          selectedTabIds={selectedTabs.map(Number)}
           onClose={() => setSaveListModalVisible(false)}
         />
       )}
