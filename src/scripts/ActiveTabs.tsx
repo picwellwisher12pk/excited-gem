@@ -46,7 +46,8 @@ export async function updateTabs(getTabsFunc: any, appStore: any) {
         title,
         url,
         windowId,
-        groupId
+        groupId,
+        incognito
       } = tab
       if (url) {
         // Merge YouTube info if available
@@ -90,7 +91,8 @@ export async function updateTabs(getTabsFunc: any, appStore: any) {
           url,
           groupId,
           windowId,
-          youtubeInfo
+          youtubeInfo,
+          incognito: Boolean(incognito)
         }
       }
       return null

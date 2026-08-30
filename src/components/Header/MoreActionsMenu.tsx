@@ -6,6 +6,7 @@ import { DuplicateTabsModal } from '../../components/Modals/DuplicateTabsModal'
 import { YoutubeTabsModal } from '../../components/Modals/YoutubeTabsModal'
 import { AITestModal } from '../../components/Modals/AITestModal'
 import {
+  BarChart3,
   Bot,
   Copy,
   FileText,
@@ -166,6 +167,15 @@ const MoreActionsMenu = () => {
       icon: <Layers size={14} />,
       onClick: handleGroupByDomain,
       disabled: isGrouping
+    },
+    {
+      key: 'analytics-dashboard',
+      label: 'Analytics & Insights',
+      icon: <BarChart3 size={14} className="text-blue-500" />,
+      onClick: () => {
+        window.location.href = '/tabs/analytics.html'
+        setIsOpen(false)
+      }
     },
     {
       key: 'export-markdown',

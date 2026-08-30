@@ -6,12 +6,13 @@ import {
   Settings,
   Menu as MenuIcon,
   X,
-  BookmarkPlus
+  BookmarkPlus,
+  BarChart3
 } from 'lucide-react'
 import type { MenuProps } from 'antd'
 
 interface SidebarProps {
-  currentPage: 'tabs' | 'sessions' | 'settings' | 'bookmarks' | 'lists'
+  currentPage: 'tabs' | 'sessions' | 'settings' | 'bookmarks' | 'lists' | 'analytics'
   collapsed?: boolean
   onToggle?: () => void
   onAIClick?: () => void
@@ -50,7 +51,7 @@ export default function Sidebar({
   } | null>(null)
 
   useEffect(() => {
-    if (process.env.NODE_ENV !== 'production') {
+    if ((globalThis as any).process?.env?.NODE_ENV !== 'production') {
       const checkHash = () => {
         fetch('/sync-hash.json?t=' + Date.now())
           .then((res) => res.json())
@@ -100,6 +101,11 @@ export default function Sidebar({
       key: 'bookmarks',
       icon: <Folder size={18} />,
       label: <a href="/tabs/bookmarks.html">Bookmarks</a>
+    },
+    {
+      key: 'analytics',
+      icon: <BarChart3 size={18} />,
+      label: <a href="/tabs/analytics.html">Analytics</a>
     }
   ]
 

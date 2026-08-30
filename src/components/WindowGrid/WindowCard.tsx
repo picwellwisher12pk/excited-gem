@@ -35,6 +35,30 @@ import { saveSession } from '../getsetSessions'
 import { faviconCache } from '../../utils/faviconCache'
 import { TabContextMenu } from '../Tab/ContextMenu'
 
+export function isWindowPrivate(
+  windowObj?: chrome.windows.Window,
+  tabs: any[] = []
+): boolean {
+  if (windowObj?.incognito) return true
+  return tabs.some((tab) => {
+    if (tab?.incognito) return true
+    const title = (tab?.title || '').toLowerCase()
+    const url = (tab?.url || '').toLowerCase()
+    return (
+      title.includes('inprivate') ||
+      title.includes('incognito') ||
+      title.includes('private browsing') ||
+      url.includes('inprivate') ||
+      url.includes('incognito') ||
+      url.includes('privatebrowsing') ||
+      url.startsWith('edge://inprivate') ||
+      url.startsWith('chrome://incognito') ||
+      url.startsWith('about:inprivate') ||
+      url.startsWith('about:privatebrowsing')
+    )
+  })
+}
+
 interface WindowCardProps {
   windowId: number
   windowIndex: number
@@ -74,6 +98,8 @@ export function SortableGridTabItem({
 }: SortableGridTabItemProps) {
   const dispatch = useDispatch()
   const [imgError, setImgError] = useState(false)
+  const isPrivateTab = isIncognito || isWindowPrivate(undefined, [tab])
+
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
       id: tab.id,
@@ -104,7 +130,7 @@ export function SortableGridTabItem({
     }
   }
 
-  const itemBgClass = isIncognito
+  const itemBgClass = isPrivateTab
     ? isSelected
       ? 'bg-purple-900/60 border-purple-400 text-purple-100 shadow-sm'
       : tab.active
@@ -116,7 +142,7 @@ export function SortableGridTabItem({
     ? 'bg-blue-50/50 border-blue-400/80 shadow-xs'
     : 'bg-white border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/80'
 
-  const titleClass = isIncognito
+  const titleClass = isPrivateTab
     ? tab.active
       ? 'text-purple-300 font-semibold'
       : 'text-zinc-200'
@@ -124,11 +150,11 @@ export function SortableGridTabItem({
     ? 'text-blue-700 font-semibold'
     : 'text-slate-700'
 
-  const actionBtnClass = isIncognito
+  const actionBtnClass = isPrivateTab
     ? 'p-1 text-zinc-400 hover:text-zinc-200 rounded transition-colors hover:bg-zinc-700/60'
     : 'p-1 text-slate-400 hover:text-slate-600 rounded transition-colors'
 
-  const closeBtnClass = isIncognito
+  const closeBtnClass = isPrivateTab
     ? 'p-1 text-zinc-400 hover:text-red-400 rounded transition-colors hover:bg-red-950/60'
     : 'p-1 text-slate-400 hover:text-red-600 rounded transition-colors'
 
@@ -324,6 +350,14 @@ export function WindowCard({
     (state: RootState) => state.tabs.isSelectionMode
   )
 
+  const isPrivateWindow = isIncognito || isWindowPrivate(undefined, tabs)
+  const isEdgeInPrivate = tabs.some(
+    (t) =>
+      (t.title && t.title.toLowerCase().includes('inprivate')) ||
+      (t.url && t.url.toLowerCase().includes('inprivate'))
+  )
+  const privateBadgeLabel = isEdgeInPrivate ? 'InPrivate' : 'Incognito'
+
   // Droppable container for whole window card
   const { setNodeRef, isOver } = useDroppable({
     id: `window-card-${windowId}`,
@@ -423,7 +457,7 @@ export function WindowCard({
     }
   }
 
-  const cardContainerClass = isIncognito
+  const cardContainerClass = isPrivateWindow
     ? `flex flex-col bg-zinc-900 rounded-xl border shadow-md transition-all duration-200 overflow-hidden max-h-[580px] h-[520px] ${
         isOver
           ? 'border-purple-500 ring-2 ring-purple-500/50 bg-purple-950/20'
@@ -439,13 +473,13 @@ export function WindowCard({
           : 'border-slate-200 hover:border-slate-300'
       }`
 
-  const headerClass = isIncognito
+  const headerClass = isPrivateWindow
     ? 'flex items-center justify-between px-3.5 py-2.5 border-b select-none bg-gradient-to-r from-zinc-900 via-zinc-850 to-zinc-900 border-zinc-800 text-zinc-100'
     : isCurrentWindow
     ? 'flex items-center justify-between px-3.5 py-2.5 border-b select-none bg-gradient-to-r from-blue-50/90 via-slate-50 to-white border-blue-200/80'
     : 'flex items-center justify-between px-3.5 py-2.5 border-b select-none bg-slate-50/90 border-slate-200'
 
-  const dotClass = isIncognito
+  const dotClass = isPrivateWindow
     ? isCurrentWindow
       ? 'bg-purple-500 animate-pulse ring-2 ring-purple-400/40'
       : 'bg-zinc-600'
@@ -453,11 +487,11 @@ export function WindowCard({
     ? 'bg-blue-600 animate-pulse'
     : 'bg-slate-400'
 
-  const headerBtnClass = isIncognito
+  const headerBtnClass = isPrivateWindow
     ? 'flex items-center justify-center w-7 h-7 min-w-0 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
     : 'flex items-center justify-center w-7 h-7 min-w-0 hover:bg-slate-200/70'
 
-  const headerCloseBtnClass = isIncognito
+  const headerCloseBtnClass = isPrivateWindow
     ? 'flex items-center justify-center w-7 h-7 min-w-0 hover:bg-red-950/60 text-zinc-400 hover:text-red-400'
     : 'flex items-center justify-center w-7 h-7 min-w-0 hover:bg-red-50 text-slate-400 hover:text-red-500'
 
@@ -473,21 +507,21 @@ export function WindowCard({
           <div className="flex items-center gap-1.5 truncate">
             <span
               className={`font-semibold text-sm ${
-                isIncognito ? 'text-zinc-100' : 'text-slate-800'
+                isPrivateWindow ? 'text-zinc-100' : 'text-slate-800'
               }`}
             >
               Window {windowIndex}
             </span>
-            {isIncognito && (
+            {isPrivateWindow && (
               <span className="flex items-center gap-1 bg-purple-950/90 text-purple-300 border border-purple-800/80 text-[11px] font-medium px-1.5 py-0.2 rounded-full">
                 <EyeOff size={11} />
-                <span>Incognito</span>
+                <span>{privateBadgeLabel}</span>
               </span>
             )}
             {isCurrentWindow && (
               <span
                 className={
-                  isIncognito
+                  isPrivateWindow
                     ? 'bg-purple-900/60 text-purple-300 border border-purple-700/60 text-[11px] font-medium px-1.5 py-0.2 rounded-full'
                     : 'bg-blue-100 text-blue-700 text-[11px] font-medium px-1.5 py-0.2 rounded-full'
                 }
@@ -498,7 +532,7 @@ export function WindowCard({
           </div>
           <span
             className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${
-              isIncognito
+              isPrivateWindow
                 ? tabs.length > 30
                   ? 'bg-amber-950 text-amber-300 border border-amber-800'
                   : 'bg-zinc-800 text-zinc-300 border border-zinc-700/80'
@@ -517,7 +551,7 @@ export function WindowCard({
             <Button
               type="text"
               size="small"
-              icon={<Eye size={14} className={isIncognito ? 'text-zinc-300' : 'text-slate-600'} />}
+              icon={<Eye size={14} className={isPrivateWindow ? 'text-zinc-300' : 'text-slate-600'} />}
               onClick={handleFocusWindow}
               className={headerBtnClass}
             />
@@ -526,7 +560,7 @@ export function WindowCard({
             <Button
               type="text"
               size="small"
-              icon={<Plus size={14} className={isIncognito ? 'text-zinc-300' : 'text-slate-600'} />}
+              icon={<Plus size={14} className={isPrivateWindow ? 'text-zinc-300' : 'text-slate-600'} />}
               onClick={handleNewTab}
               className={headerBtnClass}
             />
@@ -535,7 +569,7 @@ export function WindowCard({
             <Button
               type="text"
               size="small"
-              icon={<Save size={14} className={isIncognito ? 'text-zinc-300' : 'text-slate-600'} />}
+              icon={<Save size={14} className={isPrivateWindow ? 'text-zinc-300' : 'text-slate-600'} />}
               onClick={handleSaveWindow}
               className={headerBtnClass}
             />
@@ -544,7 +578,7 @@ export function WindowCard({
             <Button
               type="text"
               size="small"
-              icon={<Moon size={14} className={isIncognito ? 'text-zinc-300' : 'text-slate-600'} />}
+              icon={<Moon size={14} className={isPrivateWindow ? 'text-zinc-300' : 'text-slate-600'} />}
               onClick={handleDiscardWindow}
               className={headerBtnClass}
             />
@@ -575,7 +609,7 @@ export function WindowCard({
       {/* Local In-Window Search Bar */}
       <div
         className={`px-3 py-2 border-b ${
-          isIncognito
+          isPrivateWindow
             ? 'bg-zinc-900 border-zinc-800/80'
             : 'border-slate-100 bg-slate-50/40'
         }`}
@@ -584,7 +618,7 @@ export function WindowCard({
           prefix={
             <Search
               size={13}
-              className={isIncognito ? 'text-zinc-500 mr-1' : 'text-slate-400 mr-1'}
+              className={isPrivateWindow ? 'text-zinc-500 mr-1' : 'text-slate-400 mr-1'}
             />
           }
           allowClear
@@ -593,7 +627,7 @@ export function WindowCard({
           value={localSearch}
           onChange={(e) => setLocalSearch(e.target.value)}
           className={`rounded-md text-xs ${
-            isIncognito
+            isPrivateWindow
               ? '!bg-zinc-800 !border-zinc-700 !text-zinc-100 placeholder:!text-zinc-500 hover:!border-zinc-600'
               : ''
           }`}
@@ -604,14 +638,14 @@ export function WindowCard({
       {otherSelectedTabs.length > 0 && (
         <div
           className={`px-3 py-1.5 border-b flex items-center justify-between ${
-            isIncognito
+            isPrivateWindow
               ? 'bg-purple-950/70 border-purple-900 text-purple-200'
               : 'bg-blue-50 border-blue-100'
           }`}
         >
           <span
             className={`text-[11px] font-medium ${
-              isIncognito ? 'text-purple-200' : 'text-blue-800'
+              isPrivateWindow ? 'text-purple-200' : 'text-blue-800'
             }`}
           >
             {otherSelectedTabs.length} selected elsewhere
@@ -623,7 +657,7 @@ export function WindowCard({
             loading={isMovingBatch}
             onClick={handleMoveSelectedHere}
             className={`!h-6 !text-[11px] !px-2 flex items-center gap-1 ${
-              isIncognito ? '!bg-purple-600 hover:!bg-purple-500 !border-purple-600' : ''
+              isPrivateWindow ? '!bg-purple-600 hover:!bg-purple-500 !border-purple-600' : ''
             }`}
           >
             Move Here
@@ -634,13 +668,13 @@ export function WindowCard({
       {/* Scrollable Tab List */}
       <div
         className={`flex-1 overflow-y-auto p-2.5 space-y-1.5 focus:outline-none ${
-          isIncognito ? 'bg-zinc-900' : 'bg-white'
+          isPrivateWindow ? 'bg-zinc-900' : 'bg-white'
         }`}
       >
         {displayedTabs.length === 0 ? (
           <div
             className={`flex flex-col items-center justify-center h-full text-xs py-8 text-center ${
-              isIncognito ? 'text-zinc-500' : 'text-slate-400'
+              isPrivateWindow ? 'text-zinc-500' : 'text-slate-400'
             }`}
           >
             {localSearch ? (
@@ -660,7 +694,7 @@ export function WindowCard({
                 tab={tab}
                 isSelected={selectedTabs.includes(tab.id)}
                 isSelectionMode={isSelectionMode}
-                isIncognito={isIncognito}
+                isIncognito={isPrivateWindow}
                 tabActionButtonsSetting={tabActionButtonsSetting}
                 groupInfo={
                   tab.groupId && tab.groupId !== -1
@@ -681,7 +715,7 @@ export function WindowCard({
       {/* Footer / Status bar for window tile */}
       <div
         className={`px-3 py-1.5 border-t flex items-center justify-between text-[11px] ${
-          isIncognito
+          isPrivateWindow
             ? 'bg-zinc-950/90 border-zinc-800 text-zinc-400'
             : 'bg-slate-50/80 border-slate-100 text-slate-500'
         }`}
@@ -692,7 +726,7 @@ export function WindowCard({
         <button
           onClick={handleFocusWindow}
           className={`flex items-center gap-1 transition-colors cursor-pointer ${
-            isIncognito
+            isPrivateWindow
               ? 'text-zinc-400 hover:text-purple-300'
               : 'text-slate-500 hover:text-blue-600'
           }`}

@@ -1,4 +1,4 @@
-import { Select, Space } from 'antd'
+import { Select, Space, Segmented } from 'antd'
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import type { ReactNode } from 'react'
@@ -287,29 +287,57 @@ export default function Header({
             <WindowSelector />
           </div>
           {(selectedWindow as any) === 'all' && (
-            <div className="shrink-0 ml-1 sm:ml-2">
-              <Btn
-                title={
-                  allWindowsViewMode === 'grid'
-                    ? 'Switch to List View'
-                    : 'Switch to Grid View'
-                }
-                onClick={() => {
-                  const next = allWindowsViewMode === 'grid' ? 'list' : 'grid'
+            <div className="shrink-0 ml-2">
+              <Segmented
+                size="small"
+                value={allWindowsViewMode}
+                onChange={(val) => {
+                  const next = val as 'grid' | 'list'
                   setAllWindowsViewMode(next)
                   chrome.storage.local.set({ allWindowsViewMode: next })
                 }}
-                className="flex items-center gap-1.5 !px-2.5 shadow-md hover:shadow-sm"
-              >
-                {allWindowsViewMode === 'grid' ? (
-                  <LayoutGrid size={14} className="text-blue-600 mr-1" />
-                ) : (
-                  <List size={14} className="text-blue-600 mr-1" />
-                )}
-                <span className="text-xs font-medium">
-                  {allWindowsViewMode === 'grid' ? 'Grid' : 'List'}
-                </span>
-              </Btn>
+                options={[
+                  {
+                    value: 'grid',
+                    label: (
+                      <div
+                        className="flex flex-row items-center justify-center gap-1.5 px-2 py-0.5 whitespace-nowrap leading-none"
+                        title="Windowed Grid View"
+                      >
+                        <LayoutGrid
+                          size={14}
+                          className={`shrink-0 ${
+                            allWindowsViewMode === 'grid'
+                              ? 'text-blue-600'
+                              : 'text-slate-500'
+                          }`}
+                        />
+                        <span className="text-xs font-semibold leading-none">Grid</span>
+                      </div>
+                    )
+                  },
+                  {
+                    value: 'list',
+                    label: (
+                      <div
+                        className="flex flex-row items-center justify-center gap-1.5 px-2 py-0.5 whitespace-nowrap leading-none"
+                        title="Unified List View"
+                      >
+                        <List
+                          size={14}
+                          className={`shrink-0 ${
+                            allWindowsViewMode === 'list'
+                              ? 'text-blue-600'
+                              : 'text-slate-500'
+                          }`}
+                        />
+                        <span className="text-xs font-semibold leading-none">List</span>
+                      </div>
+                    )
+                  }
+                ]}
+                className="bg-white/95 shadow-md border border-slate-200/80 rounded-lg p-0.5 select-none"
+              />
             </div>
           )}
         </div>

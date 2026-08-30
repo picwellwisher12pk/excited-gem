@@ -12,7 +12,7 @@ import {
 } from '@dnd-kit/core'
 import { useSelector, useDispatch } from 'react-redux'
 import type { RootState } from '../../store/store'
-import { WindowCard, SortableGridTabItem } from './WindowCard'
+import { WindowCard, SortableGridTabItem, isWindowPrivate } from './WindowCard'
 import { getAllWindows, getCurrentWindow } from '../../scripts/general'
 import { updateFilteredTabs } from '../../store/tabSlice'
 import { arrayMove } from '@dnd-kit/sortable'
@@ -47,11 +47,15 @@ export function WindowGridView({
 
   const refreshWindows = async () => {
     try {
-      const wins = await getAllWindows()
-      const curr = await getCurrentWindow()
-      setWindowsList(wins || [])
-      if (curr && typeof curr.id === 'number') {
-        setCurrentWindowId(curr.id)
+      if (chrome.windows) {
+        chrome.windows.getAll({ populate: true }, (wins) => {
+          setWindowsList(wins || [])
+        })
+        chrome.windows.getCurrent({ populate: true }, (curr) => {
+          if (curr && typeof curr.id === 'number') {
+            setCurrentWindowId(curr.id)
+          }
+        })
       }
     } catch (err) {
       console.error('Failed to load windows for grid view:', err)
@@ -250,9 +254,7 @@ export function WindowGridView({
                 const windowTabs = tabsByWindow.get(winId) || []
                 const isCurrent = winId === currentWindowId
                 const windowObj = windowsList.find((w) => w.id === winId)
-                const isIncognito = Boolean(
-                  windowObj?.incognito || windowTabs.some((t) => t.incognito)
-                )
+                const isIncognito = isWindowPrivate(windowObj, windowTabs)
                 return (
                   <WindowCard
                     key={winId}
@@ -276,7 +278,7 @@ export function WindowGridView({
                     tab={activeDragTab}
                     isSelected={false}
                     isSelectionMode={false}
-                    isIncognito={Boolean(activeDragTab.incognito)}
+                    isIncognito={isWindowPrivate(undefined, [activeDragTab])}
                     tabActionButtonsSetting={tabActionButtonsSetting}
                     groupInfo={
                       activeDragTab.groupId && activeDragTab.groupId !== -1
