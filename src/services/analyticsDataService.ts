@@ -1,14 +1,18 @@
 import { getTree } from '../utils/bookmarks'
 import type { BookmarkNode } from '../utils/bookmarks'
 // @ts-ignore
-import { getLists, getBookmarkLists, getSessions } from '../components/getsetSessions'
+import {
+  getLists,
+  getBookmarkLists,
+  getSessions
+} from '../components/getsetSessions'
 
 const browser =
   typeof chrome !== 'undefined'
     ? chrome
     : typeof (globalThis as any).browser !== 'undefined'
-    ? (globalThis as any).browser
-    : null
+      ? (globalThis as any).browser
+      : null
 
 export interface DomainStat {
   domain: string
@@ -195,9 +199,10 @@ export function extractDomain(url?: string): string {
   try {
     if (url.startsWith('chrome://')) return 'chrome://'
     if (url.startsWith('chrome-extension://')) return 'Extension'
-    if (url.startsWith('about:') || url.startsWith('edge://')) return 'Browser Internal'
+    if (url.startsWith('about:') || url.startsWith('edge://'))
+      return 'Browser Internal'
     if (url.startsWith('file://')) return 'Local File'
-    
+
     const parsed = new URL(url)
     return parsed.hostname.replace(/^www\./, '') || parsed.protocol
   } catch {
@@ -229,7 +234,10 @@ export function aggregateTopDomains(
   items: Array<{ url?: string; favIconUrl?: string }>,
   limit = 100
 ): DomainStat[] {
-  const map = new Map<string, { count: number; favIconUrl?: string; urls: Set<string> }>()
+  const map = new Map<
+    string,
+    { count: number; favIconUrl?: string; urls: Set<string> }
+  >()
   let totalValid = 0
 
   for (const item of items) {
@@ -259,7 +267,10 @@ export function aggregateTopDomains(
     result.push({
       domain,
       count: value.count,
-      percentage: totalValid > 0 ? Number(((value.count / totalValid) * 100).toFixed(1)) : 0,
+      percentage:
+        totalValid > 0
+          ? Number(((value.count / totalValid) * 100).toFixed(1))
+          : 0,
       favIconUrl: value.favIconUrl,
       urls: Array.from(value.urls)
     })
@@ -296,9 +307,12 @@ export async function fetchTabsStats(): Promise<TabsStats> {
   // 1. Fetch Windows & Tabs
   const [windows, allTabs] = await Promise.all([
     new Promise<chrome.windows.Window[]>((resolve) => {
-      browser.windows.getAll({ populate: true }, (wins: chrome.windows.Window[]) => {
-        resolve(wins || [])
-      })
+      browser.windows.getAll(
+        { populate: true },
+        (wins: chrome.windows.Window[]) => {
+          resolve(wins || [])
+        }
+      )
     }),
     new Promise<chrome.tabs.Tab[]>((resolve) => {
       browser.tabs.query({}, (tabs: chrome.tabs.Tab[]) => {
@@ -311,9 +325,13 @@ export async function fetchTabsStats(): Promise<TabsStats> {
   let tabGroups: TabGroupStat[] = []
   if (browser.tabGroups && typeof browser.tabGroups.query === 'function') {
     try {
-      const groups = await new Promise<chrome.tabGroups.TabGroup[]>((resolve) => {
-        browser.tabGroups.query({}, (res: chrome.tabGroups.TabGroup[]) => resolve(res || []))
-      })
+      const groups = await new Promise<chrome.tabGroups.TabGroup[]>(
+        (resolve) => {
+          browser.tabGroups.query({}, (res: chrome.tabGroups.TabGroup[]) =>
+            resolve(res || [])
+          )
+        }
+      )
       tabGroups = groups.map((g) => {
         const groupTabsCount = allTabs.filter((t) => t.groupId === g.id).length
         return {
@@ -342,7 +360,10 @@ export async function fetchTabsStats(): Promise<TabsStats> {
   let focusedWindowId: number | undefined
 
   const protocolBreakdown: Record<string, number> = {}
-  const urlMap = new Map<string, { title?: string; tabIds: number[]; windowIds: number[] }>()
+  const urlMap = new Map<
+    string,
+    { title?: string; tabIds: number[]; windowIds: number[] }
+  >()
 
   const windowStats: WindowStat[] = windows.map((win) => {
     if (win.type === 'normal') normalWindowsCount++
@@ -480,18 +501,31 @@ export async function fetchBookmarksStats(): Promise<BookmarksStats> {
     older: 0
   }
 
-  const allBookmarkNodes: Array<{ url: string; title: string; dateAdded?: number }> = []
-  const urlMap = new Map<string, Array<{ id: string; title: string; folderPath: string }>>()
+  const allBookmarkNodes: Array<{
+    url: string
+    title: string
+    dateAdded?: number
+  }> = []
+  const urlMap = new Map<
+    string,
+    Array<{ id: string; title: string; folderPath: string }>
+  >()
   const folderStats: FolderStat[] = []
 
   function walk(node: BookmarkNode, currentPath: string, depth: number) {
     if (depth > maxDepth) maxDepth = depth
 
-    const path = currentPath ? `${currentPath} / ${node.title || 'Untitled'}` : node.title || 'Root'
+    const path = currentPath
+      ? `${currentPath} / ${node.title || 'Untitled'}`
+      : node.title || 'Root'
 
     if (node.url) {
       totalBookmarks++
-      allBookmarkNodes.push({ url: node.url, title: node.title, dateAdded: node.dateAdded })
+      allBookmarkNodes.push({
+        url: node.url,
+        title: node.title,
+        dateAdded: node.dateAdded
+      })
 
       // Timeline breakdown
       if (node.dateAdded) {
@@ -505,7 +539,11 @@ export async function fetchBookmarksStats(): Promise<BookmarksStats> {
 
       // Track duplicates
       const existing = urlMap.get(node.url)
-      const location = { id: node.id, title: node.title, folderPath: currentPath || 'Root' }
+      const location = {
+        id: node.id,
+        title: node.title,
+        folderPath: currentPath || 'Root'
+      }
       if (existing) {
         existing.push(location)
       } else {
@@ -560,7 +598,9 @@ export async function fetchBookmarksStats(): Promise<BookmarksStats> {
   duplicateBookmarks.sort((a, b) => b.count - a.count)
 
   const topDomains = aggregateTopDomains(allBookmarkNodes)
-  const topFolders = folderStats.sort((a, b) => b.bookmarkCount - a.bookmarkCount).slice(0, 10)
+  const topFolders = folderStats
+    .sort((a, b) => b.bookmarkCount - a.bookmarkCount)
+    .slice(0, 10)
 
   return {
     totalBookmarks,
@@ -602,7 +642,10 @@ export async function fetchListsStats(): Promise<ListsStats> {
     older: 0
   }
 
-  const processLibraries = (libraries: any[], storageType: 'extension' | 'bookmarks') => {
+  const processLibraries = (
+    libraries: any[],
+    storageType: 'extension' | 'bookmarks'
+  ) => {
     if (!libraries || !Array.isArray(libraries)) return
     totalLibraries += libraries.length
 
@@ -648,7 +691,8 @@ export async function fetchListsStats(): Promise<ListsStats> {
   largestLists.sort((a, b) => b.tabCount - a.tabCount)
 
   const topDomains = aggregateTopDomains(allTabs)
-  const avgTabsPerList = totalLists > 0 ? Number((totalTabs / totalLists).toFixed(1)) : 0
+  const avgTabsPerList =
+    totalLists > 0 ? Number((totalTabs / totalLists).toFixed(1)) : 0
 
   return {
     totalLibraries,
@@ -713,7 +757,10 @@ export async function fetchSessionsStats(): Promise<SessionsStats> {
       const tabs = windows[winId] || []
       tabs.forEach((t: any) => {
         sessionTabCount++
-        const item = { url: t.url || 'about:blank', title: t.title || t.url || 'Untitled' }
+        const item = {
+          url: t.url || 'about:blank',
+          title: t.title || t.url || 'Untitled'
+        }
         sessionTabs.push(item)
         allTabs.push(item)
       })
@@ -740,7 +787,8 @@ export async function fetchSessionsStats(): Promise<SessionsStats> {
   largestSessions.sort((a, b) => b.tabCount - a.tabCount)
 
   const topDomains = aggregateTopDomains(allTabs)
-  const avgTabsPerSession = totalSessions > 0 ? Number((totalTabs / totalSessions).toFixed(1)) : 0
+  const avgTabsPerSession =
+    totalSessions > 0 ? Number((totalTabs / totalSessions).toFixed(1)) : 0
 
   return {
     totalSessions,
@@ -773,7 +821,8 @@ export function buildCrossDomainMatrix(
       if (existing) {
         existing[key] += d.count
         existing.totalCount += d.count
-        if (!existing.favIconUrl && d.favIconUrl) existing.favIconUrl = d.favIconUrl
+        if (!existing.favIconUrl && d.favIconUrl)
+          existing.favIconUrl = d.favIconUrl
       } else {
         const item: CrossDomainStat = {
           domain: d.domain,
@@ -825,7 +874,9 @@ export async function fetchFullAnalyticsData(): Promise<FullAnalyticsData> {
 /**
  * Action: Close duplicate tabs (keeps the first occurrence)
  */
-export async function closeDuplicateTabs(duplicateUrl: string): Promise<number> {
+export async function closeDuplicateTabs(
+  duplicateUrl: string
+): Promise<number> {
   if (!browser || !browser.tabs) return 0
 
   const tabs: chrome.tabs.Tab[] = await new Promise((resolve) => {
@@ -835,7 +886,10 @@ export async function closeDuplicateTabs(duplicateUrl: string): Promise<number> 
   if (tabs.length <= 1) return 0
 
   // Keep first tab, close the rest
-  const tabsToClose = tabs.slice(1).map((t) => t.id).filter(Boolean) as number[]
+  const tabsToClose = tabs
+    .slice(1)
+    .map((t) => t.id)
+    .filter(Boolean) as number[]
   if (tabsToClose.length > 0) {
     await new Promise((resolve) => browser.tabs.remove(tabsToClose, resolve))
   }
@@ -893,7 +947,9 @@ Generated on: ${dateStr}
 ### Top Open Domains
 ${data.tabs.topDomains
   .slice(0, 10)
-  .map((d, i) => `${i + 1}. **${d.domain}**: ${d.count} tabs (${d.percentage}%)`)
+  .map(
+    (d, i) => `${i + 1}. **${d.domain}**: ${d.count} tabs (${d.percentage}%)`
+  )
   .join('\n')}
 
 ---
@@ -906,7 +962,10 @@ ${data.tabs.topDomains
 ### Top Bookmarked Domains
 ${data.bookmarks.topDomains
   .slice(0, 10)
-  .map((d, i) => `${i + 1}. **${d.domain}**: ${d.count} bookmarks (${d.percentage}%)`)
+  .map(
+    (d, i) =>
+      `${i + 1}. **${d.domain}**: ${d.count} bookmarks (${d.percentage}%)`
+  )
   .join('\n')}
 
 ---

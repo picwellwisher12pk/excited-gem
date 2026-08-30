@@ -1,13 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react'
-import {
-  Tabs,
-  Button,
-  Spin,
-  Typography,
-  Badge,
-  Tooltip,
-  message
-} from 'antd'
+import { Tabs, Button, Spin, Typography, Badge, Tooltip, message } from 'antd'
 import {
   BarChart3,
   RefreshCw,
@@ -30,9 +22,7 @@ import { AIDrawer } from '../AI/AIDrawer'
 import { RoutineQuickMenu } from '../Routines/RoutineQuickMenu'
 import UnifiedSearch from '../Search'
 import { getAIService } from '../../ai/AIService'
-import {
-  fetchFullAnalyticsData
-} from '../../services/analyticsDataService'
+import { fetchFullAnalyticsData } from '../../services/analyticsDataService'
 import type { FullAnalyticsData } from '../../services/analyticsDataService'
 import { OverviewView } from './OverviewView'
 import { TabsAnalyticsView } from './TabsAnalyticsView'
@@ -49,7 +39,9 @@ export const AnalyticsDashboard: React.FC = () => {
   const [activeTabKey, setActiveTabKey] = useState('overview')
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
-  const [analyticsData, setAnalyticsData] = useState<FullAnalyticsData | null>(null)
+  const [analyticsData, setAnalyticsData] = useState<FullAnalyticsData | null>(
+    null
+  )
   const [exportModalOpen, setExportModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -92,136 +84,142 @@ export const AnalyticsDashboard: React.FC = () => {
     checkAI()
   }, [dispatch])
 
-  const tabItems = useMemo(() => [
-    {
-      key: 'overview',
-      label: (
-        <span className="flex items-center gap-2 font-medium">
-          <PieChart size={16} />
-          <span>Overview</span>
-        </span>
-      ),
-      children: analyticsData ? (
-        <OverviewView
-          data={analyticsData}
-          onTabChange={setActiveTabKey}
-          onRefresh={() => loadData(true)}
-        />
-      ) : null
-    },
-    {
-      key: 'tabs',
-      label: (
-        <span className="flex items-center gap-2 font-medium">
-          <LayoutGrid size={16} />
-          <span>Tabs</span>
-          {analyticsData && (
-            <Badge
-              count={analyticsData.tabs.totalTabs}
-              overflowCount={999}
-              className="!text-xs ml-1"
-              color="#1890ff"
-            />
-          )}
-        </span>
-      ),
-      children: analyticsData ? (
-        <TabsAnalyticsView
-          stats={analyticsData.tabs}
-          onRefresh={() => loadData(true)}
-        />
-      ) : null
-    },
-    {
-      key: 'bookmarks',
-      label: (
-        <span className="flex items-center gap-2 font-medium">
-          <Bookmark size={16} />
-          <span>Bookmarks</span>
-          {analyticsData && (
-            <Badge
-              count={analyticsData.bookmarks.totalBookmarks}
-              overflowCount={999}
-              className="!text-xs ml-1"
-              color="#faad14"
-            />
-          )}
-        </span>
-      ),
-      children: analyticsData ? (
-        <BookmarksAnalyticsView
-          stats={analyticsData.bookmarks}
-          onRefresh={() => loadData(true)}
-        />
-      ) : null
-    },
-    {
-      key: 'lists',
-      label: (
-        <span className="flex items-center gap-2 font-medium">
-          <BookmarkPlus size={16} />
-          <span>Lists</span>
-          {analyticsData && (
-            <Badge
-              count={analyticsData.lists.totalLists}
-              overflowCount={999}
-              className="!text-xs ml-1"
-              color="#722ed1"
-            />
-          )}
-        </span>
-      ),
-      children: analyticsData ? (
-        <ListsAnalyticsView
-          stats={analyticsData.lists}
-          onRefresh={() => loadData(true)}
-        />
-      ) : null
-    },
-    {
-      key: 'sessions',
-      label: (
-        <span className="flex items-center gap-2 font-medium">
-          <FolderOpen size={16} />
-          <span>Sessions</span>
-          {analyticsData && (
-            <Badge
-              count={analyticsData.sessions.totalSessions}
-              overflowCount={999}
-              className="!text-xs ml-1"
-              color="#52c41a"
-            />
-          )}
-        </span>
-      ),
-      children: analyticsData ? (
-        <SessionsAnalyticsView
-          stats={analyticsData.sessions}
-          onRefresh={() => loadData(true)}
-        />
-      ) : null
-    },
-    {
-      key: 'domains',
-      label: (
-        <span className="flex items-center gap-2 font-medium">
-          <Globe size={16} />
-          <span>Domain Matrix</span>
-          {analyticsData && (
-            <Badge
-              count={analyticsData.crossDomains.length}
-              overflowCount={999}
-              className="!text-xs ml-1"
-              color="#13c2c2"
-            />
-          )}
-        </span>
-      ),
-      children: analyticsData ? (
-        <DomainCrossExplorer data={analyticsData} externalSearch={searchQuery} />
-      ) : null
-    }
-  ], [analyticsData, loadData])
+  const tabItems = useMemo(
+    () => [
+      {
+        key: 'overview',
+        label: (
+          <span className="flex items-center gap-2 font-medium">
+            <PieChart size={16} />
+            <span>Overview</span>
+          </span>
+        ),
+        children: analyticsData ? (
+          <OverviewView
+            data={analyticsData}
+            onTabChange={setActiveTabKey}
+            onRefresh={() => loadData(true)}
+          />
+        ) : null
+      },
+      {
+        key: 'tabs',
+        label: (
+          <span className="flex items-center gap-2 font-medium">
+            <LayoutGrid size={16} />
+            <span>Tabs</span>
+            {analyticsData && (
+              <Badge
+                count={analyticsData.tabs.totalTabs}
+                overflowCount={999}
+                className="!text-xs ml-1"
+                color="#1890ff"
+              />
+            )}
+          </span>
+        ),
+        children: analyticsData ? (
+          <TabsAnalyticsView
+            stats={analyticsData.tabs}
+            onRefresh={() => loadData(true)}
+          />
+        ) : null
+      },
+      {
+        key: 'bookmarks',
+        label: (
+          <span className="flex items-center gap-2 font-medium">
+            <Bookmark size={16} />
+            <span>Bookmarks</span>
+            {analyticsData && (
+              <Badge
+                count={analyticsData.bookmarks.totalBookmarks}
+                overflowCount={999}
+                className="!text-xs ml-1"
+                color="#faad14"
+              />
+            )}
+          </span>
+        ),
+        children: analyticsData ? (
+          <BookmarksAnalyticsView
+            stats={analyticsData.bookmarks}
+            onRefresh={() => loadData(true)}
+          />
+        ) : null
+      },
+      {
+        key: 'lists',
+        label: (
+          <span className="flex items-center gap-2 font-medium">
+            <BookmarkPlus size={16} />
+            <span>Lists</span>
+            {analyticsData && (
+              <Badge
+                count={analyticsData.lists.totalLists}
+                overflowCount={999}
+                className="!text-xs ml-1"
+                color="#722ed1"
+              />
+            )}
+          </span>
+        ),
+        children: analyticsData ? (
+          <ListsAnalyticsView
+            stats={analyticsData.lists}
+            onRefresh={() => loadData(true)}
+          />
+        ) : null
+      },
+      {
+        key: 'sessions',
+        label: (
+          <span className="flex items-center gap-2 font-medium">
+            <FolderOpen size={16} />
+            <span>Sessions</span>
+            {analyticsData && (
+              <Badge
+                count={analyticsData.sessions.totalSessions}
+                overflowCount={999}
+                className="!text-xs ml-1"
+                color="#52c41a"
+              />
+            )}
+          </span>
+        ),
+        children: analyticsData ? (
+          <SessionsAnalyticsView
+            stats={analyticsData.sessions}
+            onRefresh={() => loadData(true)}
+          />
+        ) : null
+      },
+      {
+        key: 'domains',
+        label: (
+          <span className="flex items-center gap-2 font-medium">
+            <Globe size={16} />
+            <span>Domain Matrix</span>
+            {analyticsData && (
+              <Badge
+                count={analyticsData.crossDomains.length}
+                overflowCount={999}
+                className="!text-xs ml-1"
+                color="#13c2c2"
+              />
+            )}
+          </span>
+        ),
+        children: analyticsData ? (
+          <DomainCrossExplorer
+            data={analyticsData}
+            externalSearch={searchQuery}
+          />
+        ) : null
+      }
+    ],
+    [analyticsData, loadData]
+  )
 
   return (
     <div className="flex h-[100vh] relative overflow-hidden">
@@ -301,7 +299,9 @@ export const AnalyticsDashboard: React.FC = () => {
                     }
                   }}
                   showTabFilters={false}
-                  foundCount={analyticsData ? analyticsData.crossDomains.length : 0}
+                  foundCount={
+                    analyticsData ? analyticsData.crossDomains.length : 0
+                  }
                   className="w-full !ml-0 rounded-md border-0"
                 />
               </div>

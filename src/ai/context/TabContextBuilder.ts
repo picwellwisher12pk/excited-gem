@@ -26,7 +26,13 @@ export interface TabData {
   index?: number
 }
 
-export type ContextStrategy = 'auto' | 'full' | 'compressed' | 'windowed' | 'semantic' | 'summary'
+export type ContextStrategy =
+  | 'auto'
+  | 'full'
+  | 'compressed'
+  | 'windowed'
+  | 'semantic'
+  | 'summary'
 
 export interface BuildContextOptions {
   strategy: ContextStrategy
@@ -51,8 +57,31 @@ function estimateTokens(text: string): number {
 
 /** Extract keywords from the user's query for semantic filtering */
 function extractKeywords(query: string): string[] {
-  const stopWords = new Set(['a', 'an', 'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
-    'of', 'with', 'by', 'from', 'all', 'my', 'me', 'i', 'is', 'are', 'can', 'you'])
+  const stopWords = new Set([
+    'a',
+    'an',
+    'the',
+    'and',
+    'or',
+    'but',
+    'in',
+    'on',
+    'at',
+    'to',
+    'for',
+    'of',
+    'with',
+    'by',
+    'from',
+    'all',
+    'my',
+    'me',
+    'i',
+    'is',
+    'are',
+    'can',
+    'you'
+  ])
   return query
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, ' ')
@@ -85,28 +114,46 @@ export class TabContextBuilder {
 
   build(options: BuildContextOptions): BuiltContext {
     const { strategy, tokenBudget, query, currentWindowId } = options
-    const effectiveStrategy = strategy === 'auto'
-      ? this.autoSelectStrategy(query ?? '', tokenBudget, currentWindowId)
-      : strategy
+    const effectiveStrategy =
+      strategy === 'auto'
+        ? this.autoSelectStrategy(query ?? '', tokenBudget, currentWindowId)
+        : strategy
 
     switch (effectiveStrategy) {
-      case 'full':      return this.buildFull(tokenBudget, effectiveStrategy)
-      case 'compressed': return this.buildCompressed(tokenBudget, effectiveStrategy)
-      case 'windowed':  return this.buildWindowed(tokenBudget, currentWindowId, effectiveStrategy)
-      case 'semantic':  return this.buildSemantic(tokenBudget, query ?? '', effectiveStrategy)
-      case 'summary':   return this.buildSummary(effectiveStrategy)
-      default:          return this.buildCompressed(tokenBudget, effectiveStrategy)
+      case 'full':
+        return this.buildFull(tokenBudget, effectiveStrategy)
+      case 'compressed':
+        return this.buildCompressed(tokenBudget, effectiveStrategy)
+      case 'windowed':
+        return this.buildWindowed(
+          tokenBudget,
+          currentWindowId,
+          effectiveStrategy
+        )
+      case 'semantic':
+        return this.buildSemantic(tokenBudget, query ?? '', effectiveStrategy)
+      case 'summary':
+        return this.buildSummary(effectiveStrategy)
+      default:
+        return this.buildCompressed(tokenBudget, effectiveStrategy)
     }
   }
 
-  private autoSelectStrategy(query: string, tokenBudget: number, currentWindowId?: number): ContextStrategy {
+  private autoSelectStrategy(
+    query: string,
+    tokenBudget: number,
+    currentWindowId?: number
+  ): ContextStrategy {
     const lq = query.toLowerCase()
 
     // Windowed queries
     if (/this window|current window/.test(lq)) return 'windowed'
 
     // Domain-level aggregation queries
-    if (/how many|count|most|domain|site|total/.test(lq) && !/specific|tab|close|move/.test(lq)) {
+    if (
+      /how many|count|most|domain|site|total/.test(lq) &&
+      !/specific|tab|close|move/.test(lq)
+    ) {
       return 'summary'
     }
 
@@ -128,17 +175,28 @@ export class TabContextBuilder {
     return 'summary'
   }
 
-  private buildFull(tokenBudget: number, strategy: ContextStrategy): BuiltContext {
+  private buildFull(
+    tokenBudget: number,
+    strategy: ContextStrategy
+  ): BuiltContext {
     let tabs = this.tabs
     const text = this.tabsToFull(tabs)
     if (estimateTokens(text) > tokenBudget) {
       // Truncate to fit budget
       return this.buildCompressed(tokenBudget, strategy)
     }
-    return { text, tabCount: tabs.length, estimatedTokens: estimateTokens(text), strategyUsed: strategy }
+    return {
+      text,
+      tabCount: tabs.length,
+      estimatedTokens: estimateTokens(text),
+      strategyUsed: strategy
+    }
   }
 
-  private buildCompressed(tokenBudget: number, strategy: ContextStrategy): BuiltContext {
+  private buildCompressed(
+    tokenBudget: number,
+    strategy: ContextStrategy
+  ): BuiltContext {
     const lines: string[] = []
     let tokens = 0
     const header = `You have access to ${this.tabs.length} browser tabs.\n\n`
@@ -161,11 +219,17 @@ export class TabContextBuilder {
     }
   }
 
-  private buildWindowed(tokenBudget: number, windowId: number | undefined, strategy: ContextStrategy): BuiltContext {
+  private buildWindowed(
+    tokenBudget: number,
+    windowId: number | undefined,
+    strategy: ContextStrategy
+  ): BuiltContext {
     const windowTabs = windowId
       ? this.tabs.filter((t) => t.windowId === windowId)
       : this.tabs.slice(0, 50)
-    const text = `Current window tabs (${windowTabs.length} total):\n\n` + this.tabsToCompressed(windowTabs)
+    const text =
+      `Current window tabs (${windowTabs.length} total):\n\n` +
+      this.tabsToCompressed(windowTabs)
     return {
       text,
       tabCount: windowTabs.length,
@@ -174,7 +238,11 @@ export class TabContextBuilder {
     }
   }
 
-  private buildSemantic(tokenBudget: number, query: string, strategy: ContextStrategy): BuiltContext {
+  private buildSemantic(
+    tokenBudget: number,
+    query: string,
+    strategy: ContextStrategy
+  ): BuiltContext {
     const keywords = extractKeywords(query)
     const filtered = this.filterSemantic(keywords)
     const relevant = filtered.slice(0, 200) // cap at 200 even if budget allows more
@@ -194,12 +262,15 @@ export class TabContextBuilder {
   private buildSummary(strategy: ContextStrategy): BuiltContext {
     const domainCounts: Record<string, number> = {}
     const windowCounts: Record<number, number> = {}
-    let pinned = 0, audible = 0, discarded = 0
+    let pinned = 0,
+      audible = 0,
+      discarded = 0
 
     for (const tab of this.tabs) {
       const domain = getDomain(tab.url)
       domainCounts[domain] = (domainCounts[domain] ?? 0) + 1
-      if (tab.windowId) windowCounts[tab.windowId] = (windowCounts[tab.windowId] ?? 0) + 1
+      if (tab.windowId)
+        windowCounts[tab.windowId] = (windowCounts[tab.windowId] ?? 0) + 1
       if (tab.pinned) pinned++
       if (tab.audible) audible++
       if (tab.discarded) discarded++
@@ -208,7 +279,9 @@ export class TabContextBuilder {
     const topDomains = Object.entries(domainCounts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 30)
-      .map(([domain, count]) => `  ${domain}: ${count} tab${count > 1 ? 's' : ''}`)
+      .map(
+        ([domain, count]) => `  ${domain}: ${count} tab${count > 1 ? 's' : ''}`
+      )
       .join('\n')
 
     const windowSummary = Object.entries(windowCounts)
@@ -246,24 +319,31 @@ export class TabContextBuilder {
   }
 
   private tabsToFull(tabs: TabData[]): string {
-    return tabs.map((t) => JSON.stringify({
-      id: t.id,
-      title: t.title,
-      url: t.url,
-      windowId: t.windowId,
-      pinned: t.pinned,
-      active: t.active,
-      audible: t.audible,
-      muted: t.muted,
-      discarded: t.discarded,
-      groupId: t.groupId,
-      index: t.index
-    })).join('\n')
+    return tabs
+      .map((t) =>
+        JSON.stringify({
+          id: t.id,
+          title: t.title,
+          url: t.url,
+          windowId: t.windowId,
+          pinned: t.pinned,
+          active: t.active,
+          audible: t.audible,
+          muted: t.muted,
+          discarded: t.discarded,
+          groupId: t.groupId,
+          index: t.index
+        })
+      )
+      .join('\n')
   }
 
   private tabsToCompressed(tabs: TabData[]): string {
-    return tabs.map((t) =>
-      `[${t.id}] "${t.title ?? 'Untitled'}" — ${t.url ?? ''}${t.pinned ? ' [pinned]' : ''}${t.audible ? ' [🔊]' : ''}${t.discarded ? ' [disc]' : ''}`
-    ).join('\n')
+    return tabs
+      .map(
+        (t) =>
+          `[${t.id}] "${t.title ?? 'Untitled'}" — ${t.url ?? ''}${t.pinned ? ' [pinned]' : ''}${t.audible ? ' [🔊]' : ''}${t.discarded ? ' [disc]' : ''}`
+      )
+      .join('\n')
   }
 }

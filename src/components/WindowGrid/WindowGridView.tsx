@@ -28,7 +28,9 @@ export function WindowGridView({
   tabActionButtonsSetting = 'hover'
 }: WindowGridViewProps) {
   const dispatch = useDispatch()
-  const filteredTabs = useSelector((state: RootState) => state.tabs.filteredTabs)
+  const filteredTabs = useSelector(
+    (state: RootState) => state.tabs.filteredTabs
+  )
   const [windowsList, setWindowsList] = useState<chrome.windows.Window[]>([])
   const [currentWindowId, setCurrentWindowId] = useState<number | null>(null)
   const [tabGroups, setTabGroups] = useState<

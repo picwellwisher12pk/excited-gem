@@ -25,16 +25,28 @@ interface OverviewViewProps {
   onRefresh: () => void
 }
 
-export const OverviewView: React.FC<OverviewViewProps> = ({ data, onTabChange }) => {
+export const OverviewView: React.FC<OverviewViewProps> = ({
+  data,
+  onTabChange
+}) => {
   const { tabs, bookmarks, lists, sessions, crossDomains } = data
 
   const totalTrackedItems =
-    tabs.totalTabs + bookmarks.totalBookmarks + lists.totalTabs + sessions.totalTabs
+    tabs.totalTabs +
+    bookmarks.totalBookmarks +
+    lists.totalTabs +
+    sessions.totalTabs
 
-  const tabsPct = totalTrackedItems > 0 ? (tabs.totalTabs / totalTrackedItems) * 100 : 0
-  const bmPct = totalTrackedItems > 0 ? (bookmarks.totalBookmarks / totalTrackedItems) * 100 : 0
-  const listsPct = totalTrackedItems > 0 ? (lists.totalTabs / totalTrackedItems) * 100 : 0
-  const sessionsPct = totalTrackedItems > 0 ? (sessions.totalTabs / totalTrackedItems) * 100 : 0
+  const tabsPct =
+    totalTrackedItems > 0 ? (tabs.totalTabs / totalTrackedItems) * 100 : 0
+  const bmPct =
+    totalTrackedItems > 0
+      ? (bookmarks.totalBookmarks / totalTrackedItems) * 100
+      : 0
+  const listsPct =
+    totalTrackedItems > 0 ? (lists.totalTabs / totalTrackedItems) * 100 : 0
+  const sessionsPct =
+    totalTrackedItems > 0 ? (sessions.totalTabs / totalTrackedItems) * 100 : 0
 
   return (
     <div className="space-y-6">
@@ -60,7 +72,8 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ data, onTabChange })
           </div>
           <div className="mt-3 flex flex-wrap gap-1 text-xs">
             <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-medium">
-              {tabs.totalWindows} {tabs.totalWindows === 1 ? 'window' : 'windows'}
+              {tabs.totalWindows}{' '}
+              {tabs.totalWindows === 1 ? 'window' : 'windows'}
             </span>
             {tabs.discardedTabsCount > 0 && (
               <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 font-medium flex items-center gap-1">
@@ -123,7 +136,8 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ data, onTabChange })
               {lists.totalTabs} saved tabs
             </span>
             <span className="px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 font-medium">
-              {lists.totalLibraries} {lists.totalLibraries === 1 ? 'library' : 'libraries'}
+              {lists.totalLibraries}{' '}
+              {lists.totalLibraries === 1 ? 'library' : 'libraries'}
             </span>
           </div>
         </div>
@@ -190,21 +204,26 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ data, onTabChange })
               Browser Data Distribution
             </h3>
             <Text className="text-xs text-slate-500 dark:text-slate-400">
-              Breakdown of total indexed items ({totalTrackedItems.toLocaleString()} total tabs & bookmarks)
+              Breakdown of total indexed items (
+              {totalTrackedItems.toLocaleString()} total tabs & bookmarks)
             </Text>
           </div>
           <div className="flex flex-wrap items-center gap-3 text-xs">
             <span className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-medium">
-              <span className="w-3 h-3 rounded-full bg-blue-500 inline-block" /> Tabs ({tabs.totalTabs})
+              <span className="w-3 h-3 rounded-full bg-blue-500 inline-block" />{' '}
+              Tabs ({tabs.totalTabs})
             </span>
             <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
-              <span className="w-3 h-3 rounded-full bg-amber-500 inline-block" /> Bookmarks ({bookmarks.totalBookmarks})
+              <span className="w-3 h-3 rounded-full bg-amber-500 inline-block" />{' '}
+              Bookmarks ({bookmarks.totalBookmarks})
             </span>
             <span className="flex items-center gap-1.5 text-purple-600 dark:text-purple-400 font-medium">
-              <span className="w-3 h-3 rounded-full bg-purple-500 inline-block" /> Lists ({lists.totalTabs})
+              <span className="w-3 h-3 rounded-full bg-purple-500 inline-block" />{' '}
+              Lists ({lists.totalTabs})
             </span>
             <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
-              <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" /> Sessions ({sessions.totalTabs})
+              <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" />{' '}
+              Sessions ({sessions.totalTabs})
             </span>
           </div>
         </div>
@@ -254,8 +273,15 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ data, onTabChange })
             </div>
           </div>
           <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-            <span className="text-slate-500">Active: {tabs.activeTabsCount} | Pinned: {tabs.pinnedTabsCount}</span>
-            <Button type="link" size="small" onClick={() => onTabChange('tabs')} className="!p-0 !h-auto text-blue-600">
+            <span className="text-slate-500">
+              Active: {tabs.activeTabsCount} | Pinned: {tabs.pinnedTabsCount}
+            </span>
+            <Button
+              type="link"
+              size="small"
+              onClick={() => onTabChange('tabs')}
+              className="!p-0 !h-auto text-blue-600"
+            >
               View Tabs Details →
             </Button>
           </div>
@@ -271,7 +297,11 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ data, onTabChange })
                   : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600'
               }`}
             >
-              {tabs.duplicateUrls.length > 0 ? <AlertTriangle size={20} /> : <CheckCircle size={20} />}
+              {tabs.duplicateUrls.length > 0 ? (
+                <AlertTriangle size={20} />
+              ) : (
+                <CheckCircle size={20} />
+              )}
             </div>
             <div>
               <h4 className="text-sm font-semibold text-slate-800 dark:text-white">
@@ -291,7 +321,12 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ data, onTabChange })
                 : '100% Unique'}
             </span>
             {tabs.duplicateUrls.length > 0 && (
-              <Button type="link" size="small" onClick={() => onTabChange('tabs')} className="!p-0 !h-auto text-amber-600">
+              <Button
+                type="link"
+                size="small"
+                onClick={() => onTabChange('tabs')}
+                className="!p-0 !h-auto text-amber-600"
+              >
                 Clean Duplicates →
               </Button>
             )}
@@ -308,7 +343,11 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ data, onTabChange })
                   : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600'
               }`}
             >
-              {bookmarks.duplicateBookmarks.length > 0 ? <AlertTriangle size={20} /> : <CheckCircle size={20} />}
+              {bookmarks.duplicateBookmarks.length > 0 ? (
+                <AlertTriangle size={20} />
+              ) : (
+                <CheckCircle size={20} />
+              )}
             </div>
             <div>
               <h4 className="text-sm font-semibold text-slate-800 dark:text-white">
@@ -328,7 +367,12 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ data, onTabChange })
                 : 'Clean Tree'}
             </span>
             {bookmarks.duplicateBookmarks.length > 0 && (
-              <Button type="link" size="small" onClick={() => onTabChange('bookmarks')} className="!p-0 !h-auto text-rose-600">
+              <Button
+                type="link"
+                size="small"
+                onClick={() => onTabChange('bookmarks')}
+                className="!p-0 !h-auto text-rose-600"
+              >
                 Review Duplicates →
               </Button>
             )}
@@ -349,7 +393,12 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ data, onTabChange })
                 Top Domains in Open Tabs
               </h3>
             </div>
-            <Button type="link" size="small" onClick={() => onTabChange('tabs')} className="text-blue-600">
+            <Button
+              type="link"
+              size="small"
+              onClick={() => onTabChange('tabs')}
+              className="text-blue-600"
+            >
               View All ({tabs.topDomains.length})
             </Button>
           </div>
@@ -359,11 +408,16 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ data, onTabChange })
               <div key={domainItem.domain} className="space-y-1">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5 truncate max-w-[240px]">
-                    <span className="text-slate-400 font-mono text-[11px] w-4">{index + 1}.</span>
+                    <span className="text-slate-400 font-mono text-[11px] w-4">
+                      {index + 1}.
+                    </span>
                     {domainItem.domain}
                   </span>
                   <span className="text-slate-500 font-semibold">
-                    {domainItem.count} tabs <span className="text-slate-400 font-normal">({domainItem.percentage}%)</span>
+                    {domainItem.count} tabs{' '}
+                    <span className="text-slate-400 font-normal">
+                      ({domainItem.percentage}%)
+                    </span>
                   </span>
                 </div>
                 <Progress
@@ -376,7 +430,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ data, onTabChange })
               </div>
             ))}
             {tabs.topDomains.length === 0 && (
-              <p className="text-xs text-slate-400 py-4 text-center">No open tabs found</p>
+              <p className="text-xs text-slate-400 py-4 text-center">
+                No open tabs found
+              </p>
             )}
           </div>
         </div>
@@ -392,7 +448,12 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ data, onTabChange })
                 Top Bookmarked Domains
               </h3>
             </div>
-            <Button type="link" size="small" onClick={() => onTabChange('bookmarks')} className="text-amber-600">
+            <Button
+              type="link"
+              size="small"
+              onClick={() => onTabChange('bookmarks')}
+              className="text-amber-600"
+            >
               View All ({bookmarks.topDomains.length})
             </Button>
           </div>
@@ -402,11 +463,16 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ data, onTabChange })
               <div key={domainItem.domain} className="space-y-1">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5 truncate max-w-[240px]">
-                    <span className="text-slate-400 font-mono text-[11px] w-4">{index + 1}.</span>
+                    <span className="text-slate-400 font-mono text-[11px] w-4">
+                      {index + 1}.
+                    </span>
                     {domainItem.domain}
                   </span>
                   <span className="text-slate-500 font-semibold">
-                    {domainItem.count} bookmarks <span className="text-slate-400 font-normal">({domainItem.percentage}%)</span>
+                    {domainItem.count} bookmarks{' '}
+                    <span className="text-slate-400 font-normal">
+                      ({domainItem.percentage}%)
+                    </span>
                   </span>
                 </div>
                 <Progress
@@ -419,7 +485,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ data, onTabChange })
               </div>
             ))}
             {bookmarks.topDomains.length === 0 && (
-              <p className="text-xs text-slate-400 py-4 text-center">No bookmarks found</p>
+              <p className="text-xs text-slate-400 py-4 text-center">
+                No bookmarks found
+              </p>
             )}
           </div>
         </div>
@@ -435,7 +503,12 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ data, onTabChange })
                 Largest Saved Lists
               </h3>
             </div>
-            <Button type="link" size="small" onClick={() => onTabChange('lists')} className="text-purple-600">
+            <Button
+              type="link"
+              size="small"
+              onClick={() => onTabChange('lists')}
+              className="text-purple-600"
+            >
               View All ({lists.totalLists})
             </Button>
           </div>
@@ -451,7 +524,8 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ data, onTabChange })
                     {list.name}
                   </div>
                   <div className="text-[11px] text-slate-400 truncate">
-                    Library: {list.libraryName} • {new Date(list.created).toLocaleDateString()}
+                    Library: {list.libraryName} •{' '}
+                    {new Date(list.created).toLocaleDateString()}
                   </div>
                 </div>
                 <Tag color="purple" className="!mr-0 font-medium">
@@ -460,7 +534,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ data, onTabChange })
               </div>
             ))}
             {lists.largestLists.length === 0 && (
-              <p className="text-xs text-slate-400 py-4 text-center">No saved lists found</p>
+              <p className="text-xs text-slate-400 py-4 text-center">
+                No saved lists found
+              </p>
             )}
           </div>
         </div>
@@ -476,7 +552,12 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ data, onTabChange })
                 Largest Saved Sessions
               </h3>
             </div>
-            <Button type="link" size="small" onClick={() => onTabChange('sessions')} className="text-emerald-600">
+            <Button
+              type="link"
+              size="small"
+              onClick={() => onTabChange('sessions')}
+              className="text-emerald-600"
+            >
               View All ({sessions.totalSessions})
             </Button>
           </div>
@@ -492,7 +573,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ data, onTabChange })
                     {session.name}
                   </div>
                   <div className="text-[11px] text-slate-400 truncate">
-                    {session.windowCount} {session.windowCount === 1 ? 'window' : 'windows'} • {new Date(session.created).toLocaleDateString()}
+                    {session.windowCount}{' '}
+                    {session.windowCount === 1 ? 'window' : 'windows'} •{' '}
+                    {new Date(session.created).toLocaleDateString()}
                   </div>
                 </div>
                 <Tag color="green" className="!mr-0 font-medium">
@@ -501,7 +584,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ data, onTabChange })
               </div>
             ))}
             {sessions.largestSessions.length === 0 && (
-              <p className="text-xs text-slate-400 py-4 text-center">No saved sessions found</p>
+              <p className="text-xs text-slate-400 py-4 text-center">
+                No saved sessions found
+              </p>
             )}
           </div>
         </div>

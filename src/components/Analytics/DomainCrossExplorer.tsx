@@ -50,12 +50,36 @@ type ColumnKey =
   | 'totalCount'
   | 'action'
 
-const COLUMN_DEFINITIONS: Array<{ key: ColumnKey; label: string; icon?: React.ReactNode }> = [
-  { key: 'domain', label: 'Domain Name', icon: <Globe size={14} className="text-cyan-500" /> },
-  { key: 'tabsCount', label: 'Open Tabs', icon: <LayoutGrid size={14} className="text-blue-500" /> },
-  { key: 'bookmarksCount', label: 'Bookmarks', icon: <Bookmark size={14} className="text-amber-500" /> },
-  { key: 'listsCount', label: 'Saved Lists', icon: <BookmarkPlus size={14} className="text-purple-500" /> },
-  { key: 'sessionsCount', label: 'Saved Sessions', icon: <FolderOpen size={14} className="text-emerald-500" /> },
+const COLUMN_DEFINITIONS: Array<{
+  key: ColumnKey
+  label: string
+  icon?: React.ReactNode
+}> = [
+  {
+    key: 'domain',
+    label: 'Domain Name',
+    icon: <Globe size={14} className="text-cyan-500" />
+  },
+  {
+    key: 'tabsCount',
+    label: 'Open Tabs',
+    icon: <LayoutGrid size={14} className="text-blue-500" />
+  },
+  {
+    key: 'bookmarksCount',
+    label: 'Bookmarks',
+    icon: <Bookmark size={14} className="text-amber-500" />
+  },
+  {
+    key: 'listsCount',
+    label: 'Saved Lists',
+    icon: <BookmarkPlus size={14} className="text-purple-500" />
+  },
+  {
+    key: 'sessionsCount',
+    label: 'Saved Sessions',
+    icon: <FolderOpen size={14} className="text-emerald-500" />
+  },
   { key: 'totalCount', label: 'Total References' },
   { key: 'action', label: 'Actions' }
 ]
@@ -75,13 +99,15 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
   externalSearch
 }) => {
   const [internalSearch, setInternalSearch] = useState('')
-  const [selectedDomain, setSelectedDomain] = useState<CrossDomainStat | null>(null)
+  const [selectedDomain, setSelectedDomain] = useState<CrossDomainStat | null>(
+    null
+  )
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   // Column visibility state
-  const [visibleColumns, setVisibleColumns] = useState<Record<ColumnKey, boolean>>(
-    DEFAULT_VISIBLE_COLUMNS
-  )
+  const [visibleColumns, setVisibleColumns] = useState<
+    Record<ColumnKey, boolean>
+  >(DEFAULT_VISIBLE_COLUMNS)
 
   // Filter state
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
@@ -92,7 +118,9 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
   const [currentPage, setCurrentPage] = useState<number>(1)
 
   const effectiveSearch =
-    externalSearch !== undefined && externalSearch !== '' ? externalSearch : internalSearch
+    externalSearch !== undefined && externalSearch !== ''
+      ? externalSearch
+      : internalSearch
 
   const handleSetColumn = (key: ColumnKey, isVisible: boolean) => {
     setVisibleColumns((prev) => {
@@ -124,7 +152,9 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
   }
 
   const isFilterActive =
-    effectiveSearch.trim() !== '' || categoryFilter !== 'all' || minCountFilter > 1
+    effectiveSearch.trim() !== '' ||
+    categoryFilter !== 'all' ||
+    minCountFilter > 1
 
   // Filtered dataset
   const filteredData = useMemo(() => {
@@ -140,9 +170,11 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
 
       // Category presence filter
       if (categoryFilter === 'tabs' && item.tabsCount === 0) return false
-      if (categoryFilter === 'bookmarks' && item.bookmarksCount === 0) return false
+      if (categoryFilter === 'bookmarks' && item.bookmarksCount === 0)
+        return false
       if (categoryFilter === 'lists' && item.listsCount === 0) return false
-      if (categoryFilter === 'sessions' && item.sessionsCount === 0) return false
+      if (categoryFilter === 'sessions' && item.sessionsCount === 0)
+        return false
       if (categoryFilter === 'multi') {
         const categoriesPresent = [
           item.tabsCount > 0,
@@ -170,7 +202,12 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
   // Drilldown items for selected domain
   const domainTabs = useMemo(() => {
     if (!selectedDomain) return []
-    const results: Array<{ id?: number; title?: string; url?: string; windowId: number }> = []
+    const results: Array<{
+      id?: number
+      title?: string
+      url?: string
+      windowId: number
+    }> = []
     for (const win of data.tabs.windows) {
       for (const t of win.tabs) {
         if (t.url && t.url.includes(selectedDomain.domain)) {
@@ -183,11 +220,16 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
 
   const domainBookmarks = useMemo(() => {
     if (!selectedDomain) return []
-    const results: Array<{ title: string; url: string; folderPath?: string }> = []
+    const results: Array<{ title: string; url: string; folderPath?: string }> =
+      []
     for (const dup of data.bookmarks.duplicateBookmarks) {
       if (dup.url.includes(selectedDomain.domain)) {
         for (const loc of dup.locations) {
-          results.push({ title: loc.title, url: dup.url, folderPath: loc.folderPath })
+          results.push({
+            title: loc.title,
+            url: dup.url,
+            folderPath: loc.folderPath
+          })
         }
       }
     }
@@ -196,7 +238,12 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
 
   const domainLists = useMemo(() => {
     if (!selectedDomain) return []
-    const results: Array<{ listName: string; libraryName: string; title: string; url: string }> = []
+    const results: Array<{
+      listName: string
+      libraryName: string
+      title: string
+      url: string
+    }> = []
     for (const list of data.lists.largestLists) {
       for (const tab of list.tabs) {
         if (tab.url && tab.url.includes(selectedDomain.domain)) {
@@ -214,7 +261,12 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
 
   const domainSessions = useMemo(() => {
     if (!selectedDomain) return []
-    const results: Array<{ sessionName: string; created: number; title: string; url: string }> = []
+    const results: Array<{
+      sessionName: string
+      created: number
+      title: string
+      url: string
+    }> = []
     for (const session of data.sessions.largestSessions) {
       const windows = session.windows || {}
       Object.values(windows).forEach((tabs) => {
@@ -244,7 +296,8 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
       title: 'Domain',
       dataIndex: 'domain',
       key: 'domain',
-      sorter: (a: CrossDomainStat, b: CrossDomainStat) => a.domain.localeCompare(b.domain),
+      sorter: (a: CrossDomainStat, b: CrossDomainStat) =>
+        a.domain.localeCompare(b.domain),
       render: (domain: string, record: CrossDomainStat) => (
         <div className="flex items-center gap-2.5">
           {record.favIconUrl ? (
@@ -252,12 +305,16 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
               src={record.favIconUrl}
               alt=""
               className="w-4 h-4 rounded-sm flex-shrink-0"
-              onError={(e) => ((e.target as HTMLElement).style.display = 'none')}
+              onError={(e) =>
+                ((e.target as HTMLElement).style.display = 'none')
+              }
             />
           ) : (
             <Globe size={16} className="text-slate-400 flex-shrink-0" />
           )}
-          <span className="font-semibold text-slate-800 dark:text-white text-xs">{domain}</span>
+          <span className="font-semibold text-slate-800 dark:text-white text-xs">
+            {domain}
+          </span>
         </div>
       )
     },
@@ -266,7 +323,8 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
       dataIndex: 'tabsCount',
       key: 'tabsCount',
       align: 'center' as const,
-      sorter: (a: CrossDomainStat, b: CrossDomainStat) => a.tabsCount - b.tabsCount,
+      sorter: (a: CrossDomainStat, b: CrossDomainStat) =>
+        a.tabsCount - b.tabsCount,
       render: (count: number) =>
         count > 0 ? (
           <Tag color="blue" className="font-medium text-xs">
@@ -281,7 +339,8 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
       dataIndex: 'bookmarksCount',
       key: 'bookmarksCount',
       align: 'center' as const,
-      sorter: (a: CrossDomainStat, b: CrossDomainStat) => a.bookmarksCount - b.bookmarksCount,
+      sorter: (a: CrossDomainStat, b: CrossDomainStat) =>
+        a.bookmarksCount - b.bookmarksCount,
       render: (count: number) =>
         count > 0 ? (
           <Tag color="gold" className="font-medium text-xs">
@@ -296,7 +355,8 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
       dataIndex: 'listsCount',
       key: 'listsCount',
       align: 'center' as const,
-      sorter: (a: CrossDomainStat, b: CrossDomainStat) => a.listsCount - b.listsCount,
+      sorter: (a: CrossDomainStat, b: CrossDomainStat) =>
+        a.listsCount - b.listsCount,
       render: (count: number) =>
         count > 0 ? (
           <Tag color="purple" className="font-medium text-xs">
@@ -311,7 +371,8 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
       dataIndex: 'sessionsCount',
       key: 'sessionsCount',
       align: 'center' as const,
-      sorter: (a: CrossDomainStat, b: CrossDomainStat) => a.sessionsCount - b.sessionsCount,
+      sorter: (a: CrossDomainStat, b: CrossDomainStat) =>
+        a.sessionsCount - b.sessionsCount,
       render: (count: number) =>
         count > 0 ? (
           <Tag color="green" className="font-medium text-xs">
@@ -327,7 +388,8 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
       key: 'totalCount',
       align: 'center' as const,
       defaultSortOrder: 'descend' as const,
-      sorter: (a: CrossDomainStat, b: CrossDomainStat) => a.totalCount - b.totalCount,
+      sorter: (a: CrossDomainStat, b: CrossDomainStat) =>
+        a.totalCount - b.totalCount,
       render: (count: number) => (
         <span className="font-bold text-slate-800 dark:text-white text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800">
           {count}
@@ -360,7 +422,9 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
   const columnPopoverContent = (
     <div className="w-56 space-y-2 p-1">
       <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-        <span className="font-semibold text-xs text-slate-800 dark:text-white">Toggle Columns</span>
+        <span className="font-semibold text-xs text-slate-800 dark:text-white">
+          Toggle Columns
+        </span>
         <Button
           type="link"
           size="small"
@@ -408,7 +472,8 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
                 Cross-Feature Domain Matrix
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Compare domain presence across Tabs, Bookmarks, Lists, and Sessions
+                Compare domain presence across Tabs, Bookmarks, Lists, and
+                Sessions
               </p>
             </div>
           </div>
@@ -484,7 +549,9 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
 
           {/* Min Occurrences Filter */}
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-500 dark:text-slate-400">Min Refs:</span>
+            <span className="font-semibold text-slate-500 dark:text-slate-400">
+              Min Refs:
+            </span>
             <Select
               size="small"
               value={minCountFilter}
@@ -505,7 +572,9 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
 
           {/* Page Size Selector */}
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-500 dark:text-slate-400">Rows:</span>
+            <span className="font-semibold text-slate-500 dark:text-slate-400">
+              Rows:
+            </span>
             <Select
               size="small"
               value={pageSize >= 1000 ? 1000 : pageSize}
@@ -530,8 +599,11 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
         <div className="flex items-center justify-between text-xs text-slate-500 px-1">
           <div className="flex items-center gap-1.5 flex-wrap">
             <span>
-              Showing <strong className="text-slate-800 dark:text-white">{filteredData.length}</strong> of{' '}
-              {data.crossDomains.length} domains
+              Showing{' '}
+              <strong className="text-slate-800 dark:text-white">
+                {filteredData.length}
+              </strong>{' '}
+              of {data.crossDomains.length} domains
             </span>
             {isFilterActive && (
               <span className="text-blue-600 font-medium ml-1">
@@ -562,7 +634,8 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
               setPageSize(size)
               setCurrentPage(1)
             },
-            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} domains`
+            showTotal: (total, range) =>
+              `${range[0]}-${range[1]} of ${total} domains`
           }}
           className="rounded-lg overflow-hidden border border-slate-100 dark:border-slate-800"
         />
@@ -604,13 +677,19 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
                       <div className="font-semibold text-slate-800 dark:text-white truncate">
                         {t.title || t.url}
                       </div>
-                      <div className="text-slate-400 text-[11px] truncate">{t.url}</div>
-                      <div className="mt-1 text-[10px] text-blue-500">Window #{t.windowId}</div>
+                      <div className="text-slate-400 text-[11px] truncate">
+                        {t.url}
+                      </div>
+                      <div className="mt-1 text-[10px] text-blue-500">
+                        Window #{t.windowId}
+                      </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-slate-400">No active open tabs for this domain</p>
+                <p className="text-xs text-slate-400">
+                  No active open tabs for this domain
+                </p>
               )}
             </div>
 
@@ -632,9 +711,13 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
                       <div className="font-semibold text-slate-800 dark:text-white truncate">
                         {b.title}
                       </div>
-                      <div className="text-slate-400 text-[11px] truncate">{b.url}</div>
+                      <div className="text-slate-400 text-[11px] truncate">
+                        {b.url}
+                      </div>
                       {b.folderPath && (
-                        <div className="mt-1 text-[10px] text-amber-500">📁 {b.folderPath}</div>
+                        <div className="mt-1 text-[10px] text-amber-500">
+                          📁 {b.folderPath}
+                        </div>
                       )}
                     </div>
                   ))}
@@ -662,7 +745,9 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
                       <div className="font-semibold text-slate-800 dark:text-white truncate">
                         {l.title}
                       </div>
-                      <div className="text-slate-400 text-[11px] truncate">{l.url}</div>
+                      <div className="text-slate-400 text-[11px] truncate">
+                        {l.url}
+                      </div>
                       <div className="mt-1 text-[10px] text-purple-500">
                         List: {l.listName} (Library: {l.libraryName})
                       </div>
@@ -692,9 +777,12 @@ export const DomainCrossExplorer: React.FC<DomainCrossExplorerProps> = ({
                       <div className="font-semibold text-slate-800 dark:text-white truncate">
                         {s.title}
                       </div>
-                      <div className="text-slate-400 text-[11px] truncate">{s.url}</div>
+                      <div className="text-slate-400 text-[11px] truncate">
+                        {s.url}
+                      </div>
                       <div className="mt-1 text-[10px] text-emerald-500">
-                        Session: {s.sessionName} • {new Date(s.created).toLocaleDateString()}
+                        Session: {s.sessionName} •{' '}
+                        {new Date(s.created).toLocaleDateString()}
                       </div>
                     </div>
                   ))}

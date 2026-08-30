@@ -1,19 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
-import {
-  Button,
-  Input,
-  Radio,
-  message,
-  Typography,
-  Empty,
-} from 'antd'
+import { Button, Input, Radio, message, Typography, Empty } from 'antd'
 import {
   Plus,
   Sparkles,
   Zap,
   Download,
   Upload,
-  Search as SearchIcon,
+  Search as SearchIcon
 } from 'lucide-react'
 import type {
   Routine,
@@ -238,7 +231,9 @@ export const RoutinesManager: React.FC = () => {
               </h2>
             </div>
             <p className="text-xs text-blue-100 max-w-xl m-0">
-              Build custom multi-step actions to clean up duplicate tabs, auto-group by domain, mute background noise, free RAM, and save workspaces in one click or on a recurring schedule.
+              Build custom multi-step actions to clean up duplicate tabs,
+              auto-group by domain, mute background noise, free RAM, and save
+              workspaces in one click or on a recurring schedule.
             </p>
           </div>
 
@@ -309,7 +304,8 @@ export const RoutinesManager: React.FC = () => {
           >
             <Radio.Button value="all">All ({routines.length})</Radio.Button>
             <Radio.Button value="scheduled">
-              Scheduled ({routines.filter((r) => r.triggers.intervalMinutes).length})
+              Scheduled (
+              {routines.filter((r) => r.triggers.intervalMinutes).length})
             </Radio.Button>
             <Radio.Button value="startup">
               Startup ({routines.filter((r) => r.triggers.onStartup).length})
@@ -331,7 +327,9 @@ export const RoutinesManager: React.FC = () => {
             description={
               <div className="mt-2">
                 <div className="text-sm font-semibold text-gray-700">
-                  {searchQuery ? 'No matching routines found' : 'No routines yet'}
+                  {searchQuery
+                    ? 'No matching routines found'
+                    : 'No routines yet'}
                 </div>
                 <div className="text-xs text-gray-500 mt-1 max-w-md mx-auto">
                   {searchQuery

@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { Dropdown, Button, message } from 'antd'
 import type { MenuProps } from 'antd'
-import {
-  Zap,
-  ChevronDown,
-  Settings,
-} from 'lucide-react'
+import { Zap, ChevronDown, Settings } from 'lucide-react'
 import Btn from '../Btn'
-import type { Routine, RoutineExecutionResult, RoutineScope } from '../../types/routine'
+import type {
+  Routine,
+  RoutineExecutionResult,
+  RoutineScope
+} from '../../types/routine'
 import { getRoutines } from '../../services/routineStorage'
 import { executeRoutine } from '../../services/routineEngine'
 import { getRoutineIcon } from './RoutineCard'
@@ -39,9 +39,14 @@ export const RoutineQuickMenu: React.FC<RoutineQuickMenuProps> = ({
   const [routines, setRoutines] = useState<Routine[]>([])
   const [activeRoutine, setActiveRoutine] = useState<Routine | null>(null)
   const [isRunning, setIsRunning] = useState(false)
-  const [executionResult, setExecutionResult] = useState<RoutineExecutionResult | null>(null)
+  const [executionResult, setExecutionResult] =
+    useState<RoutineExecutionResult | null>(null)
   const [execModalOpen, setExecModalOpen] = useState(false)
-  const [progress, setProgress] = useState<{ current: number; total: number; currentStepName?: string } | null>(null)
+  const [progress, setProgress] = useState<{
+    current: number
+    total: number
+    currentStepName?: string
+  } | null>(null)
 
   const loadRoutinesList = async () => {
     try {
@@ -60,12 +65,18 @@ export const RoutineQuickMenu: React.FC<RoutineQuickMenuProps> = ({
     setActiveRoutine(routine)
     setIsRunning(true)
     setExecutionResult(null)
-    setProgress({ current: 0, total: routine.steps.filter((s) => s.enabled).length })
+    setProgress({
+      current: 0,
+      total: routine.steps.filter((s) => s.enabled).length
+    })
     setExecModalOpen(true)
 
     try {
       const result = await executeRoutine(routine, {
-        targetScope: selectedTabIds && selectedTabIds.length > 0 ? 'selected-tabs' : targetScope,
+        targetScope:
+          selectedTabIds && selectedTabIds.length > 0
+            ? 'selected-tabs'
+            : targetScope,
         selectedTabIds,
         onStepProgress: (stepRes, current, total) => {
           setProgress({ current, total, currentStepName: stepRes.stepName })
@@ -108,7 +119,9 @@ export const RoutineQuickMenu: React.FC<RoutineQuickMenuProps> = ({
               ),
               label: (
                 <div className="flex items-center justify-between gap-4 py-0.5">
-                  <span className="font-medium text-xs text-gray-800">{routine.name}</span>
+                  <span className="font-medium text-xs text-gray-800">
+                    {routine.name}
+                  </span>
                   <span className="text-[10px] text-gray-400 font-mono">
                     {routine.steps.filter((s) => s.enabled).length} steps
                   </span>
@@ -120,7 +133,11 @@ export const RoutineQuickMenu: React.FC<RoutineQuickMenuProps> = ({
               {
                 key: 'no-routines',
                 disabled: true,
-                label: <span className="text-xs text-gray-400 italic">No routines enabled</span>
+                label: (
+                  <span className="text-xs text-gray-400 italic">
+                    No routines enabled
+                  </span>
+                )
               }
             ]
     },

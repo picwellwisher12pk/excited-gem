@@ -103,7 +103,14 @@ const MoreActionsMenu = () => {
       })
 
       const colors: Array<
-        'blue' | 'red' | 'yellow' | 'green' | 'pink' | 'purple' | 'cyan' | 'orange'
+        | 'blue'
+        | 'red'
+        | 'yellow'
+        | 'green'
+        | 'pink'
+        | 'purple'
+        | 'cyan'
+        | 'orange'
       > = ['blue', 'green', 'purple', 'orange', 'cyan', 'pink', 'yellow', 'red']
       let colorIdx = 0
       let groupedCount = 0

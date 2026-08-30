@@ -10,16 +10,20 @@ import { updateRoutineLastRun } from './routineStorage'
 import { saveSession, saveList } from '../components/getsetSessions'
 
 const browser =
-  (typeof window !== 'undefined'
+  typeof window !== 'undefined'
     ? (window as any).browser || window.chrome
-    : (globalThis as any).chrome)
+    : (globalThis as any).chrome
 
 export interface ExecutionContext {
   targetScope?: RoutineScope
   selectedTabIds?: number[]
   workingTabIds?: number[]
   windowId?: number
-  onStepProgress?: (stepResult: StepExecutionResult, current: number, total: number) => void
+  onStepProgress?: (
+    stepResult: StepExecutionResult,
+    current: number,
+    total: number
+  ) => void
 }
 
 export async function executeRoutine(
@@ -68,7 +72,10 @@ export async function executeRoutine(
       // Aggregate summary
       if (step.type === 'close-duplicates' || step.type === 'close-tabs') {
         summary.closedTabs += result.affectedCount || 0
-      } else if (step.type === 'group-by-domain' || step.type === 'group-by-rule') {
+      } else if (
+        step.type === 'group-by-domain' ||
+        step.type === 'group-by-rule'
+      ) {
         summary.groupedTabs += result.affectedCount || 0
       } else if (step.type === 'mute-tabs') {
         summary.mutedTabs += result.affectedCount || 0
@@ -78,7 +85,11 @@ export async function executeRoutine(
         summary.pinnedTabs += result.affectedCount || 0
       } else if (step.type === 'save-session') {
         summary.savedSessions += result.affectedCount || 1
-      } else if (step.type === 'open-urls' || step.type === 'open-session' || step.type === 'open-list') {
+      } else if (
+        step.type === 'open-urls' ||
+        step.type === 'open-session' ||
+        step.type === 'open-list'
+      ) {
         summary.openedTabs += result.affectedCount || 0
       }
 
@@ -114,16 +125,25 @@ export async function executeRoutine(
   const durationMs = endTime - startTime
 
   const summaryParts: string[] = []
-  if (summary.closedTabs > 0) summaryParts.push(`Closed ${summary.closedTabs} tabs`)
-  if (summary.groupedTabs > 0) summaryParts.push(`Grouped ${summary.groupedTabs} tabs`)
-  if (summary.discardedTabs > 0) summaryParts.push(`Suspended ${summary.discardedTabs} tabs`)
-  if (summary.mutedTabs > 0) summaryParts.push(`Muted ${summary.mutedTabs} tabs`)
-  if (summary.pinnedTabs > 0) summaryParts.push(`Pinned ${summary.pinnedTabs} tabs`)
-  if (summary.savedSessions > 0) summaryParts.push(`Saved ${summary.savedSessions} sessions`)
-  if (summary.openedTabs > 0) summaryParts.push(`Opened ${summary.openedTabs} tabs`)
+  if (summary.closedTabs > 0)
+    summaryParts.push(`Closed ${summary.closedTabs} tabs`)
+  if (summary.groupedTabs > 0)
+    summaryParts.push(`Grouped ${summary.groupedTabs} tabs`)
+  if (summary.discardedTabs > 0)
+    summaryParts.push(`Suspended ${summary.discardedTabs} tabs`)
+  if (summary.mutedTabs > 0)
+    summaryParts.push(`Muted ${summary.mutedTabs} tabs`)
+  if (summary.pinnedTabs > 0)
+    summaryParts.push(`Pinned ${summary.pinnedTabs} tabs`)
+  if (summary.savedSessions > 0)
+    summaryParts.push(`Saved ${summary.savedSessions} sessions`)
+  if (summary.openedTabs > 0)
+    summaryParts.push(`Opened ${summary.openedTabs} tabs`)
 
   const finalSummaryText =
-    summaryParts.length > 0 ? summaryParts.join(', ') : 'Routine completed with no changes.'
+    summaryParts.length > 0
+      ? summaryParts.join(', ')
+      : 'Routine completed with no changes.'
 
   // Update routine last run in storage
   await updateRoutineLastRun(routine.id, overallSuccess, finalSummaryText)
@@ -141,7 +161,10 @@ export async function executeRoutine(
   }
 }
 
-async function getTargetTabs(scope: RoutineScope, context: ExecutionContext): Promise<chrome.tabs.Tab[]> {
+async function getTargetTabs(
+  scope: RoutineScope,
+  context: ExecutionContext
+): Promise<chrome.tabs.Tab[]> {
   // If workingTabIds is set from a preceding 'filter-tabs' step, respect that working set
   if (context.workingTabIds !== undefined) {
     if (context.workingTabIds.length === 0) return []
@@ -150,7 +173,11 @@ async function getTargetTabs(scope: RoutineScope, context: ExecutionContext): Pr
     return allTabs.filter((t: any) => t.id && idSet.has(t.id))
   }
 
-  if (scope === 'selected-tabs' && context.selectedTabIds && context.selectedTabIds.length > 0) {
+  if (
+    scope === 'selected-tabs' &&
+    context.selectedTabIds &&
+    context.selectedTabIds.length > 0
+  ) {
     const allTabs = await browser.tabs.query({})
     const idSet = new Set(context.selectedTabIds)
     return allTabs.filter((t: any) => t.id && idSet.has(t.id))
@@ -172,7 +199,13 @@ async function executeStep(
   step: RoutineStep,
   scope: RoutineScope,
   context: ExecutionContext
-): Promise<{ success: boolean; message: string; affectedCount?: number; error?: string; tolerated?: boolean }> {
+): Promise<{
+  success: boolean
+  message: string
+  affectedCount?: number
+  error?: string
+  tolerated?: boolean
+}> {
   const params = step.params || {}
 
   switch (step.type) {
@@ -183,14 +216,20 @@ async function executeStep(
       const invert = !!params.invertMatch
 
       // Query from full scope (temporarily clear workingTabIds to filter afresh from the scope)
-      const baseTabs = await getTargetTabs(scope, { ...context, workingTabIds: undefined })
+      const baseTabs = await getTargetTabs(scope, {
+        ...context,
+        workingTabIds: undefined
+      })
 
       let regex: RegExp | null = null
       if (isRegex && pattern) {
         try {
           regex = new RegExp(pattern, 'i')
         } catch {
-          return { success: false, message: 'Invalid regex in filter-tabs step.' }
+          return {
+            success: false,
+            message: 'Invalid regex in filter-tabs step.'
+          }
         }
       }
 
@@ -235,7 +274,8 @@ async function executeStep(
       context.workingTabIds = undefined
       return {
         success: true,
-        message: 'Reset tab filter. Upcoming steps will target the full window scope.'
+        message:
+          'Reset tab filter. Upcoming steps will target the full window scope.'
       }
     }
 
@@ -247,7 +287,12 @@ async function executeStep(
       const urlMap = new Map<string, chrome.tabs.Tab[]>()
 
       for (const tab of tabs) {
-        if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('edge://')) continue
+        if (
+          !tab.url ||
+          tab.url.startsWith('chrome://') ||
+          tab.url.startsWith('edge://')
+        )
+          continue
         const normUrl = tab.url.split('#')[0] // normalize hash
         if (!urlMap.has(normUrl)) {
           urlMap.set(normUrl, [])
@@ -280,12 +325,20 @@ async function executeStep(
           affectedCount: tabsToClose.length
         }
       }
-      return { success: true, message: 'No duplicate tabs found.', affectedCount: 0 }
+      return {
+        success: true,
+        message: 'No duplicate tabs found.',
+        affectedCount: 0
+      }
     }
 
     case 'group-by-domain': {
       if (!browser.tabs?.group) {
-        return { success: false, message: 'Tab grouping API not available in this browser.', tolerated: true }
+        return {
+          success: false,
+          message: 'Tab grouping API not available in this browser.',
+          tolerated: true
+        }
       }
 
       const tabs = await getTargetTabs(scope, context)
@@ -297,7 +350,12 @@ async function executeStep(
         try {
           const urlObj = new URL(tab.url)
           const domain = urlObj.hostname.replace(/^www\./, '')
-          if (!domain || domain.startsWith('chrome') || domain.startsWith('edge')) continue
+          if (
+            !domain ||
+            domain.startsWith('chrome') ||
+            domain.startsWith('edge')
+          )
+            continue
 
           const winId = tab.windowId || 0
           if (!windowsGroup[winId]) windowsGroup[winId] = {}
@@ -308,9 +366,16 @@ async function executeStep(
         }
       }
 
-      const colors: Array<'blue' | 'red' | 'yellow' | 'green' | 'pink' | 'purple' | 'cyan' | 'orange'> = [
-        'blue', 'green', 'purple', 'orange', 'cyan', 'pink', 'yellow', 'red'
-      ]
+      const colors: Array<
+        | 'blue'
+        | 'red'
+        | 'yellow'
+        | 'green'
+        | 'pink'
+        | 'purple'
+        | 'cyan'
+        | 'orange'
+      > = ['blue', 'green', 'purple', 'orange', 'cyan', 'pink', 'yellow', 'red']
       let colorIdx = 0
       let totalGrouped = 0
 
@@ -337,14 +402,21 @@ async function executeStep(
 
       return {
         success: true,
-        message: totalGrouped > 0 ? `Grouped ${totalGrouped} tabs by domain.` : 'No matching domain groups found.',
+        message:
+          totalGrouped > 0
+            ? `Grouped ${totalGrouped} tabs by domain.`
+            : 'No matching domain groups found.',
         affectedCount: totalGrouped
       }
     }
 
     case 'group-by-rule': {
       if (!browser.tabs?.group) {
-        return { success: false, message: 'Tab grouping API not available.', tolerated: true }
+        return {
+          success: false,
+          message: 'Tab grouping API not available.',
+          tolerated: true
+        }
       }
 
       const tabs = await getTargetTabs(scope, context)
@@ -376,7 +448,9 @@ async function executeStep(
           }
         }
 
-        const isMatch = regex ? regex.test(val) : val.toLowerCase().includes(pattern.toLowerCase())
+        const isMatch = regex
+          ? regex.test(val)
+          : val.toLowerCase().includes(pattern.toLowerCase())
         if (isMatch) matchedTabIds.push(tab.id)
       }
 
@@ -395,7 +469,11 @@ async function executeStep(
         }
       }
 
-      return { success: true, message: `No tabs matched pattern "${pattern}".`, affectedCount: 0 }
+      return {
+        success: true,
+        message: `No tabs matched pattern "${pattern}".`,
+        affectedCount: 0
+      }
     }
 
     case 'sort-tabs': {
@@ -469,7 +547,11 @@ async function executeStep(
 
     case 'discard-tabs': {
       if (!browser.tabs?.discard) {
-        return { success: false, message: 'Tab discard API is not supported.', tolerated: true }
+        return {
+          success: false,
+          message: 'Tab discard API is not supported.',
+          tolerated: true
+        }
       }
 
       const tabs = await getTargetTabs(scope, context)
@@ -524,7 +606,11 @@ async function executeStep(
         }
       }
 
-      return { success: true, message: `Muted ${count} tabs.`, affectedCount: count }
+      return {
+        success: true,
+        message: `Muted ${count} tabs.`,
+        affectedCount: count
+      }
     }
 
     case 'unmute-tabs': {
@@ -542,7 +628,11 @@ async function executeStep(
         }
       }
 
-      return { success: true, message: `Unmuted ${count} tabs.`, affectedCount: count }
+      return {
+        success: true,
+        message: `Unmuted ${count} tabs.`,
+        affectedCount: count
+      }
     }
 
     case 'pin-tabs': {
@@ -577,7 +667,11 @@ async function executeStep(
         }
       }
 
-      return { success: true, message: `Pinned ${count} tabs.`, affectedCount: count }
+      return {
+        success: true,
+        message: `Pinned ${count} tabs.`,
+        affectedCount: count
+      }
     }
 
     case 'unpin-tabs': {
@@ -595,7 +689,11 @@ async function executeStep(
         }
       }
 
-      return { success: true, message: `Unpinned ${count} tabs.`, affectedCount: count }
+      return {
+        success: true,
+        message: `Unpinned ${count} tabs.`,
+        affectedCount: count
+      }
     }
 
     case 'close-tabs': {
@@ -612,7 +710,9 @@ async function executeStep(
         if (condition === 'domain-list' && domainList.length > 0) {
           try {
             const domain = new URL(tab.url || '').hostname.toLowerCase()
-            shouldClose = domainList.some((d) => domain === d || domain.endsWith(`.${d}`))
+            shouldClose = domainList.some(
+              (d) => domain === d || domain.endsWith(`.${d}`)
+            )
           } catch {
             shouldClose = false
           }
@@ -636,23 +736,42 @@ async function executeStep(
         }
       }
 
-      return { success: true, message: 'No matching tabs to close.', affectedCount: 0 }
+      return {
+        success: true,
+        message: 'No matching tabs to close.',
+        affectedCount: 0
+      }
     }
 
     case 'save-session': {
       const tabs = await getTargetTabs(scope, context)
       if (tabs.length === 0) {
-        return { success: true, message: 'No tabs to save as session.', affectedCount: 0 }
+        return {
+          success: true,
+          message: 'No tabs to save as session.',
+          affectedCount: 0
+        }
       }
 
       const now = new Date()
       const dateStr = now.toLocaleDateString()
-      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      const template = params.sessionNameTemplate || 'Routine Session - {date} {time}'
-      const sessionName = template.replace('{date}', dateStr).replace('{time}', timeStr)
+      const timeStr = now.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+      const template =
+        params.sessionNameTemplate || 'Routine Session - {date} {time}'
+      const sessionName = template
+        .replace('{date}', dateStr)
+        .replace('{time}', timeStr)
 
       const tabData = tabs
-        .filter((t) => t.url && !t.url.startsWith('chrome://') && !t.url.startsWith('edge://'))
+        .filter(
+          (t) =>
+            t.url &&
+            !t.url.startsWith('chrome://') &&
+            !t.url.startsWith('edge://')
+        )
         .map((t) => ({
           url: t.url || '',
           title: t.title || 'Untitled',
@@ -660,7 +779,11 @@ async function executeStep(
         }))
 
       if (tabData.length === 0) {
-        return { success: true, message: 'No valid URLs to save.', affectedCount: 0 }
+        return {
+          success: true,
+          message: 'No valid URLs to save.',
+          affectedCount: 0
+        }
       }
 
       await saveSession(tabData, sessionName)
@@ -685,28 +808,49 @@ async function executeStep(
       const field = params.filterField || 'url'
 
       const matchedTabs = tabs.filter((t) => {
-        if (!t.url || t.url.startsWith('chrome://') || t.url.startsWith('edge://')) return false
+        if (
+          !t.url ||
+          t.url.startsWith('chrome://') ||
+          t.url.startsWith('edge://')
+        )
+          return false
         if (!pattern) return true
         let val = field === 'title' ? t.title || '' : t.url || ''
         return val.toLowerCase().includes(pattern)
       })
 
       if (matchedTabs.length === 0) {
-        return { success: true, message: 'No valid tabs to save to list.', affectedCount: 0 }
+        return {
+          success: true,
+          message: 'No valid tabs to save to list.',
+          affectedCount: 0
+        }
       }
 
       const now = new Date()
       const dateStr = now.toLocaleDateString()
-      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      const template = params.sessionNameTemplate || 'Routine List - {date} {time}'
-      const listName = template.replace('{date}', dateStr).replace('{time}', timeStr)
+      const timeStr = now.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+      const template =
+        params.sessionNameTemplate || 'Routine List - {date} {time}'
+      const listName = template
+        .replace('{date}', dateStr)
+        .replace('{time}', timeStr)
 
       const tabData = matchedTabs.map((t) => ({
         url: t.url || '',
         title: t.title || 'Untitled'
       }))
 
-      await saveList(tabData, listName, params.targetId || null, params.targetName || 'Routines Library', null)
+      await saveList(
+        tabData,
+        listName,
+        params.targetId || null,
+        params.targetName || 'Routines Library',
+        null
+      )
 
       if (params.closeAfterSave) {
         const tabIds = matchedTabs.map((t) => t.id!).filter(Boolean)
@@ -733,7 +877,10 @@ async function executeStep(
         try {
           regex = new RegExp(pattern, 'i')
         } catch {
-          return { success: false, message: 'Invalid regex for move-to-window.' }
+          return {
+            success: false,
+            message: 'Invalid regex for move-to-window.'
+          }
         }
       }
 
@@ -756,14 +903,18 @@ async function executeStep(
           }
         }
 
-        const isMatch = regex ? regex.test(val) : val.toLowerCase().includes(pattern)
+        const isMatch = regex
+          ? regex.test(val)
+          : val.toLowerCase().includes(pattern)
         if (isMatch) tabsToMove.push(tab)
       }
 
       if (tabsToMove.length === 0) {
         return {
           success: true,
-          message: pattern ? `No tabs matched "${pattern}" to move.` : 'No tabs to move.',
+          message: pattern
+            ? `No tabs matched "${pattern}" to move.`
+            : 'No tabs to move.',
           affectedCount: 0
         }
       }
@@ -775,8 +926,14 @@ async function executeStep(
       })
 
       if (newWin.id && tabsToMove.length > 1) {
-        const remainingTabIds = tabsToMove.slice(1).map((t) => t.id!).filter(Boolean)
-        await browser.tabs.move(remainingTabIds, { windowId: newWin.id, index: -1 })
+        const remainingTabIds = tabsToMove
+          .slice(1)
+          .map((t) => t.id!)
+          .filter(Boolean)
+        await browser.tabs.move(remainingTabIds, {
+          windowId: newWin.id,
+          index: -1
+        })
       }
 
       return {
@@ -789,7 +946,11 @@ async function executeStep(
     case 'open-urls': {
       const urls = (params.urls || []).filter((u) => u && u.trim().length > 0)
       if (urls.length === 0) {
-        return { success: true, message: 'No URLs specified to open.', affectedCount: 0 }
+        return {
+          success: true,
+          message: 'No URLs specified to open.',
+          affectedCount: 0
+        }
       }
 
       if (params.openInNewWindow) {

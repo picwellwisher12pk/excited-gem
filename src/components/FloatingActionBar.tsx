@@ -25,7 +25,10 @@ export function FloatingActionBar() {
   )
   const [saveListOpen, setSaveListOpen] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
-  const [progress, setProgress] = useState<{ current: number; total: number } | null>(null)
+  const [progress, setProgress] = useState<{
+    current: number
+    total: number
+  } | null>(null)
 
   // Show whenever any tabs are selected (regardless of selection mode flag)
   if (selectedTabs.length === 0) return null
@@ -60,10 +63,8 @@ export function FloatingActionBar() {
     try {
       setIsProcessing(true)
       setProgress({ current: 0, total: selectedTabs.length })
-      await batchUpdateTabs(
-        selectedTabs,
-        { pinned: true },
-        (current, total) => setProgress({ current, total })
+      await batchUpdateTabs(selectedTabs, { pinned: true }, (current, total) =>
+        setProgress({ current, total })
       )
       handleClose()
     } catch (err) {

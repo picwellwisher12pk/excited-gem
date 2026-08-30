@@ -5,7 +5,10 @@ import { getRoutines, syncRoutineAlarms } from './services/routineStorage'
 import { executeRoutine } from './services/routineEngine'
 import debounce from 'lodash/debounce'
 
-const browser = (typeof window !== 'undefined' ? window.browser : (globalThis as any).browser) || chrome
+const browser =
+  (typeof window !== 'undefined'
+    ? window.browser
+    : (globalThis as any).browser) || chrome
 
 console.log('DEBUG: Background script loaded')
 
@@ -64,7 +67,9 @@ browser.runtime.onInstalled.addListener(() => {
     browser.storage.local.get('preferences').then((result) => {})
   })
   getTabs('current').then((tabs) => setBadge(tabs.length))
-  syncRoutineAlarms().catch((err) => console.error('Error syncing routine alarms:', err))
+  syncRoutineAlarms().catch((err) =>
+    console.error('Error syncing routine alarms:', err)
+  )
 })
 
 // --- Routine Automation Handlers ---
@@ -194,14 +199,19 @@ browser.storage.local
 const fetchingYoutubeApi = new Set<string>()
 
 async function fetchYouTubeApiInfo(videoId: string, force = false) {
-  console.log(`DEBUG: fetchYouTubeApiInfo called for ${videoId} (force=${force})`)
+  console.log(
+    `DEBUG: fetchYouTubeApiInfo called for ${videoId} (force=${force})`
+  )
   if (!force && youtubeApiCache.has(videoId)) {
     const cached = youtubeApiCache.get(videoId)!
-    const isRecent = Date.now() - cached.timestamp < 24 * 60 * 60 * 1000;
+    const isRecent = Date.now() - cached.timestamp < 24 * 60 * 60 * 1000
     // If it's recent AND actually has a duration (or it's been less than 5 minutes for failures)
-    if (isRecent && (cached.duration > 0 || Date.now() - cached.timestamp < 5 * 60 * 1000)) {
-      console.log(`DEBUG: Using cached info for ${videoId}`);
-      return cached;
+    if (
+      isRecent &&
+      (cached.duration > 0 || Date.now() - cached.timestamp < 5 * 60 * 1000)
+    ) {
+      console.log(`DEBUG: Using cached info for ${videoId}`)
+      return cached
     }
   }
 
@@ -298,7 +308,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log('DEBUG: Background received REFRESH_YOUTUBE_DATA')
     chrome.tabs.query({}).then((tabs) => {
       tabs.forEach((tab) => {
-        if (tab.url && (tab.url.includes('youtube.com/') || tab.url.includes('youtu.be/'))) {
+        if (
+          tab.url &&
+          (tab.url.includes('youtube.com/') || tab.url.includes('youtu.be/'))
+        ) {
           const videoId = extractVideoId(tab.url)
           if (videoId) {
             fetchYouTubeApiInfo(videoId, true)
@@ -333,9 +346,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Delegate to existing session save logic
     chrome.storage.local.get(['sessions', 'pref'], (result) => {
       const sessions = result.sessions ?? {}
-      const sessionName = message.name || `Session ${new Date().toLocaleDateString()}`
+      const sessionName =
+        message.name || `Session ${new Date().toLocaleDateString()}`
       chrome.tabs.query({}).then((tabs) => {
-        const targetTabs = message.tabIds 
+        const targetTabs = message.tabIds
           ? tabs.filter((t) => message.tabIds.includes(t.id))
           : tabs
 
@@ -346,7 +360,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             byWindow[t.windowId].push({ url: t.url, title: t.title ?? '' })
           }
         })
-        sessions[Date.now()] = { name: sessionName, created: Date.now(), windows: byWindow }
+        sessions[Date.now()] = {
+          name: sessionName,
+          created: Date.now(),
+          windows: byWindow
+        }
         chrome.storage.local.set({ sessions })
         sendResponse({ success: true })
       })
@@ -362,7 +380,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       chrome.tabs.query({}).then((tabs) => {
         const tabsToSave = tabs.filter((t) => message.tabIds.includes(t.id))
         tabsToSave.forEach((t) => {
-          lists[listName].push({ url: t.url, title: t.title, added: Date.now() })
+          lists[listName].push({
+            url: t.url,
+            title: t.title,
+            added: Date.now()
+          })
         })
         chrome.storage.local.set({ lists })
         sendResponse({ success: true })
@@ -373,7 +395,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'AI_RESTORE_SESSION') {
     chrome.storage.local.get(['sessions'], (result) => {
       const sessions = result.sessions ?? {}
-      const session = Object.values(sessions).find((s: any) => s.name === message.sessionName) as any
+      const session = Object.values(sessions).find(
+        (s: any) => s.name === message.sessionName
+      ) as any
       if (session) {
         Object.values(session.windows).forEach((tabs: any) => {
           tabs.forEach((t: any) => chrome.tabs.create({ url: t.url }))
@@ -397,7 +421,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'AI_DELETE_SESSION') {
     chrome.storage.local.get(['sessions'], (result) => {
       const sessions = result.sessions ?? {}
-      const keyToDelete = Object.keys(sessions).find((k) => sessions[k].name === message.sessionName)
+      const keyToDelete = Object.keys(sessions).find(
+        (k) => sessions[k].name === message.sessionName
+      )
       if (keyToDelete) {
         delete sessions[keyToDelete]
         chrome.storage.local.set({ sessions })
@@ -412,7 +438,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'AI_RENAME_SESSION') {
     chrome.storage.local.get(['sessions'], (result) => {
       const sessions = result.sessions ?? {}
-      const keyToRename = Object.keys(sessions).find((k) => sessions[k].name === message.oldName)
+      const keyToRename = Object.keys(sessions).find(
+        (k) => sessions[k].name === message.oldName
+      )
       if (keyToRename) {
         sessions[keyToRename].name = message.newName
         chrome.storage.local.set({ sessions })

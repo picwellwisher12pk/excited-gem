@@ -1,4 +1,9 @@
-export type RoutineScope = 'active-window' | 'all-windows' | 'selected-tabs' | 'session' | 'list'
+export type RoutineScope =
+  | 'active-window'
+  | 'all-windows'
+  | 'selected-tabs'
+  | 'session'
+  | 'list'
 
 export type StepActionType =
   // Tab Filtering & Working Set Scope

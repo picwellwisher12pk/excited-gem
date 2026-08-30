@@ -13,10 +13,10 @@
 
 import {
   BaseProvider,
-  ChatMessage,
-  StreamChunk,
-  DiscoveredModel,
-  ProviderStatus
+  type ChatMessage,
+  type StreamChunk,
+  type DiscoveredModel,
+  type ProviderStatus
 } from './BaseProvider'
 
 /** Known cloud endpoints with curated model lists */
@@ -24,19 +24,40 @@ const CLOUD_MODELS: Record<string, DiscoveredModel[]> = {
   'api.openai.com': [
     { id: 'gpt-4o-mini', name: 'GPT-4o Mini', contextLength: 128000 },
     { id: 'gpt-4o', name: 'GPT-4o', contextLength: 128000 },
-    { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', contextLength: 128000 },
+    { id: 'o3-mini', name: 'o3 Mini', contextLength: 200000 },
+    { id: 'o1', name: 'o1', contextLength: 200000 },
     { id: 'o1-mini', name: 'o1 Mini', contextLength: 128000 },
-    { id: 'o1', name: 'o1', contextLength: 200000 }
+    { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', contextLength: 128000 }
   ],
   'api.groq.com': [
-    { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B (Groq)', contextLength: 128000 },
-    { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B (Groq)', contextLength: 128000 },
-    { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B (Groq)', contextLength: 32768 },
+    {
+      id: 'llama-3.3-70b-versatile',
+      name: 'Llama 3.3 70B (Groq)',
+      contextLength: 128000
+    },
+    {
+      id: 'llama-3.1-8b-instant',
+      name: 'Llama 3.1 8B (Groq)',
+      contextLength: 128000
+    },
+    {
+      id: 'mixtral-8x7b-32768',
+      name: 'Mixtral 8x7B (Groq)',
+      contextLength: 32768
+    },
     { id: 'gemma2-9b-it', name: 'Gemma2 9B (Groq)', contextLength: 8192 }
   ],
   'api.together.xyz': [
-    { id: 'meta-llama/Llama-3.3-70B-Instruct-Turbo', name: 'Llama 3.3 70B (Together)', contextLength: 131072 },
-    { id: 'mistralai/Mixtral-8x7B-Instruct-v0.1', name: 'Mixtral 8x7B (Together)', contextLength: 32768 }
+    {
+      id: 'meta-llama/Llama-3.3-70B-Instruct-Turbo',
+      name: 'Llama 3.3 70B (Together)',
+      contextLength: 131072
+    },
+    {
+      id: 'mistralai/Mixtral-8x7B-Instruct-v0.1',
+      name: 'Mixtral 8x7B (Together)',
+      contextLength: 32768
+    }
   ]
 }
 
@@ -58,7 +79,10 @@ export class OpenAICompatProvider extends BaseProvider {
   }) {
     super()
     this.type = config.type ?? 'openai-compatible'
-    this.baseUrl = (config.baseUrl || 'https://api.openai.com').replace(/\/$/, '')
+    this.baseUrl = (config.baseUrl || 'https://api.openai.com').replace(
+      /\/$/,
+      ''
+    )
     this.model = config.model
     this.apiKey = config.apiKey || ''
     this.systemPrompt = config.systemPrompt || ''
@@ -76,7 +100,10 @@ export class OpenAICompatProvider extends BaseProvider {
     return [{ role: 'system', content: this.systemPrompt }, ...messages]
   }
 
-  async chat(messages: ChatMessage[], abortSignal?: AbortSignal): Promise<string> {
+  async chat(
+    messages: ChatMessage[],
+    abortSignal?: AbortSignal
+  ): Promise<string> {
     const res = await fetch(`${this.baseUrl}/v1/chat/completions`, {
       method: 'POST',
       headers: this.getHeaders(),
@@ -95,7 +122,10 @@ export class OpenAICompatProvider extends BaseProvider {
     return data.choices?.[0]?.message?.content ?? ''
   }
 
-  async *stream(messages: ChatMessage[], abortSignal?: AbortSignal): AsyncGenerator<StreamChunk> {
+  async *stream(
+    messages: ChatMessage[],
+    abortSignal?: AbortSignal
+  ): AsyncGenerator<StreamChunk> {
     const res = await fetch(`${this.baseUrl}/v1/chat/completions`, {
       method: 'POST',
       headers: this.getHeaders(),

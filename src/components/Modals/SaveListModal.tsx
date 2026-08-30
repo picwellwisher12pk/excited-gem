@@ -21,7 +21,7 @@ import {
   HardDrive,
   CheckCircle2,
   Search,
-  X,
+  X
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
@@ -34,7 +34,8 @@ import {
 import { clearSelectedTabs } from '../../store/tabSlice'
 
 const { Text } = Typography
-const browserApi = (typeof window !== 'undefined' && (window as any).browser) || chrome
+const browserApi =
+  (typeof window !== 'undefined' && (window as any).browser) || chrome
 
 interface TabData {
   id: number
@@ -94,17 +95,22 @@ export function SaveListModal({
   const { tabs } = useSelector((state: any) => state.tabs)
 
   // Configuration states
-  const [storageType, setStorageType] = useState<'extension' | 'bookmarks'>('extension')
+  const [storageType, setStorageType] = useState<'extension' | 'bookmarks'>(
+    'extension'
+  )
   const [listName, setListName] = useState('')
   const [libraryMode, setLibraryMode] = useState<'new' | 'existing'>('new')
   const [newLibraryName, setNewLibraryName] = useState('')
-  const [existingLibraryId, setExistingLibraryId] = useState<string | null>(null)
+  const [existingLibraryId, setExistingLibraryId] = useState<string | null>(
+    null
+  )
   const [listMode, setListMode] = useState<'new' | 'existing'>('new')
   const [existingListId, setExistingListId] = useState<string | null>(null)
 
   // Bookmarks specific states
   const [bookmarkFolders, setBookmarkFolders] = useState<any[]>([])
-  const [selectedBookmarkParent, setSelectedBookmarkParent] = useState<string>('1')
+  const [selectedBookmarkParent, setSelectedBookmarkParent] =
+    useState<string>('1')
   const [bookmarkLibraryName, setBookmarkLibraryName] = useState('My Library')
   const [useRootFolder, setUseRootFolder] = useState(false)
   const [rootFolderName, setRootFolderName] = useState('Excited Gem Lists')
@@ -158,9 +164,15 @@ export function SaveListModal({
   // Track URLs already in selected library
   const urlsInSelectedLibrary = useMemo(() => {
     const set = new Set<string>()
-    if (storageType === 'extension' && libraryMode === 'existing' && existingLibraryId) {
+    if (
+      storageType === 'extension' &&
+      libraryMode === 'existing' &&
+      existingLibraryId
+    ) {
       const lib = libraries.find((l) => l.id === existingLibraryId)
-      lib?.lists?.forEach((l) => l.tabs?.forEach((t) => t.url && set.add(t.url)))
+      lib?.lists?.forEach((l) =>
+        l.tabs?.forEach((t) => t.url && set.add(t.url))
+      )
     }
     return set
   }, [storageType, libraryMode, existingLibraryId, libraries])
@@ -215,7 +227,9 @@ export function SaveListModal({
 
   // Selection toggles for preview tabs
   const visibleSelectableTabs = useMemo(() => {
-    return displayedPreviewTabs.filter((t) => !t.isDupeInSelection && !t.isDupeInLibrary)
+    return displayedPreviewTabs.filter(
+      (t) => !t.isDupeInSelection && !t.isDupeInLibrary
+    )
   }, [displayedPreviewTabs])
 
   const allVisibleSelected =
@@ -331,7 +345,10 @@ export function SaveListModal({
       footer={
         <div className="flex items-center justify-between w-full pt-1.5">
           <div className="text-xs text-slate-500 flex items-center gap-1.5 truncate">
-            <CheckCircle2 size={14} className="text-emerald-500 flex-shrink-0" />
+            <CheckCircle2
+              size={14}
+              className="text-emerald-500 flex-shrink-0"
+            />
             <span className="truncate">
               Ready to save{' '}
               <strong className="text-slate-700 font-semibold">
@@ -381,7 +398,10 @@ export function SaveListModal({
           <div className="space-y-3">
             {/* Storage Type Switcher */}
             <div>
-              <Text strong className="text-[11px] uppercase tracking-wider text-slate-500 block mb-1.5 font-semibold">
+              <Text
+                strong
+                className="text-[11px] uppercase tracking-wider text-slate-500 block mb-1.5 font-semibold"
+              >
                 1. Save Location
               </Text>
               <div className="grid grid-cols-2 gap-2">
@@ -425,7 +445,10 @@ export function SaveListModal({
 
             {/* List Details & Organization */}
             <div className="space-y-2.5">
-              <Text strong className="text-[11px] uppercase tracking-wider text-slate-500 block font-semibold">
+              <Text
+                strong
+                className="text-[11px] uppercase tracking-wider text-slate-500 block font-semibold"
+              >
                 2. Organization & Details
               </Text>
 
@@ -461,7 +484,9 @@ export function SaveListModal({
                   >
                     <Space direction="vertical" className="w-full">
                       <Radio value="new">
-                        <span className="text-xs font-medium">Create New Library</span>
+                        <span className="text-xs font-medium">
+                          Create New Library
+                        </span>
                       </Radio>
                       {libraryMode === 'new' && (
                         <Input
@@ -470,7 +495,9 @@ export function SaveListModal({
                           value={newLibraryName}
                           onChange={(e) => setNewLibraryName(e.target.value)}
                           className="ml-6 w-[86%] text-xs"
-                          prefix={<FolderOpen size={12} className="text-slate-400" />}
+                          prefix={
+                            <FolderOpen size={12} className="text-slate-400" />
+                          }
                         />
                       )}
 
@@ -506,38 +533,44 @@ export function SaveListModal({
                             }))}
                           />
 
-                          {selectedLib && selectedLib.lists && selectedLib.lists.length > 0 && (
-                            <div className="pt-0.5">
-                              <Radio.Group
-                                size="small"
-                                value={listMode}
-                                onChange={(e) => setListMode(e.target.value)}
-                                className="text-[11px]"
-                              >
-                                <Space direction="vertical">
-                                  <Radio value="new">
-                                    <span className="text-[11px]">New List in Library</span>
-                                  </Radio>
-                                  <Radio value="existing">
-                                    <span className="text-[11px]">Append to Existing List</span>
-                                  </Radio>
-                                </Space>
-                              </Radio.Group>
-
-                              {listMode === 'existing' && (
-                                <Select
+                          {selectedLib &&
+                            selectedLib.lists &&
+                            selectedLib.lists.length > 0 && (
+                              <div className="pt-0.5">
+                                <Radio.Group
                                   size="small"
-                                  className="w-full mt-1 text-xs"
-                                  value={existingListId}
-                                  onChange={setExistingListId}
-                                  options={selectedLib.lists.map((l) => ({
-                                    label: `${l.name || 'Unnamed List'} (${l.tabs?.length || 0} tabs)`,
-                                    value: l.id
-                                  }))}
-                                />
-                              )}
-                            </div>
-                          )}
+                                  value={listMode}
+                                  onChange={(e) => setListMode(e.target.value)}
+                                  className="text-[11px]"
+                                >
+                                  <Space direction="vertical">
+                                    <Radio value="new">
+                                      <span className="text-[11px]">
+                                        New List in Library
+                                      </span>
+                                    </Radio>
+                                    <Radio value="existing">
+                                      <span className="text-[11px]">
+                                        Append to Existing List
+                                      </span>
+                                    </Radio>
+                                  </Space>
+                                </Radio.Group>
+
+                                {listMode === 'existing' && (
+                                  <Select
+                                    size="small"
+                                    className="w-full mt-1 text-xs"
+                                    value={existingListId}
+                                    onChange={setExistingListId}
+                                    options={selectedLib.lists.map((l) => ({
+                                      label: `${l.name || 'Unnamed List'} (${l.tabs?.length || 0} tabs)`,
+                                      value: l.id
+                                    }))}
+                                  />
+                                )}
+                              </div>
+                            )}
                         </div>
                       )}
                     </Space>
@@ -581,7 +614,9 @@ export function SaveListModal({
                       value={bookmarkLibraryName}
                       onChange={(e) => setBookmarkLibraryName(e.target.value)}
                       placeholder="e.g. My Library"
-                      prefix={<FolderOpen size={12} className="text-amber-500" />}
+                      prefix={
+                        <FolderOpen size={12} className="text-amber-500" />
+                      }
                       className="text-xs"
                     />
                   </div>
@@ -609,9 +644,12 @@ export function SaveListModal({
 
                   <div className="bg-white/90 p-1.5 rounded border border-amber-100 text-[10px] text-slate-600 font-mono leading-tight">
                     Path: 📁{' '}
-                    {bookmarkFolders.find((f) => f.value === selectedBookmarkParent)
-                      ?.title || 'Bookmarks Bar'}{' '}
-                    {useRootFolder && rootFolderName ? `→ 📁 ${rootFolderName} ` : ''}
+                    {bookmarkFolders.find(
+                      (f) => f.value === selectedBookmarkParent
+                    )?.title || 'Bookmarks Bar'}{' '}
+                    {useRootFolder && rootFolderName
+                      ? `→ 📁 ${rootFolderName} `
+                      : ''}
                     → 📁 {bookmarkLibraryName || 'My Library'} → 📁{' '}
                     {listName || 'Saved List'}
                   </div>
@@ -622,7 +660,10 @@ export function SaveListModal({
 
           {/* After Saving Actions */}
           <div className="border-t border-slate-200 pt-2.5">
-            <Text strong className="text-[11px] uppercase tracking-wider text-slate-500 block mb-1 font-semibold">
+            <Text
+              strong
+              className="text-[11px] uppercase tracking-wider text-slate-500 block mb-1 font-semibold"
+            >
               3. After Saving
             </Text>
             <div className="space-y-1">
@@ -721,7 +762,8 @@ export function SaveListModal({
               type="info"
               message={
                 <span className="text-xs">
-                  <strong>{dupeCount} duplicate URLs</strong> in selection/library will be skipped.
+                  <strong>{dupeCount} duplicate URLs</strong> in
+                  selection/library will be skipped.
                 </span>
               }
               className="mb-2 py-0.5 px-2 flex-shrink-0"
@@ -747,8 +789,8 @@ export function SaveListModal({
                       isDupe
                         ? 'opacity-40 bg-slate-100 border-slate-200'
                         : isChecked
-                        ? 'bg-white border-slate-200/90 hover:border-blue-300 shadow-[0_1px_2px_rgba(0,0,0,0.02)]'
-                        : 'bg-slate-100/70 border-slate-200 opacity-60'
+                          ? 'bg-white border-slate-200/90 hover:border-blue-300 shadow-[0_1px_2px_rgba(0,0,0,0.02)]'
+                          : 'bg-slate-100/70 border-slate-200 opacity-60'
                     }`}
                   >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -792,11 +834,18 @@ export function SaveListModal({
                           {tab.isDupeInLibrary ? 'In Library' : 'Duplicate'}
                         </Tag>
                       )}
-                      <Tooltip title={isChecked ? 'Exclude tab' : 'Include tab'}>
+                      <Tooltip
+                        title={isChecked ? 'Exclude tab' : 'Include tab'}
+                      >
                         <Button
                           type="text"
                           size="small"
-                          icon={<X size={12} className="text-slate-400 hover:text-red-500" />}
+                          icon={
+                            <X
+                              size={12}
+                              className="text-slate-400 hover:text-red-500"
+                            />
+                          }
                           onClick={() => handleToggleExcludeTab(tab.id)}
                           className="w-5 h-5 flex items-center justify-center p-0"
                         />

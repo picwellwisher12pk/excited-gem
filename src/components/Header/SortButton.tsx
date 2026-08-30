@@ -49,7 +49,7 @@ const SortButton = ({ tabs }) => {
 
       {isOpen && (
         <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 min-w-[120px]">
-          {items.map(item => (
+          {items.map((item) => (
             <div
               key={item.key}
               className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"

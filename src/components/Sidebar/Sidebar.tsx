@@ -12,7 +12,13 @@ import {
 import type { MenuProps } from 'antd'
 
 interface SidebarProps {
-  currentPage: 'tabs' | 'sessions' | 'settings' | 'bookmarks' | 'lists' | 'analytics'
+  currentPage:
+    | 'tabs'
+    | 'sessions'
+    | 'settings'
+    | 'bookmarks'
+    | 'lists'
+    | 'analytics'
   collapsed?: boolean
   onToggle?: () => void
   onAIClick?: () => void

@@ -16,7 +16,7 @@ import {
   Cpu,
   ArrowUpDown,
   CheckCircle2,
-  XCircle,
+  XCircle
 } from 'lucide-react'
 import type { Routine } from '../../types/routine'
 
@@ -115,7 +115,12 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
   return (
     <Card
       className="shadow-sm hover:shadow-md transition-shadow border-gray-200 rounded-xl overflow-hidden flex flex-col justify-between"
-      bodyStyle={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%' }}
+      bodyStyle={{
+        padding: '16px',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%'
+      }}
     >
       <div>
         {/* Card Header */}
@@ -156,20 +161,29 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
             {routine.targetScope === 'active-window'
               ? 'Current Window'
               : routine.targetScope === 'all-windows'
-              ? 'All Windows'
-              : routine.targetScope === 'selected-tabs'
-              ? 'Selected Tabs'
-              : 'Target'}
+                ? 'All Windows'
+                : routine.targetScope === 'selected-tabs'
+                  ? 'Selected Tabs'
+                  : 'Target'}
           </Tag>
 
-          {routine.triggers.intervalMinutes && routine.triggers.intervalMinutes > 0 ? (
-            <Tag color="purple" icon={<Clock size={11} className="inline mr-1" />} className="text-xs !m-0 !rounded-md">
+          {routine.triggers.intervalMinutes &&
+          routine.triggers.intervalMinutes > 0 ? (
+            <Tag
+              color="purple"
+              icon={<Clock size={11} className="inline mr-1" />}
+              className="text-xs !m-0 !rounded-md"
+            >
               Every {routine.triggers.intervalMinutes}m
             </Tag>
           ) : null}
 
           {routine.triggers.onStartup && (
-            <Tag color="green" icon={<Zap size={11} className="inline mr-1" />} className="text-xs !m-0 !rounded-md">
+            <Tag
+              color="green"
+              icon={<Zap size={11} className="inline mr-1" />}
+              className="text-xs !m-0 !rounded-md"
+            >
               On Startup
             </Tag>
           )}
@@ -194,7 +208,9 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
                     : 'bg-gray-100 text-gray-400 border-gray-200 line-through'
                 }`}
               >
-                <span className="text-gray-400 font-mono text-[9px]">{idx + 1}.</span>
+                <span className="text-gray-400 font-mono text-[9px]">
+                  {idx + 1}.
+                </span>
                 <span>{step.name || getStepTypeLabel(step.type)}</span>
               </span>
             ))}
@@ -210,10 +226,19 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
               ) : (
                 <XCircle size={13} className="text-rose-500" />
               )}
-              <span>Last run: {new Date(routine.lastRunAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              <span>
+                Last run:{' '}
+                {new Date(routine.lastRunAt).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </span>
             </span>
             {routine.lastRunSummary && (
-              <span className="text-[11px] text-gray-400 max-w-[150px] truncate" title={routine.lastRunSummary}>
+              <span
+                className="text-[11px] text-gray-400 max-w-[150px] truncate"
+                title={routine.lastRunSummary}
+              >
                 {routine.lastRunSummary}
               </span>
             )}

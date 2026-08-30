@@ -227,7 +227,9 @@ function TabList() {
   const [isLoading, setIsLoading] = React.useState(false)
   const listRef = useRef<any>(null)
   const [groupedTabsSetting, setGroupedTabsSetting] = React.useState(true)
-  const [allWindowsViewMode, setAllWindowsViewMode] = React.useState<'grid' | 'list'>('grid')
+  const [allWindowsViewMode, setAllWindowsViewMode] = React.useState<
+    'grid' | 'list'
+  >('grid')
   const [tabActionButtonsSetting, setTabActionButtonsSetting] = React.useState<
     'always' | 'hover'
   >('hover')
@@ -357,14 +359,17 @@ function TabList() {
     chrome.tabGroups.onCreated.addListener(onGroupUpdated)
     chrome.tabGroups.onRemoved.addListener(onGroupUpdated)
 
-    chrome.storage.local.get(['groupedTabs', 'tabActionButtons', 'allWindowsViewMode'], (result) => {
-      if (result.groupedTabs !== undefined)
-        setGroupedTabsSetting(result.groupedTabs)
-      if (result.tabActionButtons)
-        setTabActionButtonsSetting(result.tabActionButtons)
-      if (result.allWindowsViewMode)
-        setAllWindowsViewMode(result.allWindowsViewMode)
-    })
+    chrome.storage.local.get(
+      ['groupedTabs', 'tabActionButtons', 'allWindowsViewMode'],
+      (result) => {
+        if (result.groupedTabs !== undefined)
+          setGroupedTabsSetting(result.groupedTabs)
+        if (result.tabActionButtons)
+          setTabActionButtonsSetting(result.tabActionButtons)
+        if (result.allWindowsViewMode)
+          setAllWindowsViewMode(result.allWindowsViewMode)
+      }
+    )
 
     // Listen for storage changes
     const handleStorageChange = (changes: any, area: string) => {
@@ -477,7 +482,8 @@ function TabList() {
     // 3. Build display list
     sortedTabs.forEach((tab: any) => {
       // Window Header (Only if showing all windows AND grouping is enabled)
-      const showWindowHeader = (selectedWindow as any) === 'all' && groupedTabsSetting
+      const showWindowHeader =
+        (selectedWindow as any) === 'all' && groupedTabsSetting
 
       if (showWindowHeader && tab.windowId !== lastWindowId) {
         lastWindowId = tab.windowId

@@ -1,32 +1,31 @@
-
 import { useSelector } from 'react-redux'
 import type { RootState } from '../../store/store'
 import type { ProviderType } from '../../ai/AIService'
 
 const PROVIDER_ICONS: Record<ProviderType, string> = {
-  'gemini-nano':       '⚡',
-  'ollama':            '🦙',
-  'lm-studio':         '🏠',
-  'jan':               '🌀',
-  'llamacpp':          '🔧',
+  'gemini-nano': '⚡',
+  ollama: '🦙',
+  'lm-studio': '🏠',
+  jan: '🌀',
+  llamacpp: '🔧',
   'openai-compatible': '🔌',
-  'openai':            '🤖',
-  'gemini-cloud':      '✨',
-  'anthropic':         '🧠',
-  'groq':              '⚡'
+  openai: '🤖',
+  'gemini-cloud': '✨',
+  anthropic: '🧠',
+  groq: '⚡'
 }
 
 const PROVIDER_LABELS: Record<ProviderType, string> = {
-  'gemini-nano':       'Nano',
-  'ollama':            'Ollama',
-  'lm-studio':         'LM Studio',
-  'jan':               'Jan',
-  'llamacpp':          'llama.cpp',
+  'gemini-nano': 'Nano',
+  ollama: 'Ollama',
+  'lm-studio': 'LM Studio',
+  jan: 'Jan',
+  llamacpp: 'llama.cpp',
   'openai-compatible': 'Local',
-  'openai':            'OpenAI',
-  'gemini-cloud':      'Gemini',
-  'anthropic':         'Claude',
-  'groq':              'Groq'
+  openai: 'OpenAI',
+  'gemini-cloud': 'Gemini',
+  anthropic: 'Claude',
+  groq: 'Groq'
 }
 
 interface AIProviderBadgeProps {
@@ -39,8 +38,8 @@ interface AIProviderBadgeProps {
 
 import type { ProviderStatus } from '../../ai/providers/BaseProvider'
 
-export function AIProviderBadge({ 
-  size = 'sm', 
+export function AIProviderBadge({
+  size = 'sm',
   showModel = true,
   onClick,
   active,
@@ -58,7 +57,11 @@ export function AIProviderBadge({
 
   const icon = PROVIDER_ICONS[providerType] ?? '🤖'
   const label = PROVIDER_LABELS[providerType] ?? providerType
-  const modelShort = model ? (model.length > 18 ? model.slice(0, 15) + '…' : model) : '—'
+  const modelShort = model
+    ? model.length > 18
+      ? model.slice(0, 15) + '…'
+      : model
+    : '—'
   const isConnected = currentStatus?.connected ?? null
 
   return (
@@ -67,19 +70,24 @@ export function AIProviderBadge({
       className={`
         inline-flex items-center gap-1.5 rounded-full border shadow-sm
         ${size === 'sm' ? 'px-2.5 py-1 text-[10px]' : 'px-3.5 py-1.5 text-xs'}
-        ${!isEnabled
-          ? 'bg-gray-50 border-gray-200 text-gray-500 grayscale'
-          : isConnected === true
-          ? 'bg-green-50 border-green-200 text-green-700'
-          : isConnected === false
-          ? 'bg-red-50 border-red-200 text-red-600'
-          : 'bg-blue-50 border-blue-200 text-blue-600'
+        ${
+          !isEnabled
+            ? 'bg-gray-50 border-gray-200 text-gray-500 grayscale'
+            : isConnected === true
+              ? 'bg-green-50 border-green-200 text-green-700'
+              : isConnected === false
+                ? 'bg-red-50 border-red-200 text-red-600'
+                : 'bg-blue-50 border-blue-200 text-blue-600'
         }
         ${onClick ? 'cursor-pointer hover:shadow-md active:scale-95' : ''}
         ${active ? 'ring-2 ring-blue-400 ring-offset-2 ring-offset-white' : ''}
         font-medium transition-all duration-200
       `}
-      title={isConnected === false ? `AI Error: ${currentStatus?.error}` : `AI: ${label} · ${model}`}
+      title={
+        isConnected === false
+          ? `AI Error: ${currentStatus?.error}`
+          : `AI: ${label} · ${model}`
+      }
     >
       <span>{icon}</span>
       <span>{label}</span>

@@ -1,5 +1,3 @@
-
-
 interface TabData {
   id: string
   index: number

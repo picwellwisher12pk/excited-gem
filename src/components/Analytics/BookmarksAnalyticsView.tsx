@@ -31,7 +31,9 @@ interface BookmarksAnalyticsViewProps {
   onRefresh: () => void
 }
 
-export const BookmarksAnalyticsView: React.FC<BookmarksAnalyticsViewProps> = ({ stats }) => {
+export const BookmarksAnalyticsView: React.FC<BookmarksAnalyticsViewProps> = ({
+  stats
+}) => {
   const [domainSearch, setDomainSearch] = useState('')
   const [pageSize, setPageSize] = useState<number>(10)
 
@@ -48,33 +50,47 @@ export const BookmarksAnalyticsView: React.FC<BookmarksAnalyticsViewProps> = ({ 
       {/* ── Top Metrics ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3">
-          <Text className="text-[11px] font-semibold uppercase text-slate-400">Total Bookmarks</Text>
+          <Text className="text-[11px] font-semibold uppercase text-slate-400">
+            Total Bookmarks
+          </Text>
           <div className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">
             {stats.totalBookmarks}
           </div>
-          <Text className="text-[11px] text-amber-500 font-medium">Saved items</Text>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3">
-          <Text className="text-[11px] font-semibold uppercase text-slate-400">Folders</Text>
-          <div className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">
-            {stats.totalFolders}
-          </div>
-          <Text className="text-[11px] text-slate-500">
-            {stats.emptyFoldersCount > 0 ? `${stats.emptyFoldersCount} empty` : 'Organized'}
+          <Text className="text-[11px] text-amber-500 font-medium">
+            Saved items
           </Text>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3">
-          <Text className="text-[11px] font-semibold uppercase text-slate-400">Tree Depth</Text>
+          <Text className="text-[11px] font-semibold uppercase text-slate-400">
+            Folders
+          </Text>
           <div className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">
-            {stats.maxDepth}
+            {stats.totalFolders}
           </div>
-          <Text className="text-[11px] text-purple-500 font-medium">Folder levels</Text>
+          <Text className="text-[11px] text-slate-500">
+            {stats.emptyFoldersCount > 0
+              ? `${stats.emptyFoldersCount} empty`
+              : 'Organized'}
+          </Text>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3">
-          <Text className="text-[11px] font-semibold uppercase text-slate-400">Duplicate URLs</Text>
+          <Text className="text-[11px] font-semibold uppercase text-slate-400">
+            Tree Depth
+          </Text>
+          <div className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">
+            {stats.maxDepth}
+          </div>
+          <Text className="text-[11px] text-purple-500 font-medium">
+            Folder levels
+          </Text>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3">
+          <Text className="text-[11px] font-semibold uppercase text-slate-400">
+            Duplicate URLs
+          </Text>
           <div className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">
             {stats.duplicateBookmarks.length}
           </div>
@@ -84,11 +100,15 @@ export const BookmarksAnalyticsView: React.FC<BookmarksAnalyticsViewProps> = ({ 
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3">
-          <Text className="text-[11px] font-semibold uppercase text-slate-400">Unique Domains</Text>
+          <Text className="text-[11px] font-semibold uppercase text-slate-400">
+            Unique Domains
+          </Text>
           <div className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">
             {stats.topDomains.length}
           </div>
-          <Text className="text-[11px] text-cyan-500 font-medium">Bookmarked domains</Text>
+          <Text className="text-[11px] text-cyan-500 font-medium">
+            Bookmarked domains
+          </Text>
         </div>
       </div>
 
@@ -110,19 +130,25 @@ export const BookmarksAnalyticsView: React.FC<BookmarksAnalyticsViewProps> = ({ 
 
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-center">
-            <div className="text-xs text-slate-400 font-medium">Last 24 Hours</div>
+            <div className="text-xs text-slate-400 font-medium">
+              Last 24 Hours
+            </div>
             <div className="text-xl font-bold text-slate-800 dark:text-white mt-1">
               {stats.timelineBreakdown.last24Hours}
             </div>
           </div>
           <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-center">
-            <div className="text-xs text-slate-400 font-medium">Last 7 Days</div>
+            <div className="text-xs text-slate-400 font-medium">
+              Last 7 Days
+            </div>
             <div className="text-xl font-bold text-slate-800 dark:text-white mt-1">
               {stats.timelineBreakdown.last7Days}
             </div>
           </div>
           <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-center">
-            <div className="text-xs text-slate-400 font-medium">Last 30 Days</div>
+            <div className="text-xs text-slate-400 font-medium">
+              Last 30 Days
+            </div>
             <div className="text-xl font-bold text-slate-800 dark:text-white mt-1">
               {stats.timelineBreakdown.last30Days}
             </div>
@@ -134,7 +160,9 @@ export const BookmarksAnalyticsView: React.FC<BookmarksAnalyticsViewProps> = ({ 
             </div>
           </div>
           <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-center">
-            <div className="text-xs text-slate-400 font-medium">Older (&gt; 1 Year)</div>
+            <div className="text-xs text-slate-400 font-medium">
+              Older (&gt; 1 Year)
+            </div>
             <div className="text-xl font-bold text-slate-800 dark:text-white mt-1">
               {stats.timelineBreakdown.older}
             </div>
@@ -183,7 +211,10 @@ export const BookmarksAnalyticsView: React.FC<BookmarksAnalyticsViewProps> = ({ 
                     {folder.bookmarkCount} items
                   </Tag>
                 </div>
-                <p className="text-[11px] text-slate-400 truncate" title={folder.path}>
+                <p
+                  className="text-[11px] text-slate-400 truncate"
+                  title={folder.path}
+                >
                   {folder.path}
                 </p>
               </div>
@@ -195,7 +226,9 @@ export const BookmarksAnalyticsView: React.FC<BookmarksAnalyticsViewProps> = ({ 
             </div>
           ))}
           {stats.topFolders.length === 0 && (
-            <p className="text-xs text-slate-400 py-4 text-center">No folders found</p>
+            <p className="text-xs text-slate-400 py-4 text-center">
+              No folders found
+            </p>
           )}
         </div>
       </div>
@@ -210,7 +243,8 @@ export const BookmarksAnalyticsView: React.FC<BookmarksAnalyticsViewProps> = ({ 
               </div>
               <div>
                 <h3 className="text-base font-semibold text-rose-900 dark:text-rose-200">
-                  Duplicate Bookmarks Inspector ({stats.duplicateBookmarks.length})
+                  Duplicate Bookmarks Inspector (
+                  {stats.duplicateBookmarks.length})
                 </h3>
                 <p className="text-xs text-rose-700 dark:text-rose-400">
                   Identical URLs saved in multiple folders
@@ -241,7 +275,9 @@ export const BookmarksAnalyticsView: React.FC<BookmarksAnalyticsViewProps> = ({ 
                     {dup.count} copies
                   </Tag>
                 </div>
-                <div className="text-[11px] text-slate-400 truncate">{dup.url}</div>
+                <div className="text-[11px] text-slate-400 truncate">
+                  {dup.url}
+                </div>
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {dup.locations.map((loc, lIdx) => (
                     <span
@@ -310,19 +346,26 @@ export const BookmarksAnalyticsView: React.FC<BookmarksAnalyticsViewProps> = ({ 
             >
               <div className="flex items-center justify-between text-xs mb-1">
                 <span className="font-semibold text-slate-800 dark:text-white flex items-center gap-2 truncate">
-                  <span className="text-slate-400 font-mono text-[11px] w-5">{index + 1}.</span>
+                  <span className="text-slate-400 font-mono text-[11px] w-5">
+                    {index + 1}.
+                  </span>
                   {domainItem.favIconUrl && (
                     <img
                       src={domainItem.favIconUrl}
                       alt=""
                       className="w-4 h-4 rounded-sm flex-shrink-0"
-                      onError={(e) => ((e.target as HTMLElement).style.display = 'none')}
+                      onError={(e) =>
+                        ((e.target as HTMLElement).style.display = 'none')
+                      }
                     />
                   )}
                   <span className="truncate">{domainItem.domain}</span>
                 </span>
                 <span className="text-slate-500 font-medium">
-                  {domainItem.count} bookmarks <span className="text-slate-400 font-normal">({domainItem.percentage}%)</span>
+                  {domainItem.count} bookmarks{' '}
+                  <span className="text-slate-400 font-normal">
+                    ({domainItem.percentage}%)
+                  </span>
                 </span>
               </div>
               <Progress
@@ -335,7 +378,9 @@ export const BookmarksAnalyticsView: React.FC<BookmarksAnalyticsViewProps> = ({ 
             </div>
           ))}
           {filteredDomains.length === 0 && (
-            <p className="text-xs text-slate-400 py-6 text-center">No matching domains found</p>
+            <p className="text-xs text-slate-400 py-6 text-center">
+              No matching domains found
+            </p>
           )}
         </div>
       </div>

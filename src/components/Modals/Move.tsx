@@ -17,9 +17,14 @@ export const MoveModal: React.FC<MoveModalProps> = ({
 }) => {
   const options = ['Current Windows', 'New Window', 'To End', 'To Start']
   const [type, setType] = useState<string>(options[0])
-  const [windowId, setWindowId] = useState<number | undefined>(currentWindow?.id)
+  const [windowId, setWindowId] = useState<number | undefined>(
+    currentWindow?.id
+  )
   const [isMoving, setIsMoving] = useState(false)
-  const [progress, setProgress] = useState<{ current: number; total: number }>({ current: 0, total: 0 })
+  const [progress, setProgress] = useState<{ current: number; total: number }>({
+    current: 0,
+    total: 0
+  })
 
   useEffect(() => {
     if (currentWindow?.id) {
@@ -120,13 +125,17 @@ export const MoveModal: React.FC<MoveModalProps> = ({
           const otherTabs = tabIds.slice(1)
           setProgress({ current: 1, total: tabIds.length })
 
-          const newWin = await chrome.windows.create({ tabId: firstTab, focused: true })
+          const newWin = await chrome.windows.create({
+            tabId: firstTab,
+            focused: true
+          })
 
           if (otherTabs.length > 0 && newWin?.id) {
             await batchMoveTabs(
               otherTabs,
               { windowId: newWin.id, index: -1 },
-              (current) => setProgress({ current: current + 1, total: tabIds.length })
+              (current) =>
+                setProgress({ current: current + 1, total: tabIds.length })
             )
           }
           break
@@ -156,14 +165,17 @@ export const MoveModal: React.FC<MoveModalProps> = ({
       resetComponent()
       setMoveModalVisible(false)
     } catch (error) {
-      console.error("Move failed:", error)
-      alert("Failed to move tabs. See console for details.")
+      console.error('Move failed:', error)
+      alert('Failed to move tabs. See console for details.')
     } finally {
       setIsMoving(false)
     }
   }
 
-  const progressPercent = progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0
+  const progressPercent =
+    progress.total > 0
+      ? Math.round((progress.current / progress.total) * 100)
+      : 0
 
   return (
     <Modal

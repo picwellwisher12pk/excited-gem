@@ -29,7 +29,9 @@ interface SessionsAnalyticsViewProps {
   onRefresh: () => void
 }
 
-export const SessionsAnalyticsView: React.FC<SessionsAnalyticsViewProps> = ({ stats }) => {
+export const SessionsAnalyticsView: React.FC<SessionsAnalyticsViewProps> = ({
+  stats
+}) => {
   const [domainSearch, setDomainSearch] = useState('')
   const [pageSize, setPageSize] = useState<number>(10)
 
@@ -46,15 +48,21 @@ export const SessionsAnalyticsView: React.FC<SessionsAnalyticsViewProps> = ({ st
       {/* ── Top Metrics ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3">
-          <Text className="text-[11px] font-semibold uppercase text-slate-400">Total Sessions</Text>
+          <Text className="text-[11px] font-semibold uppercase text-slate-400">
+            Total Sessions
+          </Text>
           <div className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">
             {stats.totalSessions}
           </div>
-          <Text className="text-[11px] text-emerald-500 font-medium">Saved snapshots</Text>
+          <Text className="text-[11px] text-emerald-500 font-medium">
+            Saved snapshots
+          </Text>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3">
-          <Text className="text-[11px] font-semibold uppercase text-slate-400">Saved Windows</Text>
+          <Text className="text-[11px] font-semibold uppercase text-slate-400">
+            Saved Windows
+          </Text>
           <div className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">
             {stats.totalWindows}
           </div>
@@ -62,27 +70,39 @@ export const SessionsAnalyticsView: React.FC<SessionsAnalyticsViewProps> = ({ st
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3">
-          <Text className="text-[11px] font-semibold uppercase text-slate-400">Saved Tabs</Text>
+          <Text className="text-[11px] font-semibold uppercase text-slate-400">
+            Saved Tabs
+          </Text>
           <div className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">
             {stats.totalTabs}
           </div>
-          <Text className="text-[11px] text-teal-500 font-medium">Total tabs preserved</Text>
+          <Text className="text-[11px] text-teal-500 font-medium">
+            Total tabs preserved
+          </Text>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3">
-          <Text className="text-[11px] font-semibold uppercase text-slate-400">Avg Tabs / Session</Text>
+          <Text className="text-[11px] font-semibold uppercase text-slate-400">
+            Avg Tabs / Session
+          </Text>
           <div className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">
             {stats.avgTabsPerSession}
           </div>
-          <Text className="text-[11px] text-blue-500 font-medium">Tabs per snapshot</Text>
+          <Text className="text-[11px] text-blue-500 font-medium">
+            Tabs per snapshot
+          </Text>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3">
-          <Text className="text-[11px] font-semibold uppercase text-slate-400">Unique Domains</Text>
+          <Text className="text-[11px] font-semibold uppercase text-slate-400">
+            Unique Domains
+          </Text>
           <div className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">
             {stats.topDomains.length}
           </div>
-          <Text className="text-[11px] text-cyan-500 font-medium">Preserved domains</Text>
+          <Text className="text-[11px] text-cyan-500 font-medium">
+            Preserved domains
+          </Text>
         </div>
       </div>
 
@@ -128,7 +148,9 @@ export const SessionsAnalyticsView: React.FC<SessionsAnalyticsViewProps> = ({ st
                   </Tag>
                 </div>
                 <div className="text-[11px] text-slate-400 truncate">
-                  {session.windowCount} {session.windowCount === 1 ? 'window' : 'windows'} • {new Date(session.created).toLocaleDateString()}
+                  {session.windowCount}{' '}
+                  {session.windowCount === 1 ? 'window' : 'windows'} •{' '}
+                  {new Date(session.created).toLocaleDateString()}
                 </div>
 
                 {/* Top domains preview */}
@@ -148,7 +170,9 @@ export const SessionsAnalyticsView: React.FC<SessionsAnalyticsViewProps> = ({ st
             </div>
           ))}
           {stats.largestSessions.length === 0 && (
-            <p className="text-xs text-slate-400 py-4 text-center">No saved sessions found</p>
+            <p className="text-xs text-slate-400 py-4 text-center">
+              No saved sessions found
+            </p>
           )}
         </div>
       </div>
@@ -162,7 +186,8 @@ export const SessionsAnalyticsView: React.FC<SessionsAnalyticsViewProps> = ({ st
             </div>
             <div>
               <h3 className="text-base font-semibold text-slate-800 dark:text-white">
-                Domains in Saved Sessions ({stats.topDomains.length} unique domains)
+                Domains in Saved Sessions ({stats.topDomains.length} unique
+                domains)
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 Most frequent domains across all your saved session snapshots
@@ -205,19 +230,26 @@ export const SessionsAnalyticsView: React.FC<SessionsAnalyticsViewProps> = ({ st
             >
               <div className="flex items-center justify-between text-xs mb-1">
                 <span className="font-semibold text-slate-800 dark:text-white flex items-center gap-2 truncate">
-                  <span className="text-slate-400 font-mono text-[11px] w-5">{index + 1}.</span>
+                  <span className="text-slate-400 font-mono text-[11px] w-5">
+                    {index + 1}.
+                  </span>
                   {domainItem.favIconUrl && (
                     <img
                       src={domainItem.favIconUrl}
                       alt=""
                       className="w-4 h-4 rounded-sm flex-shrink-0"
-                      onError={(e) => ((e.target as HTMLElement).style.display = 'none')}
+                      onError={(e) =>
+                        ((e.target as HTMLElement).style.display = 'none')
+                      }
                     />
                   )}
                   <span className="truncate">{domainItem.domain}</span>
                 </span>
                 <span className="text-slate-500 font-medium">
-                  {domainItem.count} tabs <span className="text-slate-400 font-normal">({domainItem.percentage}%)</span>
+                  {domainItem.count} tabs{' '}
+                  <span className="text-slate-400 font-normal">
+                    ({domainItem.percentage}%)
+                  </span>
                 </span>
               </div>
               <Progress
@@ -230,7 +262,9 @@ export const SessionsAnalyticsView: React.FC<SessionsAnalyticsViewProps> = ({ st
             </div>
           ))}
           {filteredDomains.length === 0 && (
-            <p className="text-xs text-slate-400 py-6 text-center">No matching domains found</p>
+            <p className="text-xs text-slate-400 py-6 text-center">
+              No matching domains found
+            </p>
           )}
         </div>
       </div>

@@ -9,10 +9,10 @@
 
 import {
   BaseProvider,
-  ChatMessage,
-  StreamChunk,
-  DiscoveredModel,
-  ProviderStatus
+  type ChatMessage,
+  type StreamChunk,
+  type DiscoveredModel,
+  type ProviderStatus
 } from './BaseProvider'
 
 export class OllamaProvider extends BaseProvider {
@@ -23,19 +23,33 @@ export class OllamaProvider extends BaseProvider {
   private model: string
   private systemPrompt: string
 
-  constructor(config: { baseUrl?: string; model: string; systemPrompt?: string }) {
+  constructor(config: {
+    baseUrl?: string
+    model: string
+    systemPrompt?: string
+  }) {
     super()
-    this.baseUrl = (config.baseUrl || 'http://localhost:11434').replace(/\/$/, '')
+    this.baseUrl = (config.baseUrl || 'http://localhost:11434').replace(
+      /\/$/,
+      ''
+    )
     this.model = config.model
     this.systemPrompt = config.systemPrompt || ''
   }
 
-  async chat(messages: ChatMessage[], abortSignal?: AbortSignal): Promise<string> {
+  async chat(
+    messages: ChatMessage[],
+    abortSignal?: AbortSignal
+  ): Promise<string> {
     const msgs = this.prependSystem(messages)
     const res = await fetch(`${this.baseUrl}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: this.model, messages: msgs, stream: false }),
+      body: JSON.stringify({
+        model: this.model,
+        messages: msgs,
+        stream: false
+      }),
       signal: abortSignal
     })
     if (!res.ok) {
@@ -46,7 +60,10 @@ export class OllamaProvider extends BaseProvider {
     return data.message?.content ?? ''
   }
 
-  async *stream(messages: ChatMessage[], abortSignal?: AbortSignal): AsyncGenerator<StreamChunk> {
+  async *stream(
+    messages: ChatMessage[],
+    abortSignal?: AbortSignal
+  ): AsyncGenerator<StreamChunk> {
     const msgs = this.prependSystem(messages)
     const res = await fetch(`${this.baseUrl}/api/chat`, {
       method: 'POST',
@@ -86,7 +103,9 @@ export class OllamaProvider extends BaseProvider {
   }
 
   async discoverModels(): Promise<DiscoveredModel[]> {
-    const res = await fetch(`${this.baseUrl}/api/tags`, { signal: AbortSignal.timeout(5000) })
+    const res = await fetch(`${this.baseUrl}/api/tags`, {
+      signal: AbortSignal.timeout(5000)
+    })
     if (!res.ok) throw new Error(`Ollama tags error ${res.status}`)
     const data = await res.json()
     return (data.models ?? []).map((m: any) => ({
@@ -101,7 +120,9 @@ export class OllamaProvider extends BaseProvider {
   }
 
   /** Fetch detailed info for a specific model (context window, family, etc.) */
-  async showModel(modelName: string): Promise<{ contextLength?: number; family?: string } | null> {
+  async showModel(
+    modelName: string
+  ): Promise<{ contextLength?: number; family?: string } | null> {
     try {
       const res = await fetch(`${this.baseUrl}/api/show`, {
         method: 'POST',
@@ -112,7 +133,8 @@ export class OllamaProvider extends BaseProvider {
       if (!res.ok) return null
       const data = await res.json()
       return {
-        contextLength: data.model_info?.['llama.context_length'] ?? data.parameters?.num_ctx,
+        contextLength:
+          data.model_info?.['llama.context_length'] ?? data.parameters?.num_ctx,
         family: data.details?.family
       }
     } catch {

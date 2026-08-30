@@ -7,17 +7,38 @@
 
 import {
   BaseProvider,
-  ChatMessage,
-  StreamChunk,
-  DiscoveredModel,
-  ProviderStatus
+  type ChatMessage,
+  type StreamChunk,
+  type DiscoveredModel,
+  type ProviderStatus
 } from './BaseProvider'
 
 const ANTHROPIC_MODELS: DiscoveredModel[] = [
-  { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', contextLength: 200000 },
-  { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', contextLength: 200000 },
-  { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', contextLength: 200000 },
-  { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku', contextLength: 200000 }
+  {
+    id: 'claude-3-7-sonnet-20250219',
+    name: 'Claude 3.7 Sonnet',
+    contextLength: 200000
+  },
+  {
+    id: 'claude-3-5-sonnet-20241022',
+    name: 'Claude 3.5 Sonnet',
+    contextLength: 200000
+  },
+  {
+    id: 'claude-3-5-haiku-20241022',
+    name: 'Claude 3.5 Haiku',
+    contextLength: 200000
+  },
+  {
+    id: 'claude-3-opus-20240229',
+    name: 'Claude 3 Opus',
+    contextLength: 200000
+  },
+  {
+    id: 'claude-3-haiku-20240307',
+    name: 'Claude 3 Haiku',
+    contextLength: 200000
+  }
 ]
 
 const BASE = 'https://api.anthropic.com/v1'
@@ -32,7 +53,12 @@ export class AnthropicProvider extends BaseProvider {
   private systemPrompt: string
   private maxTokens: number
 
-  constructor(config: { model: string; apiKey: string; systemPrompt?: string; maxTokens?: number }) {
+  constructor(config: {
+    model: string
+    apiKey: string
+    systemPrompt?: string
+    maxTokens?: number
+  }) {
     super()
     this.model = config.model
     this.apiKey = config.apiKey
@@ -62,7 +88,10 @@ export class AnthropicProvider extends BaseProvider {
     }
   }
 
-  async chat(messages: ChatMessage[], abortSignal?: AbortSignal): Promise<string> {
+  async chat(
+    messages: ChatMessage[],
+    abortSignal?: AbortSignal
+  ): Promise<string> {
     const res = await fetch(`${BASE}/messages`, {
       method: 'POST',
       headers: this.getHeaders(),
@@ -77,7 +106,10 @@ export class AnthropicProvider extends BaseProvider {
     return data.content?.[0]?.text ?? ''
   }
 
-  async *stream(messages: ChatMessage[], abortSignal?: AbortSignal): AsyncGenerator<StreamChunk> {
+  async *stream(
+    messages: ChatMessage[],
+    abortSignal?: AbortSignal
+  ): AsyncGenerator<StreamChunk> {
     const res = await fetch(`${BASE}/messages`, {
       method: 'POST',
       headers: this.getHeaders(),
@@ -137,7 +169,10 @@ export class AnthropicProvider extends BaseProvider {
       })
       if (!res.ok) {
         const err = await res.json()
-        return { connected: false, error: err.error?.message ?? `HTTP ${res.status}` }
+        return {
+          connected: false,
+          error: err.error?.message ?? `HTTP ${res.status}`
+        }
       }
       return {
         connected: true,

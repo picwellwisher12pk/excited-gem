@@ -8,10 +8,22 @@ import { OllamaProvider } from './providers/OllamaProvider'
 import { OpenAICompatProvider } from './providers/OpenAICompatProvider'
 import { GeminiCloudProvider } from './providers/GeminiCloudProvider'
 import { AnthropicProvider } from './providers/AnthropicProvider'
-import { TabContextBuilder, type ContextStrategy, type TabData } from './context/TabContextBuilder'
+import {
+  TabContextBuilder,
+  type ContextStrategy,
+  type TabData
+} from './context/TabContextBuilder'
 import { TabActionExecutor } from './actions/TabActionExecutor'
-import { ACTION_SYSTEM_PROMPT, type BrowserAction } from './actions/ActionDefinitions'
-import type { BaseProvider, DiscoveredModel, ProviderStatus, StreamChunk } from './providers/BaseProvider'
+import {
+  ACTION_SYSTEM_PROMPT,
+  type BrowserAction
+} from './actions/ActionDefinitions'
+import type {
+  BaseProvider,
+  DiscoveredModel,
+  ProviderStatus,
+  StreamChunk
+} from './providers/BaseProvider'
 import type { ChatMessage } from '../store/aiSlice'
 
 export type ProviderType =
@@ -139,7 +151,8 @@ export class AIService {
 
   /** Test the current provider's connection */
   async testConnection(): Promise<ProviderStatus> {
-    if (!this.provider) return { connected: false, error: 'No provider configured.' }
+    if (!this.provider)
+      return { connected: false, error: 'No provider configured.' }
     return this.provider.testConnection()
   }
 
@@ -165,7 +178,8 @@ export class AIService {
   ): Promise<{ action: BrowserAction | null; rawResponse: string }> {
     if (!this.provider) throw new Error('AI provider not configured.')
 
-    const effectiveBudget = this.settings.contextWindowOverride ?? this.settings.tokenBudget
+    const effectiveBudget =
+      this.settings.contextWindowOverride ?? this.settings.tokenBudget
     const builder = new TabContextBuilder(tabs)
     const ctx = builder.build({
       strategy: this.settings.contextStrategy,
@@ -180,7 +194,7 @@ export class AIService {
 
     const messages = [
       { role: 'system' as const, content: combinedSystemPrompt },
-      ...history.map(m => ({ role: m.role, content: m.content })),
+      ...history.map((m) => ({ role: m.role, content: m.content })),
       {
         role: 'user' as const,
         content: `${ctx.text}\n\n---\nUser request: ${userMessage}`
@@ -205,7 +219,8 @@ export class AIService {
   ): AsyncGenerator<StreamChunk> {
     if (!this.provider) throw new Error('AI provider not configured.')
 
-    const effectiveBudget = this.settings.contextWindowOverride ?? this.settings.tokenBudget
+    const effectiveBudget =
+      this.settings.contextWindowOverride ?? this.settings.tokenBudget
     const builder = new TabContextBuilder(tabs)
     const ctx = builder.build({
       strategy: this.settings.contextStrategy,
@@ -220,7 +235,7 @@ export class AIService {
 
     const messages = [
       { role: 'system' as const, content: combinedSystemPrompt },
-      ...history.map(m => ({ role: m.role, content: m.content })),
+      ...history.map((m) => ({ role: m.role, content: m.content })),
       {
         role: 'user' as const,
         content: `${ctx.text}\n\n---\nUser request: ${userMessage}`

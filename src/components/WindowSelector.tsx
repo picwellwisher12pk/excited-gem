@@ -157,9 +157,7 @@ export default function WindowSelector() {
                 </div>
                 <small
                   className={
-                    totalTabCount > 50
-                      ? '!text-orange-600'
-                      : '!text-green-500'
+                    totalTabCount > 50 ? '!text-orange-600' : '!text-green-500'
                   }
                 >
                   {totalTabCount} tab{totalTabCount > 1 && 's'}
@@ -206,9 +204,7 @@ export default function WindowSelector() {
                   </div>
                   <small
                     className={
-                      option.count > 50
-                        ? '!text-orange-600'
-                        : '!text-lime-700'
+                      option.count > 50 ? '!text-orange-600' : '!text-lime-700'
                     }
                   >
                     {option.count} tab{option.count > 1 && 's'}

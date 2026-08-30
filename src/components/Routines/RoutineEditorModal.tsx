@@ -36,7 +36,13 @@ import {
   HelpCircle,
   X
 } from 'lucide-react'
-import type { Routine, RoutineStep, StepActionType, RoutineScope, StepParams } from '../../types/routine'
+import type {
+  Routine,
+  RoutineStep,
+  StepActionType,
+  RoutineScope,
+  StepParams
+} from '../../types/routine'
 import { getRoutineIcon, getStepTypeLabel } from './RoutineCard'
 import { executeRoutine } from '../../services/routineEngine'
 
@@ -70,7 +76,7 @@ const AVAILABLE_COLORS = [
   '#ef4444', // red
   '#06b6d4', // cyan
   '#ec4899', // pink
-  '#64748b'  // slate
+  '#64748b' // slate
 ]
 
 interface ActionStepDefinition {
@@ -86,14 +92,16 @@ const ACTION_CATALOG: ActionStepDefinition[] = [
   {
     type: 'filter-tabs',
     title: 'Filter / Search Tabs (Set Working Scope)',
-    description: 'Searches tabs matching URL or Title pattern/regex. All subsequent steps in this routine will run ONLY on these tabs.',
+    description:
+      'Searches tabs matching URL or Title pattern/regex. All subsequent steps in this routine will run ONLY on these tabs.',
     icon: <Search size={16} className="text-blue-600" />,
     category: 'filter'
   },
   {
     type: 'reset-filter',
     title: 'Reset Filter Scope',
-    description: 'Resets the working scope back to the full window tabs for any following steps.',
+    description:
+      'Resets the working scope back to the full window tabs for any following steps.',
     icon: <Sparkles size={16} className="text-gray-500" />,
     category: 'filter'
   },
@@ -102,21 +110,24 @@ const ACTION_CATALOG: ActionStepDefinition[] = [
   {
     type: 'close-duplicates',
     title: 'Close Duplicate Tabs',
-    description: 'Finds identical URLs and closes redundant copies, keeping pinned tabs.',
+    description:
+      'Finds identical URLs and closes redundant copies, keeping pinned tabs.',
     icon: <Sparkles size={16} className="text-blue-500" />,
     category: 'cleanup'
   },
   {
     type: 'discard-tabs',
     title: 'Suspend Background Tabs (Save RAM)',
-    description: 'Hibernates inactive tabs to free memory without closing them.',
+    description:
+      'Hibernates inactive tabs to free memory without closing them.',
     icon: <Cpu size={16} className="text-emerald-500" />,
     category: 'cleanup'
   },
   {
     type: 'close-tabs',
     title: 'Close Filtered Tabs / Distractions',
-    description: 'Closes tabs matching domain blacklists (social media) or URL patterns.',
+    description:
+      'Closes tabs matching domain blacklists (social media) or URL patterns.',
     icon: <Trash2 size={16} className="text-red-500" />,
     category: 'cleanup'
   },
@@ -125,28 +136,32 @@ const ACTION_CATALOG: ActionStepDefinition[] = [
   {
     type: 'group-by-domain',
     title: 'Auto-Group Tabs by Domain',
-    description: 'Groups multiple tabs from the same site into colored Chrome tab groups.',
+    description:
+      'Groups multiple tabs from the same site into colored Chrome tab groups.',
     icon: <Layers size={16} className="text-indigo-500" />,
     category: 'organize'
   },
   {
     type: 'group-by-rule',
     title: 'Group Tabs by Rule / Regex',
-    description: 'Matches specific URLs or titles and puts them in a named group.',
+    description:
+      'Matches specific URLs or titles and puts them in a named group.',
     icon: <Layers size={16} className="text-purple-500" />,
     category: 'organize'
   },
   {
     type: 'sort-tabs',
     title: 'Sort Tabs (Domain, Title, URL)',
-    description: 'Reorders tabs in your window alphabetically, keeping pinned tabs first.',
+    description:
+      'Reorders tabs in your window alphabetically, keeping pinned tabs first.',
     icon: <ArrowUpDown size={16} className="text-cyan-500" />,
     category: 'organize'
   },
   {
     type: 'move-to-window',
     title: 'Move Matching Tabs to New Window',
-    description: 'Gathers matching or selected tabs (e.g. YouTube Shorts) into a clean new window.',
+    description:
+      'Gathers matching or selected tabs (e.g. YouTube Shorts) into a clean new window.',
     icon: <Layers size={16} className="text-amber-500" />,
     category: 'organize'
   },
@@ -199,14 +214,16 @@ const ACTION_CATALOG: ActionStepDefinition[] = [
   {
     type: 'open-urls',
     title: 'Open Specific URLs',
-    description: 'Opens a defined list of websites in new tabs or a new window.',
+    description:
+      'Opens a defined list of websites in new tabs or a new window.',
     icon: <Globe size={16} className="text-green-500" />,
     category: 'sessions'
   },
   {
     type: 'wait',
     title: 'Delay / Wait',
-    description: 'Pauses for a specified number of seconds before the next step.',
+    description:
+      'Pauses for a specified number of seconds before the next step.',
     icon: <Clock size={16} className="text-gray-500" />,
     category: 'sessions'
   }
@@ -276,7 +293,12 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
   const getDefaultParamsForType = (type: StepActionType): StepParams => {
     switch (type) {
       case 'filter-tabs':
-        return { filterPattern: '', filterField: 'url', isRegex: false, invertMatch: false }
+        return {
+          filterPattern: '',
+          filterField: 'url',
+          isRegex: false,
+          invertMatch: false
+        }
       case 'reset-filter':
         return {}
       case 'close-duplicates':
@@ -284,11 +306,21 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
       case 'group-by-domain':
         return { minTabsPerGroup: 2 }
       case 'group-by-rule':
-        return { groupTitle: 'Work', rulePattern: 'github.com', ruleField: 'url', isRegex: false }
+        return {
+          groupTitle: 'Work',
+          rulePattern: 'github.com',
+          ruleField: 'url',
+          isRegex: false
+        }
       case 'sort-tabs':
         return { sortBy: 'domain', sortDirection: 'asc' }
       case 'move-to-window':
-        return { filterPattern: '', filterField: 'url', isRegex: false, newWindowIncognito: false }
+        return {
+          filterPattern: '',
+          filterField: 'url',
+          isRegex: false,
+          newWindowIncognito: false
+        }
       case 'discard-tabs':
         return { discardScope: 'all-background' }
       case 'mute-tabs':
@@ -300,13 +332,27 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
       case 'unpin-tabs':
         return {}
       case 'close-tabs':
-        return { closeCondition: 'domain-list', domainList: ['twitter.com', 'reddit.com'] }
+        return {
+          closeCondition: 'domain-list',
+          domainList: ['twitter.com', 'reddit.com']
+        }
       case 'save-session':
-        return { sessionNameTemplate: 'Routine Snapshot - {date} {time}', closeAfterSave: false }
+        return {
+          sessionNameTemplate: 'Routine Snapshot - {date} {time}',
+          closeAfterSave: false
+        }
       case 'save-list':
-        return { filterPattern: '', sessionNameTemplate: 'Routine List - {date} {time}', closeAfterSave: false }
+        return {
+          filterPattern: '',
+          sessionNameTemplate: 'Routine List - {date} {time}',
+          closeAfterSave: false
+        }
       case 'open-urls':
-        return { urls: ['https://google.com'], openInNewWindow: false, pinOpenedTabs: false }
+        return {
+          urls: ['https://google.com'],
+          openInNewWindow: false,
+          pinOpenedTabs: false
+        }
       case 'wait':
         return { delayMs: 1000 }
       case 'show-notification':
@@ -394,7 +440,8 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
   }
 
   const filteredCatalog = ACTION_CATALOG.filter((item) => {
-    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory
+    const matchesCategory =
+      selectedCategory === 'all' || item.category === selectedCategory
     const matchesSearch =
       item.title.toLowerCase().includes(stepSearch.toLowerCase()) ||
       item.description.toLowerCase().includes(stepSearch.toLowerCase())
@@ -429,7 +476,11 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
             </Button>
             <div className="flex items-center gap-2">
               <Button onClick={onClose}>Cancel</Button>
-              <Button type="primary" onClick={handleSave} className="!bg-blue-600">
+              <Button
+                type="primary"
+                onClick={handleSave}
+                className="!bg-blue-600"
+              >
                 Save Routine
               </Button>
             </div>
@@ -440,19 +491,27 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
           {/* Basic Settings */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-gray-700 mb-1 block">Routine Name</label>
+              <label className="text-xs font-semibold text-gray-700 mb-1 block">
+                Routine Name
+              </label>
               <Input
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 placeholder="e.g. Focus & Tidy"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-gray-700 mb-1 block">Description</label>
+              <label className="text-xs font-semibold text-gray-700 mb-1 block">
+                Description
+              </label>
               <Input
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 placeholder="e.g. Cleans duplicates and organizes tabs"
               />
             </div>
@@ -461,7 +520,9 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
           {/* Icon & Color Selector */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50 p-3 rounded-lg border border-gray-100">
             <div>
-              <label className="text-xs font-semibold text-gray-700 mb-1.5 block">Icon</label>
+              <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
+                Icon
+              </label>
               <div className="flex flex-wrap gap-1.5">
                 {AVAILABLE_ICONS.map((ic) => (
                   <button
@@ -481,7 +542,9 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-gray-700 mb-1.5 block">Theme Color</label>
+              <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
+                Theme Color
+              </label>
               <div className="flex flex-wrap gap-2 pt-1">
                 {AVAILABLE_COLORS.map((c) => (
                   <button
@@ -489,7 +552,9 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                     type="button"
                     onClick={() => setFormData({ ...formData, color: c })}
                     className={`w-6 h-6 rounded-full transition-transform cursor-pointer border-2 ${
-                      formData.color === c ? 'scale-110 border-gray-800 shadow-sm' : 'border-transparent hover:scale-105'
+                      formData.color === c
+                        ? 'scale-110 border-gray-800 shadow-sm'
+                        : 'border-transparent hover:scale-105'
                     }`}
                     style={{ backgroundColor: c }}
                   />
@@ -506,21 +571,30 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Default Target Scope</label>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">
+                  Default Target Scope
+                </label>
                 <Select
                   value={formData.targetScope}
-                  onChange={(val: RoutineScope) => setFormData({ ...formData, targetScope: val })}
+                  onChange={(val: RoutineScope) =>
+                    setFormData({ ...formData, targetScope: val })
+                  }
                   className="w-full"
                   options={[
                     { value: 'active-window', label: 'Current Window Tabs' },
                     { value: 'all-windows', label: 'All Windows Tabs' },
-                    { value: 'selected-tabs', label: 'Selected Tabs (When Running on Selection)' }
+                    {
+                      value: 'selected-tabs',
+                      label: 'Selected Tabs (When Running on Selection)'
+                    }
                   ]}
                 />
               </div>
 
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Scheduled Interval</label>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">
+                  Scheduled Interval
+                </label>
                 <Select
                   value={formData.triggers.intervalMinutes || null}
                   onChange={(val) =>
@@ -549,7 +623,10 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    triggers: { ...formData.triggers, onStartup: e.target.checked }
+                    triggers: {
+                      ...formData.triggers,
+                      onStartup: e.target.checked
+                    }
                   })
                 }
               >
@@ -560,9 +637,13 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
 
               <Checkbox
                 checked={formData.enabled}
-                onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
+                onChange={(e) =>
+                  setFormData({ ...formData, enabled: e.target.checked })
+                }
               >
-                <span className="text-xs font-medium text-gray-700">Routine Enabled</span>
+                <span className="text-xs font-medium text-gray-700">
+                  Routine Enabled
+                </span>
               </Checkbox>
             </div>
           </div>
@@ -596,9 +677,12 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
             {formData.steps.length === 0 ? (
               <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
                 <Sparkles size={28} className="mx-auto text-gray-400 mb-2" />
-                <div className="text-sm font-medium text-gray-700">No steps in this routine yet</div>
+                <div className="text-sm font-medium text-gray-700">
+                  No steps in this routine yet
+                </div>
                 <div className="text-xs text-gray-500 mb-3">
-                  Add cleanup, grouping, suspension, window move, or session actions.
+                  Add cleanup, grouping, suspension, window move, or session
+                  actions.
                 </div>
                 <Button
                   type="primary"
@@ -633,7 +717,9 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                         </span>
                         <Input
                           value={step.name}
-                          onChange={(e) => handleUpdateStep(step.id, { name: e.target.value })}
+                          onChange={(e) =>
+                            handleUpdateStep(step.id, { name: e.target.value })
+                          }
                           className="font-medium text-sm !border-transparent hover:!border-gray-300 focus:!border-blue-500 max-w-[280px]"
                         />
                         <Tag color="blue" className="text-xs">
@@ -644,7 +730,9 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                       <div className="flex items-center gap-1">
                         <Switch
                           checked={step.enabled}
-                          onChange={(checked) => handleUpdateStep(step.id, { enabled: checked })}
+                          onChange={(checked) =>
+                            handleUpdateStep(step.id, { enabled: checked })
+                          }
                           size="small"
                         />
 
@@ -697,9 +785,14 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                       {step.type === 'filter-tabs' && (
                         <div className="space-y-2">
                           <div className="text-[11px] text-blue-700 bg-blue-50/80 p-2 rounded border border-blue-100 flex items-center gap-1.5">
-                            <Search size={13} className="text-blue-500 flex-shrink-0" />
+                            <Search
+                              size={13}
+                              className="text-blue-500 flex-shrink-0"
+                            />
                             <span>
-                              <strong>Working Scope Filter:</strong> All upcoming steps below this will execute only on tabs matching this filter.
+                              <strong>Working Scope Filter:</strong> All
+                              upcoming steps below this will execute only on
+                              tabs matching this filter.
                             </span>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
@@ -711,19 +804,25 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                                 size="small"
                                 value={step.params.filterPattern || ''}
                                 onChange={(e) =>
-                                  handleUpdateStepParams(step.id, { filterPattern: e.target.value })
+                                  handleUpdateStepParams(step.id, {
+                                    filterPattern: e.target.value
+                                  })
                                 }
                                 placeholder="e.g. youtube.com/shorts or github.com or /doc/i"
                               />
                             </div>
                             <div>
-                              <label className="block text-[10px] text-gray-500 mb-0.5">Match Field</label>
+                              <label className="block text-[10px] text-gray-500 mb-0.5">
+                                Match Field
+                              </label>
                               <Select
                                 size="small"
                                 className="w-full"
                                 value={step.params.filterField || 'url'}
                                 onChange={(val) =>
-                                  handleUpdateStepParams(step.id, { filterField: val })
+                                  handleUpdateStepParams(step.id, {
+                                    filterField: val
+                                  })
                                 }
                                 options={[
                                   { value: 'url', label: 'URL' },
@@ -737,7 +836,9 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                             <Checkbox
                               checked={step.params.isRegex ?? false}
                               onChange={(e) =>
-                                handleUpdateStepParams(step.id, { isRegex: e.target.checked })
+                                handleUpdateStepParams(step.id, {
+                                  isRegex: e.target.checked
+                                })
                               }
                             >
                               Use Regular Expression (Regex)
@@ -745,7 +846,9 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                             <Checkbox
                               checked={step.params.invertMatch ?? false}
                               onChange={(e) =>
-                                handleUpdateStepParams(step.id, { invertMatch: e.target.checked })
+                                handleUpdateStepParams(step.id, {
+                                  invertMatch: e.target.checked
+                                })
                               }
                             >
                               Invert Filter (Exclude matching tabs)
@@ -756,7 +859,8 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
 
                       {step.type === 'reset-filter' && (
                         <div className="text-xs text-gray-600 italic py-1">
-                          Resets any previous working scope filter. Following steps will target all tabs in the window.
+                          Resets any previous working scope filter. Following
+                          steps will target all tabs in the window.
                         </div>
                       )}
 
@@ -765,7 +869,9 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                           <Checkbox
                             checked={step.params.preferPinned ?? true}
                             onChange={(e) =>
-                              handleUpdateStepParams(step.id, { preferPinned: e.target.checked })
+                              handleUpdateStepParams(step.id, {
+                                preferPinned: e.target.checked
+                              })
                             }
                           >
                             Prefer keeping pinned tabs
@@ -773,7 +879,9 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                           <Checkbox
                             checked={step.params.acrossAllWindows ?? false}
                             onChange={(e) =>
-                              handleUpdateStepParams(step.id, { acrossAllWindows: e.target.checked })
+                              handleUpdateStepParams(step.id, {
+                                acrossAllWindows: e.target.checked
+                              })
                             }
                           >
                             Deduplicate across all browser windows
@@ -789,7 +897,9 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                             max={20}
                             value={step.params.minTabsPerGroup || 2}
                             onChange={(val) =>
-                              handleUpdateStepParams(step.id, { minTabsPerGroup: val || 2 })
+                              handleUpdateStepParams(step.id, {
+                                minTabsPerGroup: val || 2
+                              })
                             }
                             size="small"
                           />
@@ -799,34 +909,48 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                       {step.type === 'group-by-rule' && (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                           <div>
-                            <label className="block text-[10px] text-gray-500 mb-0.5">Group Title</label>
+                            <label className="block text-[10px] text-gray-500 mb-0.5">
+                              Group Title
+                            </label>
                             <Input
                               size="small"
                               value={step.params.groupTitle || ''}
                               onChange={(e) =>
-                                handleUpdateStepParams(step.id, { groupTitle: e.target.value })
+                                handleUpdateStepParams(step.id, {
+                                  groupTitle: e.target.value
+                                })
                               }
                               placeholder="e.g. Work"
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] text-gray-500 mb-0.5">Pattern to Match</label>
+                            <label className="block text-[10px] text-gray-500 mb-0.5">
+                              Pattern to Match
+                            </label>
                             <Input
                               size="small"
                               value={step.params.rulePattern || ''}
                               onChange={(e) =>
-                                handleUpdateStepParams(step.id, { rulePattern: e.target.value })
+                                handleUpdateStepParams(step.id, {
+                                  rulePattern: e.target.value
+                                })
                               }
                               placeholder="e.g. github.com"
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] text-gray-500 mb-0.5">Field</label>
+                            <label className="block text-[10px] text-gray-500 mb-0.5">
+                              Field
+                            </label>
                             <Select
                               size="small"
                               className="w-full"
                               value={step.params.ruleField || 'url'}
-                              onChange={(val) => handleUpdateStepParams(step.id, { ruleField: val })}
+                              onChange={(val) =>
+                                handleUpdateStepParams(step.id, {
+                                  ruleField: val
+                                })
+                              }
                               options={[
                                 { value: 'url', label: 'URL' },
                                 { value: 'title', label: 'Page Title' },
@@ -844,12 +968,17 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                             <Select
                               size="small"
                               value={step.params.sortBy || 'domain'}
-                              onChange={(val) => handleUpdateStepParams(step.id, { sortBy: val })}
+                              onChange={(val) =>
+                                handleUpdateStepParams(step.id, { sortBy: val })
+                              }
                               options={[
                                 { value: 'domain', label: 'Domain' },
                                 { value: 'title', label: 'Page Title' },
                                 { value: 'url', label: 'Full URL' },
-                                { value: 'audible-first', label: 'Audible tabs first' }
+                                {
+                                  value: 'audible-first',
+                                  label: 'Audible tabs first'
+                                }
                               ]}
                             />
                           </div>
@@ -859,7 +988,9 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                               size="small"
                               value={step.params.sortDirection || 'asc'}
                               onChange={(val) =>
-                                handleUpdateStepParams(step.id, { sortDirection: val })
+                                handleUpdateStepParams(step.id, {
+                                  sortDirection: val
+                                })
                               }
                               options={[
                                 { value: 'asc', label: 'Ascending (A-Z)' },
@@ -875,25 +1006,32 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                             <div className="md:col-span-2">
                               <label className="block text-[10px] text-gray-500 mb-0.5">
-                                Filter Pattern (leave blank to move all tabs in scope):
+                                Filter Pattern (leave blank to move all tabs in
+                                scope):
                               </label>
                               <Input
                                 size="small"
                                 value={step.params.filterPattern || ''}
                                 onChange={(e) =>
-                                  handleUpdateStepParams(step.id, { filterPattern: e.target.value })
+                                  handleUpdateStepParams(step.id, {
+                                    filterPattern: e.target.value
+                                  })
                                 }
                                 placeholder="e.g. youtube.com/shorts or github.com"
                               />
                             </div>
                             <div>
-                              <label className="block text-[10px] text-gray-500 mb-0.5">Match In</label>
+                              <label className="block text-[10px] text-gray-500 mb-0.5">
+                                Match In
+                              </label>
                               <Select
                                 size="small"
                                 className="w-full"
                                 value={step.params.filterField || 'url'}
                                 onChange={(val) =>
-                                  handleUpdateStepParams(step.id, { filterField: val })
+                                  handleUpdateStepParams(step.id, {
+                                    filterField: val
+                                  })
                                 }
                                 options={[
                                   { value: 'url', label: 'URL' },
@@ -923,10 +1061,15 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                             size="small"
                             value={step.params.discardScope || 'all-background'}
                             onChange={(val) =>
-                              handleUpdateStepParams(step.id, { discardScope: val })
+                              handleUpdateStepParams(step.id, {
+                                discardScope: val
+                              })
                             }
                             options={[
-                              { value: 'all-background', label: 'All background tabs (non-active)' }
+                              {
+                                value: 'all-background',
+                                label: 'All background tabs (non-active)'
+                              }
                             ]}
                           />
                           <span className="text-gray-400 text-[11px]">
@@ -941,11 +1084,21 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                           <Select
                             size="small"
                             value={step.params.muteScope || 'all-except-active'}
-                            onChange={(val) => handleUpdateStepParams(step.id, { muteScope: val })}
+                            onChange={(val) =>
+                              handleUpdateStepParams(step.id, {
+                                muteScope: val
+                              })
+                            }
                             options={[
-                              { value: 'all-except-active', label: 'All tabs except currently active' },
+                              {
+                                value: 'all-except-active',
+                                label: 'All tabs except currently active'
+                              },
                               { value: 'all', label: 'All tabs' },
-                              { value: 'audible-only', label: 'Only currently audible tabs' }
+                              {
+                                value: 'audible-only',
+                                label: 'Only currently audible tabs'
+                              }
                             ]}
                           />
                         </div>
@@ -957,11 +1110,19 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                           <Select
                             size="small"
                             value={step.params.pinScope || 'all'}
-                            onChange={(val) => handleUpdateStepParams(step.id, { pinScope: val })}
+                            onChange={(val) =>
+                              handleUpdateStepParams(step.id, { pinScope: val })
+                            }
                             options={[
                               { value: 'all', label: 'All tabs in scope' },
-                              { value: 'domain-matches', label: 'Domain matches pattern' },
-                              { value: 'url-contains', label: 'URL contains string' }
+                              {
+                                value: 'domain-matches',
+                                label: 'Domain matches pattern'
+                              },
+                              {
+                                value: 'url-contains',
+                                label: 'URL contains string'
+                              }
                             ]}
                           />
                           {step.params.pinScope !== 'all' && (
@@ -970,7 +1131,9 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                               placeholder="Pattern to match (e.g. mail.google.com)"
                               value={step.params.matchPattern || ''}
                               onChange={(e) =>
-                                handleUpdateStepParams(step.id, { matchPattern: e.target.value })
+                                handleUpdateStepParams(step.id, {
+                                  matchPattern: e.target.value
+                                })
                               }
                               className="max-w-[200px]"
                             />
@@ -984,13 +1147,23 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                             <span>Close condition:</span>
                             <Select
                               size="small"
-                              value={step.params.closeCondition || 'domain-list'}
+                              value={
+                                step.params.closeCondition || 'domain-list'
+                              }
                               onChange={(val) =>
-                                handleUpdateStepParams(step.id, { closeCondition: val })
+                                handleUpdateStepParams(step.id, {
+                                  closeCondition: val
+                                })
                               }
                               options={[
-                                { value: 'domain-list', label: 'Matching specific domains' },
-                                { value: 'pattern-match', label: 'Matching URL or Title text' }
+                                {
+                                  value: 'domain-list',
+                                  label: 'Matching specific domains'
+                                },
+                                {
+                                  value: 'pattern-match',
+                                  label: 'Matching URL or Title text'
+                                }
                               ]}
                             />
                           </div>
@@ -998,11 +1171,14 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                           {step.params.closeCondition === 'domain-list' ? (
                             <div>
                               <label className="block text-[10px] text-gray-500 mb-0.5">
-                                Comma-separated domains to close (e.g. twitter.com, reddit.com, tiktok.com):
+                                Comma-separated domains to close (e.g.
+                                twitter.com, reddit.com, tiktok.com):
                               </label>
                               <Input
                                 size="small"
-                                value={(step.params.domainList || []).join(', ')}
+                                value={(step.params.domainList || []).join(
+                                  ', '
+                                )}
                                 onChange={(e) =>
                                   handleUpdateStepParams(step.id, {
                                     domainList: e.target.value
@@ -1023,7 +1199,9 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                                 size="small"
                                 value={step.params.closePattern || ''}
                                 onChange={(e) =>
-                                  handleUpdateStepParams(step.id, { closePattern: e.target.value })
+                                  handleUpdateStepParams(step.id, {
+                                    closePattern: e.target.value
+                                  })
                                 }
                                 placeholder="e.g. /video/ or youtube.com"
                               />
@@ -1058,7 +1236,9 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                                 size="small"
                                 value={step.params.filterPattern || ''}
                                 onChange={(e) =>
-                                  handleUpdateStepParams(step.id, { filterPattern: e.target.value })
+                                  handleUpdateStepParams(step.id, {
+                                    filterPattern: e.target.value
+                                  })
                                 }
                                 placeholder="e.g. youtube.com/shorts"
                               />
@@ -1067,7 +1247,9 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                           <Checkbox
                             checked={step.params.closeAfterSave ?? false}
                             onChange={(e) =>
-                              handleUpdateStepParams(step.id, { closeAfterSave: e.target.checked })
+                              handleUpdateStepParams(step.id, {
+                                closeAfterSave: e.target.checked
+                              })
                             }
                           >
                             Close tabs after saving to list
@@ -1101,7 +1283,9 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                                 size="small"
                                 value={step.params.filterPattern || ''}
                                 onChange={(e) =>
-                                  handleUpdateStepParams(step.id, { filterPattern: e.target.value })
+                                  handleUpdateStepParams(step.id, {
+                                    filterPattern: e.target.value
+                                  })
                                 }
                                 placeholder="e.g. youtube.com/shorts"
                               />
@@ -1110,7 +1294,9 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                           <Checkbox
                             checked={step.params.closeAfterSave ?? false}
                             onChange={(e) =>
-                              handleUpdateStepParams(step.id, { closeAfterSave: e.target.checked })
+                              handleUpdateStepParams(step.id, {
+                                closeAfterSave: e.target.checked
+                              })
                             }
                           >
                             Close tabs after saving session
@@ -1129,7 +1315,10 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                             value={(step.params.urls || []).join('\n')}
                             onChange={(e) =>
                               handleUpdateStepParams(step.id, {
-                                urls: e.target.value.split('\n').map((u) => u.trim()).filter(Boolean)
+                                urls: e.target.value
+                                  .split('\n')
+                                  .map((u) => u.trim())
+                                  .filter(Boolean)
                               })
                             }
                             placeholder="https://mail.google.com&#10;https://calendar.google.com&#10;https://github.com"
@@ -1167,10 +1356,16 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                             max={30000}
                             step={500}
                             value={step.params.delayMs || 1000}
-                            onChange={(val) => handleUpdateStepParams(step.id, { delayMs: val || 1000 })}
+                            onChange={(val) =>
+                              handleUpdateStepParams(step.id, {
+                                delayMs: val || 1000
+                              })
+                            }
                             size="small"
                           />
-                          <span className="text-gray-400">({(step.params.delayMs || 1000) / 1000}s)</span>
+                          <span className="text-gray-400">
+                            ({(step.params.delayMs || 1000) / 1000}s)
+                          </span>
                         </div>
                       )}
                     </div>

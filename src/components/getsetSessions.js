@@ -1,11 +1,11 @@
 const browser =
-  (typeof window !== 'undefined'
+  typeof window !== 'undefined'
     ? window.browser || window.chrome
     : typeof globalThis !== 'undefined'
-    ? (globalThis.browser || globalThis.chrome)
-    : typeof chrome !== 'undefined'
-    ? chrome
-    : null)
+      ? globalThis.browser || globalThis.chrome
+      : typeof chrome !== 'undefined'
+        ? chrome
+        : null
 
 // Helper to get storage
 async function getStorage(keys) {
@@ -311,7 +311,13 @@ export async function importSessions(data, merge = true) {
  * @param {string|null} targetListId - optional existing list id to append tabs into
  * @returns {Promise<{library, list}>}
  */
-export async function saveList(tabs, listName, libraryId, newLibraryName, targetListId) {
+export async function saveList(
+  tabs,
+  listName,
+  libraryId,
+  newLibraryName,
+  targetListId
+) {
   const storage = await getStorage(['urlBank', 'libraries'])
   let urlBank = storage.urlBank || []
   let libraries = storage.libraries || {}
@@ -353,7 +359,12 @@ export async function saveList(tabs, listName, libraryId, newLibraryName, target
 
     const seenInThisSave = new Set()
     for (const tab of tabs) {
-      if (!tab.url || seenInThisSave.has(tab.url) || existingUrlsInList.has(tab.url)) continue
+      if (
+        !tab.url ||
+        seenInThisSave.has(tab.url) ||
+        existingUrlsInList.has(tab.url)
+      )
+        continue
       seenInThisSave.add(tab.url)
 
       let index = urlBank.findIndex((u) => u.url === tab.url)
@@ -422,8 +433,9 @@ export async function getLists() {
     ...lib,
     lists: Object.values(lib.lists || {}).map((list) => ({
       ...list,
-      tabs: (list.tabs || [])
-        .map((idx) => urlBank[idx] || { url: 'about:blank', title: 'Missing' })
+      tabs: (list.tabs || []).map(
+        (idx) => urlBank[idx] || { url: 'about:blank', title: 'Missing' }
+      )
     }))
   }))
 }
@@ -443,7 +455,9 @@ export async function addTabsToList(tabs, libraryId, listId) {
 
   // Collect existing URLs in this list
   const existingUrls = new Set(
-    list.tabs.map((idx) => (urlBank[idx] ? urlBank[idx].url : null)).filter(Boolean)
+    list.tabs
+      .map((idx) => (urlBank[idx] ? urlBank[idx].url : null))
+      .filter(Boolean)
   )
 
   for (const tab of tabs) {
@@ -492,7 +506,11 @@ export async function renameLibrary(libraryId, name) {
 export async function renameTabList(libraryId, listId, name) {
   const storage = await getStorage(['libraries'])
   const libraries = storage.libraries || {}
-  if (libraries[libraryId] && libraries[libraryId].lists && libraries[libraryId].lists[listId]) {
+  if (
+    libraries[libraryId] &&
+    libraries[libraryId].lists &&
+    libraries[libraryId].lists[listId]
+  ) {
     libraries[libraryId].lists[listId].name = name
     await setStorage({ libraries })
   }
@@ -510,7 +528,8 @@ async function findOrCreateChildFolder(parentId, name) {
       if (browserApi.runtime.lastError) {
         // Fallback: try creating directly
         browserApi.bookmarks.create({ parentId, title: name }, (created) => {
-          if (browserApi.runtime.lastError) return reject(browserApi.runtime.lastError)
+          if (browserApi.runtime.lastError)
+            return reject(browserApi.runtime.lastError)
           resolve(created)
         })
         return
@@ -521,7 +540,8 @@ async function findOrCreateChildFolder(parentId, name) {
         resolve(existing)
       } else {
         browserApi.bookmarks.create({ parentId, title: name }, (created) => {
-          if (browserApi.runtime.lastError) return reject(browserApi.runtime.lastError)
+          if (browserApi.runtime.lastError)
+            return reject(browserApi.runtime.lastError)
           resolve(created)
         })
       }
@@ -554,7 +574,10 @@ export async function saveListAsBookmarks(
   let parentForLib = anchorId
 
   if (rootFolderName && rootFolderName.trim()) {
-    const rootFolder = await findOrCreateChildFolder(anchorId, rootFolderName.trim())
+    const rootFolder = await findOrCreateChildFolder(
+      anchorId,
+      rootFolderName.trim()
+    )
     parentForLib = rootFolder.id
   }
 

@@ -25,10 +25,7 @@ import {
 } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
 import type { RootState } from '../../store/store'
-import {
-  updateSelectedTabs,
-  selectTabRange
-} from '../../store/tabSlice'
+import { updateSelectedTabs, selectTabRange } from '../../store/tabSlice'
 import { batchMoveTabs } from '../../utils/bulkOperations'
 // @ts-ignore
 import { saveSession } from '../getsetSessions'
@@ -100,14 +97,20 @@ export function SortableGridTabItem({
   const [imgError, setImgError] = useState(false)
   const isPrivateTab = isIncognito || isWindowPrivate(undefined, [tab])
 
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({
-      id: tab.id,
-      data: {
-        tab,
-        windowId: tab.windowId
-      }
-    })
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({
+    id: tab.id,
+    data: {
+      tab,
+      windowId: tab.windowId
+    }
+  })
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -134,21 +137,21 @@ export function SortableGridTabItem({
     ? isSelected
       ? 'bg-purple-900/60 border-purple-400 text-purple-100 shadow-sm'
       : tab.active
-      ? 'bg-purple-950/70 border-purple-500/80 text-purple-200 shadow-xs ring-1 ring-purple-500/30'
-      : 'bg-zinc-800/90 border-zinc-700/80 text-zinc-200 hover:border-zinc-500 hover:bg-zinc-750'
+        ? 'bg-purple-950/70 border-purple-500/80 text-purple-200 shadow-xs ring-1 ring-purple-500/30'
+        : 'bg-zinc-800/90 border-zinc-700/80 text-zinc-200 hover:border-zinc-500 hover:bg-zinc-750'
     : isSelected
-    ? 'bg-blue-50/90 border-blue-300 shadow-sm'
-    : tab.active
-    ? 'bg-blue-50/50 border-blue-400/80 shadow-xs'
-    : 'bg-white border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/80'
+      ? 'bg-blue-50/90 border-blue-300 shadow-sm'
+      : tab.active
+        ? 'bg-blue-50/50 border-blue-400/80 shadow-xs'
+        : 'bg-white border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/80'
 
   const titleClass = isPrivateTab
     ? tab.active
       ? 'text-purple-300 font-semibold'
       : 'text-zinc-200'
     : tab.active
-    ? 'text-blue-700 font-semibold'
-    : 'text-slate-700'
+      ? 'text-blue-700 font-semibold'
+      : 'text-slate-700'
 
   const actionBtnClass = isPrivateTab
     ? 'p-1 text-zinc-400 hover:text-zinc-200 rounded transition-colors hover:bg-zinc-700/60'
@@ -210,7 +213,9 @@ export function SortableGridTabItem({
               src={cachedFavicon}
               alt=""
               className={`w-3.5 h-3.5 object-contain rounded-xs transition-opacity ${
-                isSelected || isSelectionMode ? 'opacity-0' : 'group-hover:opacity-0'
+                isSelected || isSelectionMode
+                  ? 'opacity-0'
+                  : 'group-hover:opacity-0'
               }`}
               onError={() => setImgError(true)}
             />
@@ -220,71 +225,73 @@ export function SortableGridTabItem({
               className={`${
                 isIncognito ? 'text-zinc-500' : 'text-slate-400'
               } transition-opacity ${
-                isSelected || isSelectionMode ? 'opacity-0' : 'group-hover:opacity-0'
+                isSelected || isSelectionMode
+                  ? 'opacity-0'
+                  : 'group-hover:opacity-0'
               }`}
             />
           )}
         </div>
 
-      {/* Tab Title & URL */}
-      <div
-        className="flex-1 min-w-0 cursor-pointer"
-        onClick={() => onTabClick(tab)}
-      >
-        <div className="flex items-center gap-1.5">
-          {tab.pinned && (
-            <Pin size={11} className="text-amber-500 fill-amber-500 shrink-0" />
-          )}
-          {groupInfo && (
-            <span
-              className="px-1 py-0.2 rounded text-[10px] font-semibold text-white truncate max-w-[70px]"
-              style={{ backgroundColor: groupInfo.color || '#6b7280' }}
-              title={`Group: ${groupInfo.title || 'Untitled'}`}
-            >
-              {groupInfo.title || 'Group'}
-            </span>
-          )}
-          <span
-            className={`truncate ${titleClass}`}
-            title={tab.title}
-          >
-            {tab.title || 'Untitled Tab'}
-          </span>
-        </div>
-      </div>
-
-      {/* Audio Indicator */}
-      {(tab.audible || tab.mutedInfo?.muted) && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            onToggleMute(tab.id, tab.mutedInfo?.muted)
-          }}
-          className={`p-1 rounded transition-colors ${
-            isIncognito
-              ? 'text-zinc-400 hover:text-zinc-200'
-              : 'text-slate-500 hover:text-slate-700'
-          }`}
-          title={tab.mutedInfo?.muted ? 'Unmute tab' : 'Mute tab'}
+        {/* Tab Title & URL */}
+        <div
+          className="flex-1 min-w-0 cursor-pointer"
+          onClick={() => onTabClick(tab)}
         >
-          {tab.mutedInfo?.muted ? (
-            <VolumeX size={12} />
-          ) : (
-            <Volume2
-              size={12}
-              className={
-                isIncognito
-                  ? 'text-purple-400 animate-pulse'
-                  : 'text-blue-600 animate-pulse'
-              }
-            />
-          )}
-        </button>
-      )}
+          <div className="flex items-center gap-1.5">
+            {tab.pinned && (
+              <Pin
+                size={11}
+                className="text-amber-500 fill-amber-500 shrink-0"
+              />
+            )}
+            {groupInfo && (
+              <span
+                className="px-1 py-0.2 rounded text-[10px] font-semibold text-white truncate max-w-[70px]"
+                style={{ backgroundColor: groupInfo.color || '#6b7280' }}
+                title={`Group: ${groupInfo.title || 'Untitled'}`}
+              >
+                {groupInfo.title || 'Group'}
+              </span>
+            )}
+            <span className={`truncate ${titleClass}`} title={tab.title}>
+              {tab.title || 'Untitled Tab'}
+            </span>
+          </div>
+        </div>
 
-      {/* Actions (Discard, Pin, Close) */}
-      <div
-        className={`
+        {/* Audio Indicator */}
+        {(tab.audible || tab.mutedInfo?.muted) && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onToggleMute(tab.id, tab.mutedInfo?.muted)
+            }}
+            className={`p-1 rounded transition-colors ${
+              isIncognito
+                ? 'text-zinc-400 hover:text-zinc-200'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+            title={tab.mutedInfo?.muted ? 'Unmute tab' : 'Mute tab'}
+          >
+            {tab.mutedInfo?.muted ? (
+              <VolumeX size={12} />
+            ) : (
+              <Volume2
+                size={12}
+                className={
+                  isIncognito
+                    ? 'text-purple-400 animate-pulse'
+                    : 'text-blue-600 animate-pulse'
+                }
+              />
+            )}
+          </button>
+        )}
+
+        {/* Actions (Discard, Pin, Close) */}
+        <div
+          className={`
           flex items-center gap-0.5 transition-opacity
           ${
             tabActionButtonsSetting === 'always'
@@ -292,44 +299,47 @@ export function SortableGridTabItem({
               : 'opacity-0 group-hover:opacity-100'
           }
         `}
-      >
-        {!tab.discarded && (
-          <Tooltip title="Discard tab (free memory)">
+        >
+          {!tab.discarded && (
+            <Tooltip title="Discard tab (free memory)">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDiscardTab(tab.id)
+                }}
+                className={actionBtnClass}
+              >
+                <Moon size={12} />
+              </button>
+            </Tooltip>
+          )}
+          <Tooltip title={tab.pinned ? 'Unpin tab' : 'Pin tab'}>
             <button
               onClick={(e) => {
                 e.stopPropagation()
-                onDiscardTab(tab.id)
+                onTogglePin(tab.id, tab.pinned)
               }}
               className={actionBtnClass}
             >
-              <Moon size={12} />
+              <Pin
+                size={12}
+                className={tab.pinned ? 'fill-current text-amber-500' : ''}
+              />
             </button>
           </Tooltip>
-        )}
-        <Tooltip title={tab.pinned ? 'Unpin tab' : 'Pin tab'}>
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onTogglePin(tab.id, tab.pinned)
-            }}
-            className={actionBtnClass}
-          >
-            <Pin size={12} className={tab.pinned ? 'fill-current text-amber-500' : ''} />
-          </button>
-        </Tooltip>
-        <Tooltip title="Close tab">
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onCloseTab(tab.id)
-            }}
-            className={closeBtnClass}
-          >
-            <X size={12} />
-          </button>
-        </Tooltip>
+          <Tooltip title="Close tab">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onCloseTab(tab.id)
+              }}
+              className={closeBtnClass}
+            >
+              <X size={12} />
+            </button>
+          </Tooltip>
+        </div>
       </div>
-    </div>
     </TabContextMenu>
   )
 }
@@ -345,7 +355,9 @@ export function WindowCard({
 }: WindowCardProps) {
   const [localSearch, setLocalSearch] = useState('')
   const [isMovingBatch, setIsMovingBatch] = useState(false)
-  const selectedTabs = useSelector((state: RootState) => state.tabs.selectedTabs)
+  const selectedTabs = useSelector(
+    (state: RootState) => state.tabs.selectedTabs
+  )
   const isSelectionMode = useSelector(
     (state: RootState) => state.tabs.isSelectionMode
   )
@@ -407,7 +419,9 @@ export function WindowCard({
       inactiveTabs.forEach((id) => {
         chrome.tabs.discard(id)
       })
-      message.info(`Discarded ${inactiveTabs.length} inactive tabs in Window ${windowIndex}`)
+      message.info(
+        `Discarded ${inactiveTabs.length} inactive tabs in Window ${windowIndex}`
+      )
     }
   }
 
@@ -448,7 +462,9 @@ export function WindowCard({
         windowId,
         index: -1
       })
-      message.success(`Moved ${otherSelectedTabs.length} tabs to Window ${windowIndex}`)
+      message.success(
+        `Moved ${otherSelectedTabs.length} tabs to Window ${windowIndex}`
+      )
     } catch (err) {
       console.error('Error moving selected tabs:', err)
       message.error('Failed to move tabs')
@@ -462,30 +478,30 @@ export function WindowCard({
         isOver
           ? 'border-purple-500 ring-2 ring-purple-500/50 bg-purple-950/20'
           : isCurrentWindow
-          ? 'border-purple-500/80 ring-2 ring-purple-500/30 shadow-purple-950/20'
-          : 'border-zinc-800 hover:border-zinc-700'
+            ? 'border-purple-500/80 ring-2 ring-purple-500/30 shadow-purple-950/20'
+            : 'border-zinc-800 hover:border-zinc-700'
       }`
     : `flex flex-col bg-white rounded-xl border shadow-xs transition-all duration-200 overflow-hidden max-h-[580px] h-[520px] ${
         isOver
           ? 'border-blue-500 ring-2 ring-blue-400/40 bg-blue-50/20'
           : isCurrentWindow
-          ? 'border-blue-300 ring-1 ring-blue-100'
-          : 'border-slate-200 hover:border-slate-300'
+            ? 'border-blue-300 ring-1 ring-blue-100'
+            : 'border-slate-200 hover:border-slate-300'
       }`
 
   const headerClass = isPrivateWindow
     ? 'flex items-center justify-between px-3.5 py-2.5 border-b select-none bg-gradient-to-r from-zinc-900 via-zinc-850 to-zinc-900 border-zinc-800 text-zinc-100'
     : isCurrentWindow
-    ? 'flex items-center justify-between px-3.5 py-2.5 border-b select-none bg-gradient-to-r from-blue-50/90 via-slate-50 to-white border-blue-200/80'
-    : 'flex items-center justify-between px-3.5 py-2.5 border-b select-none bg-slate-50/90 border-slate-200'
+      ? 'flex items-center justify-between px-3.5 py-2.5 border-b select-none bg-gradient-to-r from-blue-50/90 via-slate-50 to-white border-blue-200/80'
+      : 'flex items-center justify-between px-3.5 py-2.5 border-b select-none bg-slate-50/90 border-slate-200'
 
   const dotClass = isPrivateWindow
     ? isCurrentWindow
       ? 'bg-purple-500 animate-pulse ring-2 ring-purple-400/40'
       : 'bg-zinc-600'
     : isCurrentWindow
-    ? 'bg-blue-600 animate-pulse'
-    : 'bg-slate-400'
+      ? 'bg-blue-600 animate-pulse'
+      : 'bg-slate-400'
 
   const headerBtnClass = isPrivateWindow
     ? 'flex items-center justify-center w-7 h-7 min-w-0 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
@@ -496,10 +512,7 @@ export function WindowCard({
     : 'flex items-center justify-center w-7 h-7 min-w-0 hover:bg-red-50 text-slate-400 hover:text-red-500'
 
   return (
-    <div
-      ref={setNodeRef}
-      className={cardContainerClass}
-    >
+    <div ref={setNodeRef} className={cardContainerClass}>
       {/* Window Header */}
       <div className={headerClass}>
         <div className="flex items-center gap-2 min-w-0">
@@ -537,8 +550,8 @@ export function WindowCard({
                   ? 'bg-amber-950 text-amber-300 border border-amber-800'
                   : 'bg-zinc-800 text-zinc-300 border border-zinc-700/80'
                 : tabs.length > 30
-                ? 'bg-amber-100 text-amber-700'
-                : 'bg-slate-200/70 text-slate-600'
+                  ? 'bg-amber-100 text-amber-700'
+                  : 'bg-slate-200/70 text-slate-600'
             }`}
           >
             {tabs.length} {tabs.length === 1 ? 'tab' : 'tabs'}
@@ -551,7 +564,14 @@ export function WindowCard({
             <Button
               type="text"
               size="small"
-              icon={<Eye size={14} className={isPrivateWindow ? 'text-zinc-300' : 'text-slate-600'} />}
+              icon={
+                <Eye
+                  size={14}
+                  className={
+                    isPrivateWindow ? 'text-zinc-300' : 'text-slate-600'
+                  }
+                />
+              }
               onClick={handleFocusWindow}
               className={headerBtnClass}
             />
@@ -560,7 +580,14 @@ export function WindowCard({
             <Button
               type="text"
               size="small"
-              icon={<Plus size={14} className={isPrivateWindow ? 'text-zinc-300' : 'text-slate-600'} />}
+              icon={
+                <Plus
+                  size={14}
+                  className={
+                    isPrivateWindow ? 'text-zinc-300' : 'text-slate-600'
+                  }
+                />
+              }
               onClick={handleNewTab}
               className={headerBtnClass}
             />
@@ -569,7 +596,14 @@ export function WindowCard({
             <Button
               type="text"
               size="small"
-              icon={<Save size={14} className={isPrivateWindow ? 'text-zinc-300' : 'text-slate-600'} />}
+              icon={
+                <Save
+                  size={14}
+                  className={
+                    isPrivateWindow ? 'text-zinc-300' : 'text-slate-600'
+                  }
+                />
+              }
               onClick={handleSaveWindow}
               className={headerBtnClass}
             />
@@ -578,7 +612,14 @@ export function WindowCard({
             <Button
               type="text"
               size="small"
-              icon={<Moon size={14} className={isPrivateWindow ? 'text-zinc-300' : 'text-slate-600'} />}
+              icon={
+                <Moon
+                  size={14}
+                  className={
+                    isPrivateWindow ? 'text-zinc-300' : 'text-slate-600'
+                  }
+                />
+              }
               onClick={handleDiscardWindow}
               className={headerBtnClass}
             />
@@ -618,7 +659,9 @@ export function WindowCard({
           prefix={
             <Search
               size={13}
-              className={isPrivateWindow ? 'text-zinc-500 mr-1' : 'text-slate-400 mr-1'}
+              className={
+                isPrivateWindow ? 'text-zinc-500 mr-1' : 'text-slate-400 mr-1'
+              }
             />
           }
           allowClear
@@ -657,7 +700,9 @@ export function WindowCard({
             loading={isMovingBatch}
             onClick={handleMoveSelectedHere}
             className={`!h-6 !text-[11px] !px-2 flex items-center gap-1 ${
-              isPrivateWindow ? '!bg-purple-600 hover:!bg-purple-500 !border-purple-600' : ''
+              isPrivateWindow
+                ? '!bg-purple-600 hover:!bg-purple-500 !border-purple-600'
+                : ''
             }`}
           >
             Move Here
@@ -721,7 +766,9 @@ export function WindowCard({
         }`}
       >
         <span>
-          {localSearch ? `${displayedTabs.length} of ${tabs.length} tabs` : `${tabs.length} tabs`}
+          {localSearch
+            ? `${displayedTabs.length} of ${tabs.length} tabs`
+            : `${tabs.length} tabs`}
         </span>
         <button
           onClick={handleFocusWindow}

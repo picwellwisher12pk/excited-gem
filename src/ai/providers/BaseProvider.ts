@@ -35,7 +35,10 @@ export abstract class BaseProvider {
   /**
    * Send a chat completion request. Returns the full response text.
    */
-  abstract chat(messages: ChatMessage[], abortSignal?: AbortSignal): Promise<string>
+  abstract chat(
+    messages: ChatMessage[],
+    abortSignal?: AbortSignal
+  ): Promise<string>
 
   /**
    * Stream a chat completion. Yields chunks as they arrive.

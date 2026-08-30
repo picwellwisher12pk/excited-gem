@@ -11,7 +11,7 @@ import {
   Button,
   Divider,
   Menu,
-  Card,
+  Card
 } from 'antd'
 import {
   KeyOutlined,
@@ -34,7 +34,7 @@ import logo from '../assets/logo.svg'
 import store from '../store/store'
 import { usePageTracking } from '../components/Analytics/usePageTracking'
 import { useDispatch, useSelector } from 'react-redux'
-import { toggleSearchIn, setRegex, } from '../store/searchSlice'
+import { toggleSearchIn, setRegex } from '../store/searchSlice'
 import { loadAISettings } from '../store/aiSlice'
 import type { AppDispatch } from '../store/store'
 import { AISettingsPanel } from '../components/AI/AISettingsPanel'
@@ -47,7 +47,11 @@ const browser = chrome
 
 const SETTINGS_CATEGORIES = [
   { key: 'display', label: 'Display Settings', icon: <BlockOutlined /> },
-  { key: 'routines', label: 'Routines & Macros', icon: <ThunderboltOutlined /> },
+  {
+    key: 'routines',
+    label: 'Routines & Macros',
+    icon: <ThunderboltOutlined />
+  },
   { key: 'integrations', label: 'Integrations & Sync', icon: <SyncOutlined /> },
   { key: 'search', label: 'Search Settings', icon: <SearchOutlined /> },
   { key: 'ai', label: 'AI Assistant', icon: <ExperimentOutlined /> },
@@ -65,7 +69,7 @@ function SettingsPageContent() {
   )
   const [activeCategory, setActiveCategory] = useState(() => {
     const hash = window.location.hash.replace('#', '')
-    return SETTINGS_CATEGORIES.some(c => c.key === hash) ? hash : 'display'
+    return SETTINGS_CATEGORIES.some((c) => c.key === hash) ? hash : 'display'
   })
   const [tabManagementMode, setTabManagementMode] = useState<
     'single' | 'per-window'
@@ -75,7 +79,9 @@ function SettingsPageContent() {
     'debounce'
   )
   const [groupedTabs, setGroupedTabs] = useState(true)
-  const [allWindowsViewMode, setAllWindowsViewMode] = useState<'grid' | 'list'>('grid')
+  const [allWindowsViewMode, setAllWindowsViewMode] = useState<'grid' | 'list'>(
+    'grid'
+  )
   const [tabActionButtons, setTabActionButtons] = useState<'always' | 'hover'>(
     'hover'
   )
@@ -111,7 +117,8 @@ function SettingsPageContent() {
           setTabManagementMode(result.tabManagementMode)
         if (result.searchBehavior) setSearchBehavior(result.searchBehavior)
         if (result.groupedTabs !== undefined) setGroupedTabs(result.groupedTabs)
-        if (result.allWindowsViewMode) setAllWindowsViewMode(result.allWindowsViewMode)
+        if (result.allWindowsViewMode)
+          setAllWindowsViewMode(result.allWindowsViewMode)
         if (result.tabActionButtons)
           setTabActionButtons(result.tabActionButtons)
         if (result.youtubeApiKey) setYoutubeApiKey(result.youtubeApiKey)
@@ -121,7 +128,7 @@ function SettingsPageContent() {
 
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '')
-      if (SETTINGS_CATEGORIES.some(c => c.key === hash)) {
+      if (SETTINGS_CATEGORIES.some((c) => c.key === hash)) {
         setActiveCategory(hash)
       }
     }
@@ -284,8 +291,12 @@ function SettingsPageContent() {
           {/* Settings Sidebar */}
           <div className="w-72 bg-white border-r border-gray-200 overflow-y-auto hidden md:block">
             <div className="p-6 border-b border-gray-200">
-              <Title level={4} className="!mb-0">Settings</Title>
-              <Text type="secondary" className="text-xs">Customize your experience</Text>
+              <Title level={4} className="!mb-0">
+                Settings
+              </Title>
+              <Text type="secondary" className="text-xs">
+                Customize your experience
+              </Text>
             </div>
             <Menu
               mode="inline"
@@ -320,76 +331,48 @@ function SettingsPageContent() {
                   title={
                     <div className="py-2">
                       <Title level={4} className="!mb-0">
-                        {SETTINGS_CATEGORIES.find(c => c.key === activeCategory)?.label}
+                        {
+                          SETTINGS_CATEGORIES.find(
+                            (c) => c.key === activeCategory
+                          )?.label
+                        }
                       </Title>
                     </div>
                   }
                 >
-                {activeCategory === 'display' && (
-                  <Space direction="vertical" size="large" className="w-full">
-                    <div>
-                      <Text strong>Extension Display Mode</Text>
-                      <div className="mt-2">
-                        <Radio.Group
-                          value={displayMode}
-                          onChange={(e) => handleDisplayModeChange(e.target.value)}
-                        >
-                          <Space direction="vertical">
-                            <Radio value="sidebar">
-                              <div>
-                                <div className="font-medium">Sidebar</div>
-                                <Text type="secondary" className="text-xs">
-                                  Open in browser sidebar
-                                </Text>
-                              </div>
-                            </Radio>
-                            <Radio value="tab">
-                              <div>
-                                <div className="font-medium">Tab</div>
-                                <Text type="secondary" className="text-xs">
-                                  Open in a new tab
-                                </Text>
-                              </div>
-                            </Radio>
-                            <Radio value="popup">
-                              <div>
-                                <div className="font-medium">Popup</div>
-                                <Text type="secondary" className="text-xs">
-                                  Open as a popup
-                                </Text>
-                              </div>
-                            </Radio>
-                          </Space>
-                        </Radio.Group>
-                      </div>
-                    </div>
-
-                    {displayMode === 'tab' && (
+                  {activeCategory === 'display' && (
+                    <Space direction="vertical" size="large" className="w-full">
                       <div>
-                        <Text strong>Tab Management Mode</Text>
+                        <Text strong>Extension Display Mode</Text>
                         <div className="mt-2">
                           <Radio.Group
-                            value={tabManagementMode}
+                            value={displayMode}
                             onChange={(e) =>
-                              handleTabManagementModeChange(e.target.value)
+                              handleDisplayModeChange(e.target.value)
                             }
                           >
                             <Space direction="vertical">
-                              <Radio value="single">
+                              <Radio value="sidebar">
                                 <div>
-                                  <div className="font-medium">
-                                    Single Extension Tab
-                                  </div>
+                                  <div className="font-medium">Sidebar</div>
                                   <Text type="secondary" className="text-xs">
-                                    Maintain one extension tab across all windows
+                                    Open in browser sidebar
                                   </Text>
                                 </div>
                               </Radio>
-                              <Radio value="per-window">
+                              <Radio value="tab">
                                 <div>
-                                  <div className="font-medium">Per Window</div>
+                                  <div className="font-medium">Tab</div>
                                   <Text type="secondary" className="text-xs">
-                                    Allow one extension tab per browser window
+                                    Open in a new tab
+                                  </Text>
+                                </div>
+                              </Radio>
+                              <Radio value="popup">
+                                <div>
+                                  <div className="font-medium">Popup</div>
+                                  <Text type="secondary" className="text-xs">
+                                    Open as a popup
                                   </Text>
                                 </div>
                               </Radio>
@@ -397,326 +380,399 @@ function SettingsPageContent() {
                           </Radio.Group>
                         </div>
                       </div>
-                    )}
 
-                    <div>
-                      <Text strong>Sessions View Mode</Text>
-                      <div className="mt-2">
-                        <Radio.Group
-                          value={sessionsView}
-                          onChange={(e) => handleSessionsViewChange(e.target.value)}
-                        >
-                          <Space direction="vertical">
-                            <Radio value="compact">
-                              <div>
-                                <div className="font-medium">Compact</div>
-                                <Text type="secondary" className="text-xs">
-                                  Single-line view with expand option (recommended)
-                                </Text>
-                              </div>
-                            </Radio>
-                            <Radio value="expanded">
-                              <div>
-                                <div className="font-medium">Expanded</div>
-                                <Text type="secondary" className="text-xs">
-                                  Show all tabs by default
-                                </Text>
-                              </div>
-                            </Radio>
-                          </Space>
-                        </Radio.Group>
-                      </div>
-                    </div>
-                    <div>
-                      <Text strong>Group Tabs by Window</Text>
-                      <div className="mt-2">
-                        <Radio.Group
-                          value={groupedTabs}
-                          onChange={(e) => handleGroupedTabsChange(e.target.value)}
-                        >
-                          <Space direction="vertical">
-                            <Radio value={true}>
-                              <div>
-                                <div className="font-medium">Enabled</div>
-                                <Text type="secondary" className="text-xs">
-                                  Group tabs by window when "All windows" is
-                                  selected
-                                </Text>
-                              </div>
-                            </Radio>
-                            <Radio value={false}>
-                              <div>
-                                <div className="font-medium">Disabled</div>
-                                <Text type="secondary" className="text-xs">
-                                  Show tabs as a flat list
-                                </Text>
-                              </div>
-                            </Radio>
-                          </Space>
-                        </Radio.Group>
-                      </div>
-                    </div>
-                    <div>
-                      <Text strong>All Windows Default View Mode</Text>
-                      <div className="mt-2">
-                        <Radio.Group
-                          value={allWindowsViewMode}
-                          onChange={(e) =>
-                            handleAllWindowsViewModeChange(e.target.value)
-                          }
-                        >
-                          <Space direction="vertical">
-                            <Radio value="grid">
-                              <div>
-                                <div className="font-medium">Windowed Grid View (Recommended)</div>
-                                <Text type="secondary" className="text-xs">
-                                  Display each browser window as a separate interactive tile with local search and drag-and-drop tab movement
-                                </Text>
-                              </div>
-                            </Radio>
-                            <Radio value="list">
-                              <div>
-                                <div className="font-medium">Unified List View</div>
-                                <Text type="secondary" className="text-xs">
-                                  Display all tabs from all windows in a single vertical list
-                                </Text>
-                              </div>
-                            </Radio>
-                          </Space>
-                        </Radio.Group>
-                      </div>
-                    </div>
-                    <div>
-                      <Text strong>Tab Action Buttons</Text>
-                      <div className="mt-2">
-                        <Radio.Group
-                          value={tabActionButtons}
-                          onChange={(e) =>
-                            handleTabActionButtonsChange(e.target.value)
-                          }
-                        >
-                          <Space direction="vertical">
-                            <Radio value="hover">
-                              <div>
-                                <div className="font-medium">On Hover</div>
-                                <Text type="secondary" className="text-xs">
-                                  Show buttons only when hovering over the tab
-                                </Text>
-                              </div>
-                            </Radio>
-                            <Radio value="always">
-                              <div>
-                                <div className="font-medium">Always Visible</div>
-                                <Text type="secondary" className="text-xs">
-                                  Always show action buttons
-                                </Text>
-                              </div>
-                            </Radio>
-                          </Space>
-                        </Radio.Group>
-                      </div>
-                    </div>
-                  </Space>
-                )}
-
-                {activeCategory === 'integrations' && (
-                  <Space direction="vertical" size="large" className="w-full">
-                    <div>
-                      <Text strong>Google Account Sync</Text>
-                      <div className="mt-2">
-                        {userProfile ? (
-                          <Space direction="vertical" className="w-full">
-                            <div className="flex items-center gap-3 p-3 bg-white rounded border border-gray-200">
-                              <img
-                                src={userProfile.picture}
-                                alt="Profile"
-                                className="w-10 h-10 rounded-full"
-                              />
-                              <div className="flex-1">
-                                <div className="font-medium">
-                                  {userProfile.name}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  {userProfile.email}
-                                </div>
-                              </div>
-                              <Button onClick={handleLogout} size="small">
-                                Sign Out
-                              </Button>
-                            </div>
-                            <Space className="mt-2 text-white">
-                              <Button
-                                icon={<CloudSyncOutlined />}
-                                onClick={handleBackup}
-                                loading={isBackingUp}
-                                type="primary"
-                              >
-                                Backup Settings & Sessions
-                              </Button>
-                              <Button
-                                icon={<CloudDownloadOutlined />}
-                                onClick={handleRestore}
-                                loading={isRestoring}
-                              >
-                                Restore from Backup
-                              </Button>
-                            </Space>
-                          </Space>
-                        ) : (
-                          <Button icon={<GoogleOutlined />} onClick={handleLogin}>
-                            Sign in with Google
-                          </Button>
-                        )}
-                        <div className="mt-2">
-                          <Text type="secondary" className="text-xs">
-                            Securely back up your saved tabs and settings to your
-                            Google Drive.
-                          </Text>
-                        </div>
-                      </div>
-                    </div>
-                    <Divider className="my-2" />
-                    <div>
-                      <Text strong>YouTube API Key (Optional BYOK)</Text>
-                      <div className="mt-2">
-                        <Input.Password
-                          prefix={<KeyOutlined className="text-gray-400" />}
-                          placeholder="AIzaSy..."
-                          value={youtubeApiKey}
-                          onChange={handleYoutubeApiKeyChange}
-                        />
-                        <div className="mt-2">
-                          <Text type="secondary" className="text-xs">
-                            Provide your own Google Cloud YouTube Data API v3 key to
-                            enable rich data fetching for unloaded YouTube tabs.
-                            <a
-                              href="https://developers.google.com/youtube/v3/getting-started"
-                              target="_blank"
-                              rel="noreferrer"
-                              className="ml-1 text-blue-500 hover:underline"
+                      {displayMode === 'tab' && (
+                        <div>
+                          <Text strong>Tab Management Mode</Text>
+                          <div className="mt-2">
+                            <Radio.Group
+                              value={tabManagementMode}
+                              onChange={(e) =>
+                                handleTabManagementModeChange(e.target.value)
+                              }
                             >
-                              Learn how to get one
-                            </a>
-                            .
-                          </Text>
+                              <Space direction="vertical">
+                                <Radio value="single">
+                                  <div>
+                                    <div className="font-medium">
+                                      Single Extension Tab
+                                    </div>
+                                    <Text type="secondary" className="text-xs">
+                                      Maintain one extension tab across all
+                                      windows
+                                    </Text>
+                                  </div>
+                                </Radio>
+                                <Radio value="per-window">
+                                  <div>
+                                    <div className="font-medium">
+                                      Per Window
+                                    </div>
+                                    <Text type="secondary" className="text-xs">
+                                      Allow one extension tab per browser window
+                                    </Text>
+                                  </div>
+                                </Radio>
+                              </Space>
+                            </Radio.Group>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  </Space>
-                )}
+                      )}
 
-                {activeCategory === 'search' && (
-                  <Space direction="vertical" size="large" className="w-full">
-                    <div>
-                      <Text strong>Search Behavior</Text>
-                      <div className="mt-2">
-                        <Radio.Group
-                          value={searchBehavior}
-                          onChange={(e) =>
-                            handleSearchBehaviorChange(e.target.value)
-                          }
-                        >
-                          <Space direction="vertical">
-                            <Radio value="debounce">
-                              <div>
-                                <div className="font-medium">As you type</div>
-                                <Text type="secondary" className="text-xs">
-                                  Search automatically while typing (debounced)
-                                </Text>
-                              </div>
-                            </Radio>
-                            <Radio value="enter">
-                              <div>
-                                <div className="font-medium">On Enter</div>
-                                <Text type="secondary" className="text-xs">
-                                  Search only when pressing Enter
-                                </Text>
-                              </div>
-                            </Radio>
-                          </Space>
-                        </Radio.Group>
-                      </div>
-                    </div>
-                    <div>
-                      <Text strong>Search in</Text>
-                      <div className="mt-2">
-                        <Space>
-                          <Checkbox
-                            checked={searchIn.title}
-                            onChange={() =>
-                              handleSearchInChange({
-                                ...searchIn,
-                                title: !searchIn.title
-                              })
-                            }
-                          >
-                            Title
-                          </Checkbox>
-                          <Checkbox
-                            checked={searchIn.url}
-                            onChange={() =>
-                              handleSearchInChange({
-                                ...searchIn,
-                                url: !searchIn.url
-                              })
-                            }
-                          >
-                            URL
-                          </Checkbox>
-                        </Space>
-                      </div>
-                    </div>
-                    <div>
-                      <Text strong>Regular Expression Search</Text>
-                      <div className="mt-2">
-                        <Space>
+                      <div>
+                        <Text strong>Sessions View Mode</Text>
+                        <div className="mt-2">
                           <Radio.Group
-                            value={regex}
-                            onChange={(e) => handleRegexChange(e.target.value)}
+                            value={sessionsView}
+                            onChange={(e) =>
+                              handleSessionsViewChange(e.target.value)
+                            }
                           >
-                            <Radio value={true}>Enabled</Radio>
-                            <Radio value={false}>Disabled</Radio>
+                            <Space direction="vertical">
+                              <Radio value="compact">
+                                <div>
+                                  <div className="font-medium">Compact</div>
+                                  <Text type="secondary" className="text-xs">
+                                    Single-line view with expand option
+                                    (recommended)
+                                  </Text>
+                                </div>
+                              </Radio>
+                              <Radio value="expanded">
+                                <div>
+                                  <div className="font-medium">Expanded</div>
+                                  <Text type="secondary" className="text-xs">
+                                    Show all tabs by default
+                                  </Text>
+                                </div>
+                              </Radio>
+                            </Space>
                           </Radio.Group>
-                        </Space>
-                      </div>
-                    </div>
-                  </Space>
-                )}
-
-                {activeCategory === 'ai' && (
-                  <AISettingsPanel />
-                )}
-
-
-                {activeCategory === 'about' && (
-                  <Space direction="vertical" className="w-full" size="middle">
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center shadow-md">
-                        <img src={logo} alt="Excited Gem" className="w-10 h-10 invert opacity-90" />
+                        </div>
                       </div>
                       <div>
-                        <Title level={4} className="!mb-0">Excited Gem</Title>
-                        <Text type="secondary" className="text-sm">Version {browser.runtime.getManifest().version}</Text>
+                        <Text strong>Group Tabs by Window</Text>
+                        <div className="mt-2">
+                          <Radio.Group
+                            value={groupedTabs}
+                            onChange={(e) =>
+                              handleGroupedTabsChange(e.target.value)
+                            }
+                          >
+                            <Space direction="vertical">
+                              <Radio value={true}>
+                                <div>
+                                  <div className="font-medium">Enabled</div>
+                                  <Text type="secondary" className="text-xs">
+                                    Group tabs by window when "All windows" is
+                                    selected
+                                  </Text>
+                                </div>
+                              </Radio>
+                              <Radio value={false}>
+                                <div>
+                                  <div className="font-medium">Disabled</div>
+                                  <Text type="secondary" className="text-xs">
+                                    Show tabs as a flat list
+                                  </Text>
+                                </div>
+                              </Radio>
+                            </Space>
+                          </Radio.Group>
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <Text className="text-gray-600 block mb-4">
-                        A powerful tab management extension for Browser, designed to help you stay organized and focused.
-                      </Text>
-                      <Divider className="my-4" />
-                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                        <Text strong className="block mb-2 text-xs uppercase tracking-wider text-gray-400">
-                          Privacy Notice
-                        </Text>
-                        <Text type="secondary" className="text-sm">
-                          This extension collects anonymous usage analytics to help improve the product. No personal information is collected.
-                        </Text>
+                      <div>
+                        <Text strong>All Windows Default View Mode</Text>
+                        <div className="mt-2">
+                          <Radio.Group
+                            value={allWindowsViewMode}
+                            onChange={(e) =>
+                              handleAllWindowsViewModeChange(e.target.value)
+                            }
+                          >
+                            <Space direction="vertical">
+                              <Radio value="grid">
+                                <div>
+                                  <div className="font-medium">
+                                    Windowed Grid View (Recommended)
+                                  </div>
+                                  <Text type="secondary" className="text-xs">
+                                    Display each browser window as a separate
+                                    interactive tile with local search and
+                                    drag-and-drop tab movement
+                                  </Text>
+                                </div>
+                              </Radio>
+                              <Radio value="list">
+                                <div>
+                                  <div className="font-medium">
+                                    Unified List View
+                                  </div>
+                                  <Text type="secondary" className="text-xs">
+                                    Display all tabs from all windows in a
+                                    single vertical list
+                                  </Text>
+                                </div>
+                              </Radio>
+                            </Space>
+                          </Radio.Group>
+                        </div>
                       </div>
-                    </div>
-                  </Space>
-                )}
-              </Card>
-            )}
+                      <div>
+                        <Text strong>Tab Action Buttons</Text>
+                        <div className="mt-2">
+                          <Radio.Group
+                            value={tabActionButtons}
+                            onChange={(e) =>
+                              handleTabActionButtonsChange(e.target.value)
+                            }
+                          >
+                            <Space direction="vertical">
+                              <Radio value="hover">
+                                <div>
+                                  <div className="font-medium">On Hover</div>
+                                  <Text type="secondary" className="text-xs">
+                                    Show buttons only when hovering over the tab
+                                  </Text>
+                                </div>
+                              </Radio>
+                              <Radio value="always">
+                                <div>
+                                  <div className="font-medium">
+                                    Always Visible
+                                  </div>
+                                  <Text type="secondary" className="text-xs">
+                                    Always show action buttons
+                                  </Text>
+                                </div>
+                              </Radio>
+                            </Space>
+                          </Radio.Group>
+                        </div>
+                      </div>
+                    </Space>
+                  )}
+
+                  {activeCategory === 'integrations' && (
+                    <Space direction="vertical" size="large" className="w-full">
+                      <div>
+                        <Text strong>Google Account Sync</Text>
+                        <div className="mt-2">
+                          {userProfile ? (
+                            <Space direction="vertical" className="w-full">
+                              <div className="flex items-center gap-3 p-3 bg-white rounded border border-gray-200">
+                                <img
+                                  src={userProfile.picture}
+                                  alt="Profile"
+                                  className="w-10 h-10 rounded-full"
+                                />
+                                <div className="flex-1">
+                                  <div className="font-medium">
+                                    {userProfile.name}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    {userProfile.email}
+                                  </div>
+                                </div>
+                                <Button onClick={handleLogout} size="small">
+                                  Sign Out
+                                </Button>
+                              </div>
+                              <Space className="mt-2 text-white">
+                                <Button
+                                  icon={<CloudSyncOutlined />}
+                                  onClick={handleBackup}
+                                  loading={isBackingUp}
+                                  type="primary"
+                                >
+                                  Backup Settings & Sessions
+                                </Button>
+                                <Button
+                                  icon={<CloudDownloadOutlined />}
+                                  onClick={handleRestore}
+                                  loading={isRestoring}
+                                >
+                                  Restore from Backup
+                                </Button>
+                              </Space>
+                            </Space>
+                          ) : (
+                            <Button
+                              icon={<GoogleOutlined />}
+                              onClick={handleLogin}
+                            >
+                              Sign in with Google
+                            </Button>
+                          )}
+                          <div className="mt-2">
+                            <Text type="secondary" className="text-xs">
+                              Securely back up your saved tabs and settings to
+                              your Google Drive.
+                            </Text>
+                          </div>
+                        </div>
+                      </div>
+                      <Divider className="my-2" />
+                      <div>
+                        <Text strong>YouTube API Key (Optional BYOK)</Text>
+                        <div className="mt-2">
+                          <Input.Password
+                            prefix={<KeyOutlined className="text-gray-400" />}
+                            placeholder="AIzaSy..."
+                            value={youtubeApiKey}
+                            onChange={handleYoutubeApiKeyChange}
+                          />
+                          <div className="mt-2">
+                            <Text type="secondary" className="text-xs">
+                              Provide your own Google Cloud YouTube Data API v3
+                              key to enable rich data fetching for unloaded
+                              YouTube tabs.
+                              <a
+                                href="https://developers.google.com/youtube/v3/getting-started"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="ml-1 text-blue-500 hover:underline"
+                              >
+                                Learn how to get one
+                              </a>
+                              .
+                            </Text>
+                          </div>
+                        </div>
+                      </div>
+                    </Space>
+                  )}
+
+                  {activeCategory === 'search' && (
+                    <Space direction="vertical" size="large" className="w-full">
+                      <div>
+                        <Text strong>Search Behavior</Text>
+                        <div className="mt-2">
+                          <Radio.Group
+                            value={searchBehavior}
+                            onChange={(e) =>
+                              handleSearchBehaviorChange(e.target.value)
+                            }
+                          >
+                            <Space direction="vertical">
+                              <Radio value="debounce">
+                                <div>
+                                  <div className="font-medium">As you type</div>
+                                  <Text type="secondary" className="text-xs">
+                                    Search automatically while typing
+                                    (debounced)
+                                  </Text>
+                                </div>
+                              </Radio>
+                              <Radio value="enter">
+                                <div>
+                                  <div className="font-medium">On Enter</div>
+                                  <Text type="secondary" className="text-xs">
+                                    Search only when pressing Enter
+                                  </Text>
+                                </div>
+                              </Radio>
+                            </Space>
+                          </Radio.Group>
+                        </div>
+                      </div>
+                      <div>
+                        <Text strong>Search in</Text>
+                        <div className="mt-2">
+                          <Space>
+                            <Checkbox
+                              checked={searchIn.title}
+                              onChange={() =>
+                                handleSearchInChange({
+                                  ...searchIn,
+                                  title: !searchIn.title
+                                })
+                              }
+                            >
+                              Title
+                            </Checkbox>
+                            <Checkbox
+                              checked={searchIn.url}
+                              onChange={() =>
+                                handleSearchInChange({
+                                  ...searchIn,
+                                  url: !searchIn.url
+                                })
+                              }
+                            >
+                              URL
+                            </Checkbox>
+                          </Space>
+                        </div>
+                      </div>
+                      <div>
+                        <Text strong>Regular Expression Search</Text>
+                        <div className="mt-2">
+                          <Space>
+                            <Radio.Group
+                              value={regex}
+                              onChange={(e) =>
+                                handleRegexChange(e.target.value)
+                              }
+                            >
+                              <Radio value={true}>Enabled</Radio>
+                              <Radio value={false}>Disabled</Radio>
+                            </Radio.Group>
+                          </Space>
+                        </div>
+                      </div>
+                    </Space>
+                  )}
+
+                  {activeCategory === 'ai' && <AISettingsPanel />}
+
+                  {activeCategory === 'about' && (
+                    <Space
+                      direction="vertical"
+                      className="w-full"
+                      size="middle"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center shadow-md">
+                          <img
+                            src={logo}
+                            alt="Excited Gem"
+                            className="w-10 h-10 invert opacity-90"
+                          />
+                        </div>
+                        <div>
+                          <Title level={4} className="!mb-0">
+                            Excited Gem
+                          </Title>
+                          <Text type="secondary" className="text-sm">
+                            Version {browser.runtime.getManifest().version}
+                          </Text>
+                        </div>
+                      </div>
+                      <div>
+                        <Text className="text-gray-600 block mb-4">
+                          A powerful tab management extension for Browser,
+                          designed to help you stay organized and focused.
+                        </Text>
+                        <Divider className="my-4" />
+                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                          <Text
+                            strong
+                            className="block mb-2 text-xs uppercase tracking-wider text-gray-400"
+                          >
+                            Privacy Notice
+                          </Text>
+                          <Text type="secondary" className="text-sm">
+                            This extension collects anonymous usage analytics to
+                            help improve the product. No personal information is
+                            collected.
+                          </Text>
+                        </div>
+                      </div>
+                    </Space>
+                  )}
+                </Card>
+              )}
             </div>
           </div>
         </div>

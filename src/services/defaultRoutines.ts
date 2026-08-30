@@ -4,13 +4,15 @@ export const DEFAULT_ROUTINE_PRESETS: RoutinePreset[] = [
   {
     id: 'preset-youtube-shorts',
     name: 'YouTube Shorts to New Window',
-    description: 'Extracts all YouTube Shorts and media tabs from the current window and moves them into their own dedicated window.',
+    description:
+      'Extracts all YouTube Shorts and media tabs from the current window and moves them into their own dedicated window.',
     icon: 'Layers',
     color: '#ef4444',
     category: 'workspace',
     routine: {
       name: 'YouTube Shorts to New Window',
-      description: 'Extracts all YouTube Shorts and media tabs from the current window and moves them into their own dedicated window.',
+      description:
+        'Extracts all YouTube Shorts and media tabs from the current window and moves them into their own dedicated window.',
       icon: 'Layers',
       color: '#ef4444',
       enabled: true,
@@ -49,13 +51,15 @@ export const DEFAULT_ROUTINE_PRESETS: RoutinePreset[] = [
   {
     id: 'preset-deep-clean',
     name: 'Deep Workspace Cleanup',
-    description: 'Deduplicates tabs, mutes background audio, suspends inactive tabs, and auto-groups by domain.',
+    description:
+      'Deduplicates tabs, mutes background audio, suspends inactive tabs, and auto-groups by domain.',
     icon: 'Sparkles',
     color: '#3b82f6',
     category: 'cleanup',
     routine: {
       name: 'Deep Workspace Cleanup',
-      description: 'Deduplicates tabs, mutes background audio, suspends inactive tabs, and auto-groups by domain.',
+      description:
+        'Deduplicates tabs, mutes background audio, suspends inactive tabs, and auto-groups by domain.',
       icon: 'Sparkles',
       color: '#3b82f6',
       enabled: true,
@@ -109,13 +113,15 @@ export const DEFAULT_ROUTINE_PRESETS: RoutinePreset[] = [
   {
     id: 'preset-focus-mode',
     name: 'Focus & Deep Work',
-    description: 'Mutes all distractions, pins active work tab, and closes distracting social/media sites.',
+    description:
+      'Mutes all distractions, pins active work tab, and closes distracting social/media sites.',
     icon: 'Zap',
     color: '#8b5cf6',
     category: 'focus',
     routine: {
       name: 'Focus & Deep Work',
-      description: 'Mutes all distractions, pins active work tab, and closes distracting social/media sites.',
+      description:
+        'Mutes all distractions, pins active work tab, and closes distracting social/media sites.',
       icon: 'Zap',
       color: '#8b5cf6',
       enabled: true,
@@ -168,13 +174,15 @@ export const DEFAULT_ROUTINE_PRESETS: RoutinePreset[] = [
   {
     id: 'preset-ram-saver',
     name: 'RAM Saver / Hibernate',
-    description: 'Suspends all non-active background tabs across all windows to free up system memory immediately.',
+    description:
+      'Suspends all non-active background tabs across all windows to free up system memory immediately.',
     icon: 'Cpu',
     color: '#10b981',
     category: 'performance',
     routine: {
       name: 'RAM Saver / Hibernate',
-      description: 'Suspends all non-active background tabs across all windows to free up system memory immediately.',
+      description:
+        'Suspends all non-active background tabs across all windows to free up system memory immediately.',
       icon: 'Cpu',
       color: '#10b981',
       enabled: true,
@@ -200,13 +208,15 @@ export const DEFAULT_ROUTINE_PRESETS: RoutinePreset[] = [
   {
     id: 'preset-snapshot-close',
     name: 'Snapshot & Tidy Window',
-    description: 'Saves the current window tabs into a timestamped Session and closes duplicates.',
+    description:
+      'Saves the current window tabs into a timestamped Session and closes duplicates.',
     icon: 'Bookmark',
     color: '#f59e0b',
     category: 'workspace',
     routine: {
       name: 'Snapshot & Tidy Window',
-      description: 'Saves the current window tabs into a timestamped Session and closes duplicates.',
+      description:
+        'Saves the current window tabs into a timestamped Session and closes duplicates.',
       icon: 'Bookmark',
       color: '#f59e0b',
       enabled: true,
@@ -252,13 +262,15 @@ export const DEFAULT_ROUTINE_PRESETS: RoutinePreset[] = [
   {
     id: 'preset-organize-sort',
     name: 'Organize & Sort Tabs',
-    description: 'Sorts all tabs alphabetically by domain (pinned first) and auto-groups matching domains.',
+    description:
+      'Sorts all tabs alphabetically by domain (pinned first) and auto-groups matching domains.',
     icon: 'Layers',
     color: '#06b6d4',
     category: 'workspace',
     routine: {
       name: 'Organize & Sort Tabs',
-      description: 'Sorts all tabs alphabetically by domain (pinned first) and auto-groups matching domains.',
+      description:
+        'Sorts all tabs alphabetically by domain (pinned first) and auto-groups matching domains.',
       icon: 'Layers',
       color: '#06b6d4',
       enabled: true,

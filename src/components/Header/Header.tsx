@@ -18,7 +18,11 @@ import {
 
 import logo from '../../assets/logo.svg'
 
-import { getAllWindows, getCurrentWindow, processTabs } from '../../scripts/general'
+import {
+  getAllWindows,
+  getCurrentWindow,
+  processTabs
+} from '../../scripts/general'
 import { clearSelectedTabs } from '../../store/tabSlice'
 import { MoveModal } from '../../components/Modals/Move'
 import { SaveListModal } from '../../components/Modals/SaveListModal'
@@ -91,10 +95,7 @@ const PinDropdown = ({ handlePin }) => {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <Btn
-        className="flex items-center"
-        onClick={() => setIsOpen(!isOpen)}
-      >
+      <Btn className="flex items-center" onClick={() => setIsOpen(!isOpen)}>
         <Pin size={14} className="mr-1" />
         <span>Pin</span>
         <ChevronDown size={14} className="ml-2 text-zinc-500" />
@@ -102,7 +103,7 @@ const PinDropdown = ({ handlePin }) => {
 
       {isOpen && (
         <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 min-w-[120px]">
-          {items.map(item => (
+          {items.map((item) => (
             <div
               key={item.key}
               className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
@@ -152,10 +153,7 @@ const MuteDropdown = ({ handleMute }) => {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <Btn
-        className="flex items-center"
-        onClick={() => setIsOpen(!isOpen)}
-      >
+      <Btn className="flex items-center" onClick={() => setIsOpen(!isOpen)}>
         <VolumeX size={14} className="mr-1" />
         <span>Mute</span>
         <ChevronDown size={14} className="ml-2 text-zinc-500" />
@@ -163,7 +161,7 @@ const MuteDropdown = ({ handleMute }) => {
 
       {isOpen && (
         <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 min-w-[120px]">
-          {items.map(item => (
+          {items.map((item) => (
             <div
               key={item.key}
               className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
@@ -183,7 +181,7 @@ export default function Header({
   allSelected = false,
   allMuted = false,
   allPinned = false,
-  processSelectedTabs = () => { },
+  processSelectedTabs = () => {},
   sidebarToggle,
   navigation
 }: Readonly<HeaderProps & { navigation?: ReactNode }>) {
@@ -194,7 +192,9 @@ export default function Header({
   const [checkedList, setCheckedList] = useState(selectedTabs)
   const [indeterminate, setIndeterminate] = useState(false)
   const [checkAll, setCheckAll] = useState(false)
-  const [allWindowsViewMode, setAllWindowsViewMode] = useState<'grid' | 'list'>('grid')
+  const [allWindowsViewMode, setAllWindowsViewMode] = useState<'grid' | 'list'>(
+    'grid'
+  )
 
   const [allWindows, setAllWindows] = useState([])
   const [currentWindow, setCurrentWindow] = useState({})
@@ -248,13 +248,9 @@ export default function Header({
 
   const sortButton = useMemo(() => <SortButton tabs={tabs} />, [tabs])
 
-  const pinSelect = (
-    <PinDropdown handlePin={handlePin} />
-  )
+  const pinSelect = <PinDropdown handlePin={handlePin} />
 
-  const muteSelect = (
-    <MuteDropdown handleMute={handleMute} />
-  )
+  const muteSelect = <MuteDropdown handleMute={handleMute} />
 
   return (
     <header className="bg-gradient-to-t from-cyan-500 to-blue-500 p-2 transition-all duration-200 ease-in-out">
@@ -266,12 +262,12 @@ export default function Header({
             </div>
           )}
           <div className="hidden sm:block">{Brand(logo)}</div>
-          {navigation && <div className="ml-4 flex items-center">{navigation}</div>}
+          {navigation && (
+            <div className="ml-4 flex items-center">{navigation}</div>
+          )}
         </div>
         <div className="flex-1 flex justify-end items-center pr-2">
-          <div className="w-full max-w-xl">
-            {children}
-          </div>
+          <div className="w-full max-w-xl">{children}</div>
         </div>
       </section>
       <section
@@ -312,7 +308,9 @@ export default function Header({
                               : 'text-slate-500'
                           }`}
                         />
-                        <span className="text-xs font-semibold leading-none">Grid</span>
+                        <span className="text-xs font-semibold leading-none">
+                          Grid
+                        </span>
                       </div>
                     )
                   },
@@ -331,7 +329,9 @@ export default function Header({
                               : 'text-slate-500'
                           }`}
                         />
-                        <span className="text-xs font-semibold leading-none">List</span>
+                        <span className="text-xs font-semibold leading-none">
+                          List
+                        </span>
                       </div>
                     )
                   }

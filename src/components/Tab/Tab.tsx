@@ -1,8 +1,5 @@
 import { List, Button } from 'antd'
-import {
-  PlayCircleOutlined,
-  PauseCircleOutlined
-} from '@ant-design/icons'
+import { PlayCircleOutlined, PauseCircleOutlined } from '@ant-design/icons'
 import React, { useState, useEffect, useRef } from 'react'
 import { controlYouTubeVideo } from '../../services/tabService'
 import { useDispatch, useSelector } from 'react-redux'

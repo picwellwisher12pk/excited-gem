@@ -10,18 +10,27 @@
 
 import {
   BaseProvider,
-  ChatMessage,
-  StreamChunk,
-  DiscoveredModel,
-  ProviderStatus
+  type ChatMessage,
+  type StreamChunk,
+  type DiscoveredModel,
+  type ProviderStatus
 } from './BaseProvider'
 
 declare global {
   interface Window {
     ai?: {
       languageModel?: {
-        capabilities(): Promise<{ available: 'readily' | 'after-download' | 'no'; defaultTopK?: number; maxTopK?: number; defaultTemperature?: number }>
-        create(options?: { systemPrompt?: string; temperature?: number; topK?: number }): Promise<AISesssionHandle>
+        capabilities(): Promise<{
+          available: 'readily' | 'after-download' | 'no'
+          defaultTopK?: number
+          maxTopK?: number
+          defaultTemperature?: number
+        }>
+        create(options?: {
+          systemPrompt?: string
+          temperature?: number
+          topK?: number
+        }): Promise<AISesssionHandle>
       }
     }
   }
@@ -29,7 +38,10 @@ declare global {
 
 interface AISesssionHandle {
   prompt(text: string, options?: { signal?: AbortSignal }): Promise<string>
-  promptStreaming(text: string, options?: { signal?: AbortSignal }): ReadableStream<string>
+  promptStreaming(
+    text: string,
+    options?: { signal?: AbortSignal }
+  ): ReadableStream<string>
   destroy(): void
 }
 
@@ -51,15 +63,22 @@ export class GeminiNanoProvider extends BaseProvider {
         'Chrome Prompt API not available. Enable "Prompt API for Gemini Nano" in chrome://flags.'
       )
     }
-    return ai.languageModel.create({ systemPrompt: systemPrompt || this.systemPrompt })
+    return ai.languageModel.create({
+      systemPrompt: systemPrompt || this.systemPrompt
+    })
   }
 
-  async chat(messages: ChatMessage[], abortSignal?: AbortSignal): Promise<string> {
+  async chat(
+    messages: ChatMessage[],
+    abortSignal?: AbortSignal
+  ): Promise<string> {
     const systemMsg = messages.find((m) => m.role === 'system')
     const userMessages = messages.filter((m) => m.role !== 'system')
 
     // Gemini Nano handles a single prompt, so we flatten the conversation
-    const prompt = userMessages.map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n')
+    const prompt = userMessages
+      .map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
+      .join('\n')
 
     const session = await this.getSession(systemMsg?.content)
     try {
@@ -69,10 +88,15 @@ export class GeminiNanoProvider extends BaseProvider {
     }
   }
 
-  async *stream(messages: ChatMessage[], abortSignal?: AbortSignal): AsyncGenerator<StreamChunk> {
+  async *stream(
+    messages: ChatMessage[],
+    abortSignal?: AbortSignal
+  ): AsyncGenerator<StreamChunk> {
     const systemMsg = messages.find((m) => m.role === 'system')
     const userMessages = messages.filter((m) => m.role !== 'system')
-    const prompt = userMessages.map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n')
+    const prompt = userMessages
+      .map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
+      .join('\n')
 
     const session = await this.getSession(systemMsg?.content)
     try {
@@ -110,11 +134,17 @@ export class GeminiNanoProvider extends BaseProvider {
     try {
       const ai = (window as any).ai || (globalThis as any).ai
       if (!ai?.languageModel) {
-        return { connected: false, error: 'Chrome Prompt API not available in this browser.' }
+        return {
+          connected: false,
+          error: 'Chrome Prompt API not available in this browser.'
+        }
       }
       const caps = await ai.languageModel.capabilities()
       if (caps.available === 'no') {
-        return { connected: false, error: 'Gemini Nano model is not available on this device.' }
+        return {
+          connected: false,
+          error: 'Gemini Nano model is not available on this device.'
+        }
       }
       return {
         connected: true,

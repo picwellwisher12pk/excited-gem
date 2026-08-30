@@ -34,11 +34,10 @@ log_error() {
     echo -e "${RED}[$(date '+%H:%M:%S')]${NC} $1" | tee -a "$LOG_FILE"
 }
 
-# Check if source directory exists
+# Ensure source and destination directories exist
 if [ ! -d "$SOURCE" ]; then
-    log_error "Source directory $SOURCE does not exist!"
-    log_error "Please run 'npm run dev' first to build the extension."
-    exit 1
+    log_warning "Source directory $SOURCE does not exist yet. Creating it..."
+    mkdir -p "$SOURCE"
 fi
 
 # Create destination directory

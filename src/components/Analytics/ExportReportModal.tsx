@@ -12,7 +12,11 @@ interface ExportReportModalProps {
   data: FullAnalyticsData | null
 }
 
-export const ExportReportModal: React.FC<ExportReportModalProps> = ({ open, onClose, data }) => {
+export const ExportReportModal: React.FC<ExportReportModalProps> = ({
+  open,
+  onClose,
+  data
+}) => {
   const [format, setFormat] = useState<'markdown' | 'json'>('markdown')
   const [copied, setCopied] = useState(false)
 
@@ -39,7 +43,8 @@ export const ExportReportModal: React.FC<ExportReportModalProps> = ({ open, onCl
       const filename = `excited-gem-analytics-${new Date().toISOString().slice(0, 10)}.${
         format === 'markdown' ? 'md' : 'json'
       }`
-      const mimeType = format === 'markdown' ? 'text/markdown' : 'application/json'
+      const mimeType =
+        format === 'markdown' ? 'text/markdown' : 'application/json'
       const blob = new Blob([reportText], { type: `${mimeType};charset=utf-8` })
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -72,7 +77,13 @@ export const ExportReportModal: React.FC<ExportReportModalProps> = ({ open, onCl
         </Button>,
         <Button
           key="copy"
-          icon={copied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
+          icon={
+            copied ? (
+              <Check size={16} className="text-green-500" />
+            ) : (
+              <Copy size={16} />
+            )
+          }
           onClick={handleCopy}
         >
           {copied ? 'Copied!' : 'Copy to Clipboard'}

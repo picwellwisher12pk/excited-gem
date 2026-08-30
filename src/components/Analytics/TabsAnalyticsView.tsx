@@ -53,7 +53,10 @@ const TAB_GROUP_COLORS: Record<string, string> = {
   orange: '#f97316'
 }
 
-export const TabsAnalyticsView: React.FC<TabsAnalyticsViewProps> = ({ stats, onRefresh }) => {
+export const TabsAnalyticsView: React.FC<TabsAnalyticsViewProps> = ({
+  stats,
+  onRefresh
+}) => {
   const [domainSearch, setDomainSearch] = useState('')
   const [pageSize, setPageSize] = useState<number>(10)
   const [closingDomain, setClosingDomain] = useState<string | null>(null)
@@ -102,7 +105,9 @@ export const TabsAnalyticsView: React.FC<TabsAnalyticsViewProps> = ({ stats, onR
       {/* ── Top Metrics ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3">
-          <Text className="text-[11px] font-semibold uppercase text-slate-400">Total Tabs</Text>
+          <Text className="text-[11px] font-semibold uppercase text-slate-400">
+            Total Tabs
+          </Text>
           <div className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">
             {stats.totalTabs}
           </div>
@@ -112,17 +117,23 @@ export const TabsAnalyticsView: React.FC<TabsAnalyticsViewProps> = ({ stats, onR
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3">
-          <Text className="text-[11px] font-semibold uppercase text-slate-400">Windows</Text>
+          <Text className="text-[11px] font-semibold uppercase text-slate-400">
+            Windows
+          </Text>
           <div className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">
             {stats.totalWindows}
           </div>
           <Text className="text-[11px] text-slate-500">
-            {stats.incognitoWindowsCount > 0 ? `${stats.incognitoWindowsCount} incognito` : 'All normal'}
+            {stats.incognitoWindowsCount > 0
+              ? `${stats.incognitoWindowsCount} incognito`
+              : 'All normal'}
           </Text>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3">
-          <Text className="text-[11px] font-semibold uppercase text-slate-400">Tab Groups</Text>
+          <Text className="text-[11px] font-semibold uppercase text-slate-400">
+            Tab Groups
+          </Text>
           <div className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">
             {stats.tabGroupsCount}
           </div>
@@ -132,30 +143,43 @@ export const TabsAnalyticsView: React.FC<TabsAnalyticsViewProps> = ({ stats, onR
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3">
-          <Text className="text-[11px] font-semibold uppercase text-slate-400">Pinned Tabs</Text>
+          <Text className="text-[11px] font-semibold uppercase text-slate-400">
+            Pinned Tabs
+          </Text>
           <div className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">
             {stats.pinnedTabsCount}
           </div>
           <Text className="text-[11px] text-amber-500 font-medium">
-            {stats.totalTabs > 0 ? ((stats.pinnedTabsCount / stats.totalTabs) * 100).toFixed(0) : 0}% of tabs
+            {stats.totalTabs > 0
+              ? ((stats.pinnedTabsCount / stats.totalTabs) * 100).toFixed(0)
+              : 0}
+            % of tabs
           </Text>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3">
-          <Text className="text-[11px] font-semibold uppercase text-slate-400">Sleeping Tabs</Text>
+          <Text className="text-[11px] font-semibold uppercase text-slate-400">
+            Sleeping Tabs
+          </Text>
           <div className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">
             {stats.discardedTabsCount}
           </div>
-          <Text className="text-[11px] text-emerald-500 font-medium">Memory saved</Text>
+          <Text className="text-[11px] text-emerald-500 font-medium">
+            Memory saved
+          </Text>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3">
-          <Text className="text-[11px] font-semibold uppercase text-slate-400">Audible / Media</Text>
+          <Text className="text-[11px] font-semibold uppercase text-slate-400">
+            Audible / Media
+          </Text>
           <div className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">
             {stats.audibleTabsCount}
           </div>
           <Text className="text-[11px] text-indigo-500 font-medium">
-            {stats.mutedTabsCount > 0 ? `${stats.mutedTabsCount} muted` : 'Playing audio'}
+            {stats.mutedTabsCount > 0
+              ? `${stats.mutedTabsCount} muted`
+              : 'Playing audio'}
           </Text>
         </div>
       </div>
@@ -180,7 +204,8 @@ export const TabsAnalyticsView: React.FC<TabsAnalyticsViewProps> = ({ stats, onR
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {stats.windows.map((win, idx) => {
-            const winShare = stats.totalTabs > 0 ? (win.tabCount / stats.totalTabs) * 100 : 0
+            const winShare =
+              stats.totalTabs > 0 ? (win.tabCount / stats.totalTabs) * 100 : 0
             return (
               <div
                 key={win.id}
@@ -195,8 +220,16 @@ export const TabsAnalyticsView: React.FC<TabsAnalyticsViewProps> = ({ stats, onR
                     <span className="font-semibold text-sm text-slate-800 dark:text-white">
                       Window #{idx + 1}
                     </span>
-                    {win.focused && <Tag color="blue" className="!mr-0 text-[10px]">Focused</Tag>}
-                    {win.incognito && <Tag color="purple" className="!mr-0 text-[10px]">Incognito</Tag>}
+                    {win.focused && (
+                      <Tag color="blue" className="!mr-0 text-[10px]">
+                        Focused
+                      </Tag>
+                    )}
+                    {win.incognito && (
+                      <Tag color="purple" className="!mr-0 text-[10px]">
+                        Incognito
+                      </Tag>
+                    )}
                   </div>
                   <Button
                     size="small"
@@ -211,18 +244,33 @@ export const TabsAnalyticsView: React.FC<TabsAnalyticsViewProps> = ({ stats, onR
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-slate-500">{win.tabCount} tabs</span>
-                    <span className="text-slate-400">{winShare.toFixed(1)}% of total</span>
+                    <span className="text-slate-400">
+                      {winShare.toFixed(1)}% of total
+                    </span>
                   </div>
-                  <Progress percent={winShare} size="small" strokeColor="#3b82f6" showInfo={false} className="!m-0" />
+                  <Progress
+                    percent={winShare}
+                    size="small"
+                    strokeColor="#3b82f6"
+                    showInfo={false}
+                    className="!m-0"
+                  />
                 </div>
 
                 {/* Quick tab previews */}
                 <div className="mt-3 pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-1">
-                  <div className="text-[11px] font-medium text-slate-400">Tab previews:</div>
+                  <div className="text-[11px] font-medium text-slate-400">
+                    Tab previews:
+                  </div>
                   {win.tabs.slice(0, 3).map((tab, tIdx) => (
-                    <div key={tab.id || tIdx} className="text-xs text-slate-600 dark:text-slate-300 truncate flex items-center gap-1.5">
+                    <div
+                      key={tab.id || tIdx}
+                      className="text-xs text-slate-600 dark:text-slate-300 truncate flex items-center gap-1.5"
+                    >
                       <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 flex-shrink-0" />
-                      <span className="truncate">{tab.title || tab.url || 'Untitled Tab'}</span>
+                      <span className="truncate">
+                        {tab.title || tab.url || 'Untitled Tab'}
+                      </span>
                     </div>
                   ))}
                   {win.tabs.length > 3 && (
@@ -294,7 +342,8 @@ export const TabsAnalyticsView: React.FC<TabsAnalyticsViewProps> = ({ stats, onR
                   Duplicate Open Tabs Detected ({stats.duplicateUrls.length})
                 </h3>
                 <p className="text-xs text-amber-700 dark:text-amber-400">
-                  Identical URLs currently open across your browser tabs and windows
+                  Identical URLs currently open across your browser tabs and
+                  windows
                 </p>
               </div>
             </div>
@@ -316,7 +365,8 @@ export const TabsAnalyticsView: React.FC<TabsAnalyticsViewProps> = ({ stats, onR
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <Tag color="orange" className="!mr-0 font-medium text-xs">
-                    {dup.count} instances ({dup.windowIds.length} {dup.windowIds.length === 1 ? 'win' : 'wins'})
+                    {dup.count} instances ({dup.windowIds.length}{' '}
+                    {dup.windowIds.length === 1 ? 'win' : 'wins'})
                   </Tag>
                   <Popconfirm
                     title="Close duplicate tabs?"
@@ -394,19 +444,26 @@ export const TabsAnalyticsView: React.FC<TabsAnalyticsViewProps> = ({ stats, onR
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between text-xs mb-1">
                   <span className="font-semibold text-slate-800 dark:text-white flex items-center gap-2 truncate">
-                    <span className="text-slate-400 font-mono text-[11px] w-5">{index + 1}.</span>
+                    <span className="text-slate-400 font-mono text-[11px] w-5">
+                      {index + 1}.
+                    </span>
                     {domainItem.favIconUrl && (
                       <img
                         src={domainItem.favIconUrl}
                         alt=""
                         className="w-4 h-4 rounded-sm flex-shrink-0"
-                        onError={(e) => ((e.target as HTMLElement).style.display = 'none')}
+                        onError={(e) =>
+                          ((e.target as HTMLElement).style.display = 'none')
+                        }
                       />
                     )}
                     <span className="truncate">{domainItem.domain}</span>
                   </span>
                   <span className="text-slate-500 font-medium">
-                    {domainItem.count} tabs <span className="text-slate-400 font-normal">({domainItem.percentage}%)</span>
+                    {domainItem.count} tabs{' '}
+                    <span className="text-slate-400 font-normal">
+                      ({domainItem.percentage}%)
+                    </span>
                   </span>
                 </div>
                 <Progress
@@ -440,7 +497,9 @@ export const TabsAnalyticsView: React.FC<TabsAnalyticsViewProps> = ({ stats, onR
             </div>
           ))}
           {filteredDomains.length === 0 && (
-            <p className="text-xs text-slate-400 py-6 text-center">No matching domains found</p>
+            <p className="text-xs text-slate-400 py-6 text-center">
+              No matching domains found
+            </p>
           )}
         </div>
       </div>

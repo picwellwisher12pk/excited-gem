@@ -34,7 +34,7 @@ function uid(): string {
 function toDisplayText(rawText: string, action: any): string {
   if (!action) {
     // Couldn't parse — show a clean message, not the raw JSON
-    return '⚠️ Couldn\'t parse a response. Please try rephrasing your request.'
+    return "⚠️ Couldn't parse a response. Please try rephrasing your request."
   }
   if (action.type === 'analyze') {
     // Pure analysis — show the result text
@@ -51,7 +51,13 @@ interface AICommandBarProps {
 
 export function AICommandBar({ abortRef }: AICommandBarProps) {
   const dispatch = useDispatch<AppDispatch>()
-  const { isLoading, settings, streamingMessageId, sessions, currentSessionId } = useSelector((s: RootState) => s.ai)
+  const {
+    isLoading,
+    settings,
+    streamingMessageId,
+    sessions,
+    currentSessionId
+  } = useSelector((s: RootState) => s.ai)
   const { tabs } = useSelector((s: RootState) => s.tabs)
   const [input, setInput] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -66,80 +72,100 @@ export function AICommandBar({ abortRef }: AICommandBarProps) {
 
   const store = useStore<RootState>()
 
-  const sendQuery = useCallback(async (overrideText?: string) => {
-    const text = (overrideText || input).trim()
-    if (!text || isLoading) return
-    
-    // Get absolute latest state from store to avoid stale closure issues in setTimeouts
-    const state = store.getState()
-    const { sessions, currentSessionId } = state.ai
-    const currentSession = sessions.find(s => s.id === currentSessionId)
-    const history = currentSession?.messages || []
-    
-    if (!overrideText) setInput('')
+  const sendQuery = useCallback(
+    async (overrideText?: string) => {
+      const text = (overrideText || input).trim()
+      if (!text || isLoading) return
 
-    // Add user message
-    const userMsgId = uid()
-    dispatch(addMessage({
-      id: userMsgId,
-      role: 'user',
-      content: text,
-      timestamp: Date.now()
-    } as ChatMessage))
-    dispatch(setLoading(true))
+      // Get absolute latest state from store to avoid stale closure issues in setTimeouts
+      const state = store.getState()
+      const { sessions, currentSessionId } = state.ai
+      const currentSession = sessions.find((s) => s.id === currentSessionId)
+      const history = currentSession?.messages || []
 
-    // Create AI message placeholder
-    const aiMsgId = uid()
-    dispatch(addMessage({
-      id: aiMsgId,
-      role: 'assistant',
-      content: '',
-      timestamp: Date.now(),
-      streaming: true
-    } as ChatMessage))
-    dispatch(setStreamingMessageId(aiMsgId))
+      if (!overrideText) setInput('')
 
-    const abort = new AbortController()
-    abortRef.current = abort
+      // Add user message
+      const userMsgId = uid()
+      dispatch(
+        addMessage({
+          id: userMsgId,
+          role: 'user',
+          content: text,
+          timestamp: Date.now()
+        } as ChatMessage)
+      )
+      dispatch(setLoading(true))
 
-    try {
-      console.log(`[AI] Querying ${settings.providerType} with model ${settings.model}...`)
-      const service = new AIService(settings)
-      const currentWindow = await chrome.windows.getCurrent()
+      // Create AI message placeholder
+      const aiMsgId = uid()
+      dispatch(
+        addMessage({
+          id: aiMsgId,
+          role: 'assistant',
+          content: '',
+          timestamp: Date.now(),
+          streaming: true
+        } as ChatMessage)
+      )
+      dispatch(setStreamingMessageId(aiMsgId))
 
-      let fullText = ''
+      const abort = new AbortController()
+      abortRef.current = abort
 
-      if (settings.streaming) {
-        const stream = service.streamQuery(text, tabs as any[], currentWindow.id, abort.signal, history)
-        for await (const chunk of stream) {
-          if (abort.signal.aborted) break
-          fullText += chunk.text
-          if (chunk.done) break
+      try {
+        console.log(
+          `[AI] Querying ${settings.providerType} with model ${settings.model}...`
+        )
+        const service = new AIService(settings)
+        const currentWindow = await chrome.windows.getCurrent()
+
+        let fullText = ''
+
+        if (settings.streaming) {
+          const stream = service.streamQuery(
+            text,
+            tabs as any[],
+            currentWindow.id,
+            abort.signal,
+            history
+          )
+          for await (const chunk of stream) {
+            if (abort.signal.aborted) break
+            fullText += chunk.text
+            if (chunk.done) break
+          }
+        } else {
+          const { rawResponse } = await service.query(
+            text,
+            tabs as any[],
+            currentWindow.id,
+            history
+          )
+          fullText = rawResponse
         }
-      } else {
-        const { rawResponse } = await service.query(text, tabs as any[], currentWindow.id, history)
-        fullText = rawResponse
+
+        const action = TabActionExecutor.parseAIResponse(fullText)
+        const displayText = toDisplayText(fullText, action)
+
+        dispatch(updateStreamingMessage({ id: aiMsgId, content: displayText }))
+        dispatch(finalizeStreamingMessage({ id: aiMsgId, action }))
+      } catch (e: any) {
+        if (!abort.signal.aborted) {
+          const msg =
+            e.message?.includes('fetch') || e.message?.includes('network')
+              ? '⚠️ Cannot reach the AI provider. Check your endpoint and connection.'
+              : `⚠️ ${e.message}`
+          dispatch(updateStreamingMessage({ id: aiMsgId, content: msg }))
+          dispatch(finalizeStreamingMessage({ id: aiMsgId, action: null }))
+        }
+      } finally {
+        abortRef.current = null
+        dispatch(setLoading(false))
       }
-
-      const action = TabActionExecutor.parseAIResponse(fullText)
-      const displayText = toDisplayText(fullText, action)
-
-      dispatch(updateStreamingMessage({ id: aiMsgId, content: displayText }))
-      dispatch(finalizeStreamingMessage({ id: aiMsgId, action }))
-
-    } catch (e: any) {
-      if (!abort.signal.aborted) {
-        const msg = e.message?.includes('fetch') || e.message?.includes('network')
-          ? '⚠️ Cannot reach the AI provider. Check your endpoint and connection.'
-          : `⚠️ ${e.message}`
-        dispatch(updateStreamingMessage({ id: aiMsgId, content: msg }))
-        dispatch(finalizeStreamingMessage({ id: aiMsgId, action: null }))
-      }
-    } finally {
-      abortRef.current = null
-      dispatch(setLoading(false))
-    }
-  }, [input, isLoading, dispatch, settings, tabs, abortRef, store])
+    },
+    [input, isLoading, dispatch, settings, tabs, abortRef, store]
+  )
 
   const handleSend = () => sendQuery()
 
@@ -167,7 +193,9 @@ export function AICommandBar({ abortRef }: AICommandBarProps) {
     abortRef.current?.abort()
     dispatch(setLoading(false))
     if (streamingMessageId) {
-      dispatch(finalizeStreamingMessage({ id: streamingMessageId, action: null }))
+      dispatch(
+        finalizeStreamingMessage({ id: streamingMessageId, action: null })
+      )
     }
   }
 
@@ -187,7 +215,11 @@ export function AICommandBar({ abortRef }: AICommandBarProps) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={isLoading ? 'Waiting for response…' : 'Ask about your tabs…  ↵ to send'}
+          placeholder={
+            isLoading
+              ? 'Waiting for response…'
+              : 'Ask about your tabs…  ↵ to send'
+          }
           rows={1}
           disabled={isLoading}
           autoFocus
@@ -196,9 +228,10 @@ export function AICommandBar({ abortRef }: AICommandBarProps) {
             px-3 py-2.5 pr-9
             focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400
             transition-all duration-150
-            ${isLoading
-              ? 'bg-gray-50 text-gray-400 border-gray-100 cursor-not-allowed'
-              : 'bg-white text-gray-800 border-gray-200 hover:border-gray-300'
+            ${
+              isLoading
+                ? 'bg-gray-50 text-gray-400 border-gray-100 cursor-not-allowed'
+                : 'bg-white text-gray-800 border-gray-200 hover:border-gray-300'
             }
           `}
           style={{ minHeight: '40px', maxHeight: '120px', overflow: 'auto' }}
@@ -221,8 +254,7 @@ export function AICommandBar({ abortRef }: AICommandBarProps) {
         <div className="text-[10px] text-gray-400 truncate flex-1 mr-2">
           {settings.enabled
             ? `${settings.providerType}${settings.model ? ' · ' + settings.model : ''} · ${(settings.contextWindowOverride ?? settings.tokenBudget).toLocaleString()} tokens · ↵ send · ⇧↵ newline`
-            : '⚠️ AI not configured — open Settings › AI'
-          }
+            : '⚠️ AI not configured — open Settings › AI'}
         </div>
         <Tooltip title="Clear chat">
           <Button

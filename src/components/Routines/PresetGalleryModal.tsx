@@ -20,7 +20,9 @@ export const PresetGalleryModal: React.FC<PresetGalleryModalProps> = ({
   onAddPreset,
   existingRoutines
 }) => {
-  const existingNames = new Set(existingRoutines.map((r) => r.name.toLowerCase()))
+  const existingNames = new Set(
+    existingRoutines.map((r) => r.name.toLowerCase())
+  )
 
   return (
     <Modal
@@ -41,7 +43,8 @@ export const PresetGalleryModal: React.FC<PresetGalleryModalProps> = ({
     >
       <div className="py-2">
         <Text type="secondary" className="text-xs mb-4 block">
-          Choose from curated routine templates to automate your tab cleanup, focus time, and memory optimization with one click.
+          Choose from curated routine templates to automate your tab cleanup,
+          focus time, and memory optimization with one click.
         </Text>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
@@ -63,8 +66,13 @@ export const PresetGalleryModal: React.FC<PresetGalleryModalProps> = ({
                         {getRoutineIcon(preset.icon, 18, '#ffffff')}
                       </div>
                       <div>
-                        <div className="font-semibold text-sm text-gray-800">{preset.name}</div>
-                        <Tag color="blue" className="text-[10px] !m-0 !px-1.5 !rounded">
+                        <div className="font-semibold text-sm text-gray-800">
+                          {preset.name}
+                        </div>
+                        <Tag
+                          color="blue"
+                          className="text-[10px] !m-0 !px-1.5 !rounded"
+                        >
                           {preset.category}
                         </Tag>
                       </div>
@@ -95,7 +103,10 @@ export const PresetGalleryModal: React.FC<PresetGalleryModalProps> = ({
 
                 <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
                   <span className="text-[11px] text-gray-400">
-                    Scope: {preset.routine.targetScope === 'active-window' ? 'Current Window' : 'All Windows'}
+                    Scope:{' '}
+                    {preset.routine.targetScope === 'active-window'
+                      ? 'Current Window'
+                      : 'All Windows'}
                   </span>
 
                   <button

@@ -52,14 +52,30 @@ export interface TabIdsAction extends BaseAction {
   tabIds: number[]
 }
 
-export interface CloseTabs extends TabIdsAction { type: 'close_tabs' }
-export interface PinTabs extends TabIdsAction { type: 'pin_tabs' }
-export interface UnpinTabs extends TabIdsAction { type: 'unpin_tabs' }
-export interface MuteTabs extends TabIdsAction { type: 'mute_tabs' }
-export interface UnmuteTabs extends TabIdsAction { type: 'unmute_tabs' }
-export interface DiscardTabs extends TabIdsAction { type: 'discard_tabs' }
-export interface ReloadTabs extends TabIdsAction { type: 'reload_tabs' }
-export interface UngroupTabs extends TabIdsAction { type: 'ungroup_tabs' }
+export interface CloseTabs extends TabIdsAction {
+  type: 'close_tabs'
+}
+export interface PinTabs extends TabIdsAction {
+  type: 'pin_tabs'
+}
+export interface UnpinTabs extends TabIdsAction {
+  type: 'unpin_tabs'
+}
+export interface MuteTabs extends TabIdsAction {
+  type: 'mute_tabs'
+}
+export interface UnmuteTabs extends TabIdsAction {
+  type: 'unmute_tabs'
+}
+export interface DiscardTabs extends TabIdsAction {
+  type: 'discard_tabs'
+}
+export interface ReloadTabs extends TabIdsAction {
+  type: 'reload_tabs'
+}
+export interface UngroupTabs extends TabIdsAction {
+  type: 'ungroup_tabs'
+}
 
 export interface FocusTab extends BaseAction {
   type: 'focus_tab'
@@ -81,7 +97,16 @@ export interface CreateTabGroup extends BaseAction {
   type: 'create_tab_group'
   tabIds: number[]
   name: string
-  color?: 'grey' | 'blue' | 'red' | 'yellow' | 'green' | 'pink' | 'purple' | 'cyan' | 'orange'
+  color?:
+    | 'grey'
+    | 'blue'
+    | 'red'
+    | 'yellow'
+    | 'green'
+    | 'pink'
+    | 'purple'
+    | 'cyan'
+    | 'orange'
 }
 
 export interface RenameTabGroup extends BaseAction {
@@ -169,12 +194,31 @@ export interface Analyze extends BaseAction {
 }
 
 export type BrowserAction =
-  | CloseTabs | PinTabs | UnpinTabs | MuteTabs | UnmuteTabs
-  | DiscardTabs | ReloadTabs | UngroupTabs
-  | FocusTab | DuplicateTab | MoveTabsToWindow
-  | CreateTabGroup | RenameTabGroup | CollapseTabGroup | ExpandTabGroup
-  | OpenNewWindowWithTabs | SaveSession | RestoreSession | ListSessions | DeleteSession
-  | SaveToList | BookmarkTabs | ListBookmarks | DeleteBookmarks | MoveBookmarks
+  | CloseTabs
+  | PinTabs
+  | UnpinTabs
+  | MuteTabs
+  | UnmuteTabs
+  | DiscardTabs
+  | ReloadTabs
+  | UngroupTabs
+  | FocusTab
+  | DuplicateTab
+  | MoveTabsToWindow
+  | CreateTabGroup
+  | RenameTabGroup
+  | CollapseTabGroup
+  | ExpandTabGroup
+  | OpenNewWindowWithTabs
+  | SaveSession
+  | RestoreSession
+  | ListSessions
+  | DeleteSession
+  | SaveToList
+  | BookmarkTabs
+  | ListBookmarks
+  | DeleteBookmarks
+  | MoveBookmarks
   | Analyze
 
 /** System prompt that instructs the AI to always return structured JSON */

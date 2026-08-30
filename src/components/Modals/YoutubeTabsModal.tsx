@@ -91,9 +91,7 @@ export const YoutubeTabsModal: React.FC<YoutubeTabsModalProps> = ({
         }
       })
       .sort((a: any, b: any) =>
-        sortOrder === 'desc'
-          ? b.duration - a.duration
-          : a.duration - b.duration
+        sortOrder === 'desc' ? b.duration - a.duration : a.duration - b.duration
       )
   }, [tabs, sortOrder])
 

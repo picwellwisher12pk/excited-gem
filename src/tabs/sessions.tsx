@@ -252,9 +252,7 @@ function SessionsPageContent() {
     Object.entries(session.windows).forEach(([_winId, tabs], idx) => {
       lines.push(`\n## Window ${idx + 1}`)
       tabs.forEach((t) => {
-        lines.push(
-          `- [${(t.title || t.url).replace(/[\[\]]/g, '')}](${t.url})`
-        )
+        lines.push(`- [${(t.title || t.url).replace(/[\[\]]/g, '')}](${t.url})`)
       })
     })
     navigator.clipboard.writeText(lines.join('\n'))

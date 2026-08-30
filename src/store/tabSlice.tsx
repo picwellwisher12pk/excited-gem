@@ -81,9 +81,10 @@ export const tabSlice = createSlice({
       const anchorIdx = ids.indexOf(anchor)
       const clickedIdx = ids.indexOf(clickedId)
       if (anchorIdx === -1 || clickedIdx === -1) return
-      const [from, to] = anchorIdx < clickedIdx
-        ? [anchorIdx, clickedIdx]
-        : [clickedIdx, anchorIdx]
+      const [from, to] =
+        anchorIdx < clickedIdx
+          ? [anchorIdx, clickedIdx]
+          : [clickedIdx, anchorIdx]
       const rangeIds = ids.slice(from, to + 1)
       // Add all range IDs that aren't already selected
       rangeIds.forEach((id) => {

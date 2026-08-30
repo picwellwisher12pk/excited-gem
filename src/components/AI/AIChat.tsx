@@ -20,7 +20,7 @@ import {
   PieChartOutlined,
   AudioMutedOutlined,
   SaveOutlined,
-  EditOutlined,
+  EditOutlined
 } from '@ant-design/icons'
 import { useDispatch, useSelector } from 'react-redux'
 import type { AppDispatch, RootState } from '../../store/store'
@@ -35,20 +35,23 @@ const RISK_LABELS = { low: 'Safe', medium: 'Moderate', high: 'Irreversible' }
 
 // ─── Tab list preview inside action cards ──────────────────────────────────
 
-function TabListPreview({ tabIds, limit = 8 }: { tabIds: number[]; limit?: number }) {
+function TabListPreview({
+  tabIds,
+  limit = 8
+}: { tabIds: number[]; limit?: number }) {
   const { tabs } = useSelector((s: RootState) => s.tabs) as { tabs: any[] }
   const tabMap = new Map(tabs.map((t: any) => [t.id, t]))
 
-  const matched = tabIds
-    .map((id) => tabMap.get(id))
-    .filter(Boolean)
+  const matched = tabIds.map((id) => tabMap.get(id)).filter(Boolean)
 
   const shown = matched.slice(0, limit)
   const remaining = matched.length - shown.length
   const tabOperations = {
     remove: (id: number) => chrome.tabs.remove(id),
-    toggleMuteTab: (id: number, muted: boolean) => chrome.tabs.update(id, { muted: !muted }),
-    togglePinTab: (id: number, pinned: boolean) => chrome.tabs.update(id, { pinned: !pinned }),
+    toggleMuteTab: (id: number, muted: boolean) =>
+      chrome.tabs.update(id, { muted: !muted }),
+    togglePinTab: (id: number, pinned: boolean) =>
+      chrome.tabs.update(id, { pinned: !pinned }),
     discardTab: (id: number) => chrome.tabs.discard(id)
   }
 
@@ -116,18 +119,24 @@ function ActionCard({
   }
 
   // Get tab IDs if the action has them
-  const tabIds: number[] = (action as any).tabIds ?? ((action as any).tabId ? [(action as any).tabId] : [])
+  const tabIds: number[] =
+    (action as any).tabIds ??
+    ((action as any).tabId ? [(action as any).tabId] : [])
 
   return (
-    <div className={`
+    <div
+      className={`
       mt-2 rounded-xl border
       ${executed ? 'bg-gray-50/80 border-gray-200' : 'bg-white border-blue-200 shadow-sm'}
-    `}>
+    `}
+    >
       {/* Header row */}
       <div className="px-3 pt-3 pb-2">
         <div className="flex items-start gap-2">
           <div className="flex-1 min-w-0">
-            <div className="text-xs font-semibold text-gray-800 leading-snug">{action.description}</div>
+            <div className="text-xs font-semibold text-gray-800 leading-snug">
+              {action.description}
+            </div>
           </div>
           <Tag
             color={RISK_COLORS[action.risk]}
@@ -151,11 +160,14 @@ function ActionCard({
       {/* Action bar */}
       <div className="px-3 pb-3">
         {executed ? (
-          <div className={`text-xs flex items-center gap-1.5 mt-1 ${executed.startsWith('✗') ? 'text-red-500' : 'text-green-600'}`}>
-            {executed.startsWith('✗')
-              ? <CloseOutlined style={{ fontSize: 10 }} />
-              : <CheckOutlined style={{ fontSize: 10 }} />
-            }
+          <div
+            className={`text-xs flex items-center gap-1.5 mt-1 ${executed.startsWith('✗') ? 'text-red-500' : 'text-green-600'}`}
+          >
+            {executed.startsWith('✗') ? (
+              <CloseOutlined style={{ fontSize: 10 }} />
+            ) : (
+              <CheckOutlined style={{ fontSize: 10 }} />
+            )}
             {executed}
           </div>
         ) : (
@@ -180,7 +192,10 @@ function ActionCard({
             </Button>
             {action.risk === 'high' && (
               <Tooltip title="This action is irreversible — please confirm carefully.">
-                <WarningOutlined className="text-orange-400" style={{ fontSize: 12 }} />
+                <WarningOutlined
+                  className="text-orange-400"
+                  style={{ fontSize: 12 }}
+                />
               </Tooltip>
             )}
           </div>
@@ -207,7 +222,10 @@ function MessageBubble({ message }: { message: ChatMessage }) {
           </div>
           <div className="flex justify-end mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <span className="text-[10px] text-gray-400">
-              {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {new Date(message.timestamp).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
             </span>
           </div>
         </div>
@@ -227,13 +245,16 @@ function MessageBubble({ message }: { message: ChatMessage }) {
       <div className="flex-1 min-w-0">
         {/* Text bubble */}
         {message.content && (
-          <div className={`
+          <div
+            className={`
             rounded-2xl rounded-tl-sm px-3 py-2.5 text-sm leading-relaxed
-            ${message.streaming
-              ? 'bg-gray-50 border border-gray-100 text-gray-700'
-              : 'bg-white border border-gray-100 text-gray-800 shadow-sm'
+            ${
+              message.streaming
+                ? 'bg-gray-50 border border-gray-100 text-gray-700'
+                : 'bg-white border border-gray-100 text-gray-800 shadow-sm'
             }
-          `}>
+          `}
+          >
             {message.streaming ? (
               <div className="prose prose-sm max-w-none">
                 <ReactMarkdown>{message.content}</ReactMarkdown>
@@ -264,18 +285,23 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         )}
 
         {/* Action card */}
-        {!message.streaming && message.action && message.action.type !== 'analyze' && (
-          <ActionCard
-            action={message.action}
-            messageId={message.id}
-            executed={message.executionResult}
-          />
-        )}
+        {!message.streaming &&
+          message.action &&
+          message.action.type !== 'analyze' && (
+            <ActionCard
+              action={message.action}
+              messageId={message.id}
+              executed={message.executionResult}
+            />
+          )}
 
         {/* Timestamp + copy */}
         <div className="flex items-center gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <span className="text-[10px] text-gray-400">
-            {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {new Date(message.timestamp).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
           </span>
           <button
             onClick={copyToClipboard}
@@ -297,9 +323,11 @@ interface AIChatProps {
 }
 
 export function AIChat({ isLoading }: AIChatProps) {
-  const { sessions = [], currentSessionId } = useSelector((s: RootState) => s.ai)
+  const { sessions = [], currentSessionId } = useSelector(
+    (s: RootState) => s.ai
+  )
   const messages = Array.isArray(sessions)
-    ? sessions.find((s) => s.id === currentSessionId)?.messages ?? []
+    ? (sessions.find((s) => s.id === currentSessionId)?.messages ?? [])
     : []
   const bottomRef = useRef<HTMLDivElement>(null)
 
@@ -313,19 +341,32 @@ export function AIChat({ isLoading }: AIChatProps) {
         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mb-3 shadow-lg">
           <RobotOutlined className="text-white text-xl" />
         </div>
-        <div className="text-gray-800 font-semibold text-sm mb-1">AI Tab Assistant</div>
+        <div className="text-gray-800 font-semibold text-sm mb-1">
+          AI Tab Assistant
+        </div>
         <div className="text-gray-500 text-xs leading-relaxed mb-5">
-          Ask me anything about your tabs. I can close, group, move, bookmark, or analyze them.
+          Ask me anything about your tabs. I can close, group, move, bookmark,
+          or analyze them.
         </div>
         <div className="grid grid-cols-1 gap-2 w-full">
           {[
-            { text: 'What can you do?', icon: <RobotOutlined />, prompt: 'List all your actions, features and capabilities.' },
+            {
+              text: 'What can you do?',
+              icon: <RobotOutlined />,
+              prompt: 'List all your actions, features and capabilities.'
+            },
             { text: 'List all Facebook tabs', icon: <SearchOutlined /> },
             { text: 'Close all YouTube tabs', icon: <CloseOutlined /> },
             { text: 'Group tabs by domain', icon: <AppstoreOutlined /> },
-            { text: 'Which domain has the most tabs?', icon: <PieChartOutlined /> },
+            {
+              text: 'Which domain has the most tabs?',
+              icon: <PieChartOutlined />
+            },
             { text: 'Mute all audio tabs', icon: <AudioMutedOutlined /> },
-            { text: 'Save this window as session "Work"', icon: <SaveOutlined /> }
+            {
+              text: 'Save this window as session "Work"',
+              icon: <SaveOutlined />
+            }
           ].map((cap) => (
             <div
               key={cap.text}
@@ -333,11 +374,17 @@ export function AIChat({ isLoading }: AIChatProps) {
             >
               <div
                 className="flex-1 flex items-center gap-2.5 px-3 py-2.5 text-gray-600 hover:text-blue-700"
-                onClick={() => document.dispatchEvent(new CustomEvent('ai:suggestion', {
-                  detail: { text: cap.prompt || cap.text, autoSend: true }
-                }))}
+                onClick={() =>
+                  document.dispatchEvent(
+                    new CustomEvent('ai:suggestion', {
+                      detail: { text: cap.prompt || cap.text, autoSend: true }
+                    })
+                  )
+                }
               >
-                <span className="text-gray-400 group-hover:text-blue-500 transition-colors">{cap.icon}</span>
+                <span className="text-gray-400 group-hover:text-blue-500 transition-colors">
+                  {cap.icon}
+                </span>
                 <span className="font-medium">{cap.text}</span>
               </div>
 
@@ -346,9 +393,14 @@ export function AIChat({ isLoading }: AIChatProps) {
                   className="px-3 py-2.5 border-l border-gray-200 hover:bg-blue-100 text-gray-400 hover:text-blue-600 transition-colors"
                   onClick={(e) => {
                     e.stopPropagation()
-                    document.dispatchEvent(new CustomEvent('ai:suggestion', {
-                      detail: { text: cap.prompt || cap.text, autoSend: false }
-                    }))
+                    document.dispatchEvent(
+                      new CustomEvent('ai:suggestion', {
+                        detail: {
+                          text: cap.prompt || cap.text,
+                          autoSend: false
+                        }
+                      })
+                    )
                   }}
                 >
                   <EditOutlined />
@@ -374,7 +426,11 @@ export function AIChat({ isLoading }: AIChatProps) {
           <div className="bg-gray-50 border border-gray-100 rounded-2xl rounded-tl-sm px-3 py-2.5 inline-flex items-center gap-2">
             <span className="flex gap-1">
               {[0, 150, 300].map((delay) => (
-                <span key={delay} className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: `${delay}ms` }} />
+                <span
+                  key={delay}
+                  className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
+                  style={{ animationDelay: `${delay}ms` }}
+                />
               ))}
             </span>
             <span className="text-xs text-gray-400">Thinking…</span>

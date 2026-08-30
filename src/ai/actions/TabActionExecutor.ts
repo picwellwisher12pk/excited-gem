@@ -43,28 +43,55 @@ export class TabActionExecutor {
       switch (action.type) {
         case 'close_tabs':
           await browser.tabs.remove(action.tabIds)
-          return { success: true, message: `Closed ${action.tabIds.length} tab(s).`, affectedCount: action.tabIds.length }
+          return {
+            success: true,
+            message: `Closed ${action.tabIds.length} tab(s).`,
+            affectedCount: action.tabIds.length
+          }
 
         case 'pin_tabs':
-          await Promise.all(action.tabIds.map((id) => browser.tabs.update(id, { pinned: true })))
-          return { success: true, message: `Pinned ${action.tabIds.length} tab(s).` }
+          await Promise.all(
+            action.tabIds.map((id) => browser.tabs.update(id, { pinned: true }))
+          )
+          return {
+            success: true,
+            message: `Pinned ${action.tabIds.length} tab(s).`
+          }
 
         case 'unpin_tabs':
-          await Promise.all(action.tabIds.map((id) => browser.tabs.update(id, { pinned: false })))
-          return { success: true, message: `Unpinned ${action.tabIds.length} tab(s).` }
+          await Promise.all(
+            action.tabIds.map((id) =>
+              browser.tabs.update(id, { pinned: false })
+            )
+          )
+          return {
+            success: true,
+            message: `Unpinned ${action.tabIds.length} tab(s).`
+          }
 
         case 'mute_tabs':
-          await Promise.all(action.tabIds.map((id) => browser.tabs.update(id, { muted: true })))
-          return { success: true, message: `Muted ${action.tabIds.length} tab(s).` }
+          await Promise.all(
+            action.tabIds.map((id) => browser.tabs.update(id, { muted: true }))
+          )
+          return {
+            success: true,
+            message: `Muted ${action.tabIds.length} tab(s).`
+          }
 
         case 'unmute_tabs':
-          await Promise.all(action.tabIds.map((id) => browser.tabs.update(id, { muted: false })))
-          return { success: true, message: `Unmuted ${action.tabIds.length} tab(s).` }
+          await Promise.all(
+            action.tabIds.map((id) => browser.tabs.update(id, { muted: false }))
+          )
+          return {
+            success: true,
+            message: `Unmuted ${action.tabIds.length} tab(s).`
+          }
 
         case 'focus_tab': {
           const tab = await browser.tabs.get(action.tabId)
           await browser.tabs.update(action.tabId, { active: true })
-          if (tab.windowId) await browser.windows.update(tab.windowId, { focused: true })
+          if (tab.windowId)
+            await browser.windows.update(tab.windowId, { focused: true })
           return { success: true, message: `Focused tab: "${tab.title}".` }
         }
 
@@ -74,11 +101,17 @@ export class TabActionExecutor {
 
         case 'discard_tabs':
           await Promise.all(action.tabIds.map((id) => browser.tabs.discard(id)))
-          return { success: true, message: `Discarded ${action.tabIds.length} tab(s) to save memory.` }
+          return {
+            success: true,
+            message: `Discarded ${action.tabIds.length} tab(s) to save memory.`
+          }
 
         case 'reload_tabs':
           await Promise.all(action.tabIds.map((id) => browser.tabs.reload(id)))
-          return { success: true, message: `Reloaded ${action.tabIds.length} tab(s).` }
+          return {
+            success: true,
+            message: `Reloaded ${action.tabIds.length} tab(s).`
+          }
 
         case 'move_tabs_to_window': {
           let targetWindowId: number
@@ -87,13 +120,26 @@ export class TabActionExecutor {
             targetWindowId = win.id!
             // Move all tabs except the first (which goes to the newly created window default tab)
             const [firstTabId, ...restTabIds] = action.tabIds
-            await browser.tabs.move(firstTabId, { windowId: targetWindowId, index: 0 })
-            if (restTabIds.length) await browser.tabs.move(restTabIds, { windowId: targetWindowId, index: -1 })
+            await browser.tabs.move(firstTabId, {
+              windowId: targetWindowId,
+              index: 0
+            })
+            if (restTabIds.length)
+              await browser.tabs.move(restTabIds, {
+                windowId: targetWindowId,
+                index: -1
+              })
           } else {
             targetWindowId = action.windowId
-            await browser.tabs.move(action.tabIds, { windowId: targetWindowId, index: -1 })
+            await browser.tabs.move(action.tabIds, {
+              windowId: targetWindowId,
+              index: -1
+            })
           }
-          return { success: true, message: `Moved ${action.tabIds.length} tab(s) to window.` }
+          return {
+            success: true,
+            message: `Moved ${action.tabIds.length} tab(s) to window.`
+          }
         }
 
         case 'create_tab_group': {
@@ -102,12 +148,18 @@ export class TabActionExecutor {
             title: action.name,
             color: (action.color as any) ?? 'blue'
           })
-          return { success: true, message: `Created group "${action.name}" with ${action.tabIds.length} tab(s).` }
+          return {
+            success: true,
+            message: `Created group "${action.name}" with ${action.tabIds.length} tab(s).`
+          }
         }
 
         case 'rename_tab_group':
           await browser.tabGroups.update(action.groupId, { title: action.name })
-          return { success: true, message: `Renamed group to "${action.name}".` }
+          return {
+            success: true,
+            message: `Renamed group to "${action.name}".`
+          }
 
         case 'collapse_tab_group':
           await browser.tabGroups.update(action.groupId, { collapsed: true })
@@ -119,7 +171,10 @@ export class TabActionExecutor {
 
         case 'ungroup_tabs':
           await browser.tabs.ungroup(action.tabIds)
-          return { success: true, message: `Ungrouped ${action.tabIds.length} tab(s).` }
+          return {
+            success: true,
+            message: `Ungrouped ${action.tabIds.length} tab(s).`
+          }
 
         case 'open_new_window_with_tabs': {
           const [first, ...rest] = action.tabIds
@@ -127,66 +182,131 @@ export class TabActionExecutor {
             tabId: first,
             incognito: action.incognito ?? false
           })
-          if (rest.length) await browser.tabs.move(rest, { windowId: win.id!, index: -1 })
-          return { success: true, message: `Opened ${action.tabIds.length} tab(s) in a new window.` }
+          if (rest.length)
+            await browser.tabs.move(rest, { windowId: win.id!, index: -1 })
+          return {
+            success: true,
+            message: `Opened ${action.tabIds.length} tab(s) in a new window.`
+          }
         }
 
         case 'save_session':
           // Delegate to extension's session system via message
-          await browser.runtime.sendMessage({ 
-            type: 'AI_SAVE_SESSION', 
+          await browser.runtime.sendMessage({
+            type: 'AI_SAVE_SESSION',
             name: action.name,
-            tabIds: action.tabIds 
+            tabIds: action.tabIds
           })
-          return { success: true, message: `Saved session "${action.name}" with ${action.tabIds?.length || 'all'} tab(s).` }
+          return {
+            success: true,
+            message: `Saved session "${action.name}" with ${action.tabIds?.length || 'all'} tab(s).`
+          }
 
         case 'restore_session':
-          await browser.runtime.sendMessage({ type: 'AI_RESTORE_SESSION', sessionName: action.sessionName })
-          return { success: true, message: `Restoring session "${action.sessionName}".` }
-        
+          await browser.runtime.sendMessage({
+            type: 'AI_RESTORE_SESSION',
+            sessionName: action.sessionName
+          })
+          return {
+            success: true,
+            message: `Restoring session "${action.sessionName}".`
+          }
+
         case 'list_sessions': {
-          const res = await browser.runtime.sendMessage({ type: 'AI_LIST_SESSIONS' })
-          return { success: true, message: `Found ${res.sessions?.length || 0} session(s): ${res.sessions?.map(s => s.name).join(', ') || 'None'}` }
+          const res = await browser.runtime.sendMessage({
+            type: 'AI_LIST_SESSIONS'
+          })
+          return {
+            success: true,
+            message: `Found ${res.sessions?.length || 0} session(s): ${res.sessions?.map((s) => s.name).join(', ') || 'None'}`
+          }
         }
 
         case 'delete_session':
-          await browser.runtime.sendMessage({ type: 'AI_DELETE_SESSION', sessionName: action.sessionName })
-          return { success: true, message: `Deleted session "${action.sessionName}".` }
+          await browser.runtime.sendMessage({
+            type: 'AI_DELETE_SESSION',
+            sessionName: action.sessionName
+          })
+          return {
+            success: true,
+            message: `Deleted session "${action.sessionName}".`
+          }
 
         case 'rename_session':
-          await browser.runtime.sendMessage({ type: 'AI_RENAME_SESSION', oldName: action.oldName, newName: action.newName })
-          return { success: true, message: `Renamed session from "${action.oldName}" to "${action.newName}".` }
+          await browser.runtime.sendMessage({
+            type: 'AI_RENAME_SESSION',
+            oldName: action.oldName,
+            newName: action.newName
+          })
+          return {
+            success: true,
+            message: `Renamed session from "${action.oldName}" to "${action.newName}".`
+          }
 
         case 'save_to_list':
-          await browser.runtime.sendMessage({ type: 'AI_SAVE_TO_LIST', tabIds: action.tabIds, listName: action.listName })
-          return { success: true, message: `Saved ${action.tabIds.length} tab(s) to list "${action.listName}".` }
+          await browser.runtime.sendMessage({
+            type: 'AI_SAVE_TO_LIST',
+            tabIds: action.tabIds,
+            listName: action.listName
+          })
+          return {
+            success: true,
+            message: `Saved ${action.tabIds.length} tab(s) to list "${action.listName}".`
+          }
 
         case 'bookmark_tabs': {
-          const tabs = await Promise.all(action.tabIds.map((id) => browser.tabs.get(id)))
+          const tabs = await Promise.all(
+            action.tabIds.map((id) => browser.tabs.get(id))
+          )
           let parentId: string | undefined
           if (action.folderName) {
-            const folder = await browser.bookmarks.create({ title: action.folderName })
+            const folder = await browser.bookmarks.create({
+              title: action.folderName
+            })
             parentId = folder.id
           }
           await Promise.all(
-            tabs.map((t) => browser.bookmarks.create({ title: t.title, url: t.url, parentId }))
+            tabs.map((t) =>
+              browser.bookmarks.create({ title: t.title, url: t.url, parentId })
+            )
           )
-          return { success: true, message: `Bookmarked ${tabs.length} tab(s)${action.folderName ? ` in "${action.folderName}"` : ''}.` }
+          return {
+            success: true,
+            message: `Bookmarked ${tabs.length} tab(s)${action.folderName ? ` in "${action.folderName}"` : ''}.`
+          }
         }
 
         case 'list_bookmarks': {
           const results = await browser.bookmarks.search(action.query || {})
-          const list = results.slice(0, 10).map(b => `${b.title} (${b.url || 'folder'})`).join('\n')
-          return { success: true, message: `Bookmarks matching "${action.query || 'all'}":\n${list || 'No results'}` }
+          const list = results
+            .slice(0, 10)
+            .map((b) => `${b.title} (${b.url || 'folder'})`)
+            .join('\n')
+          return {
+            success: true,
+            message: `Bookmarks matching "${action.query || 'all'}":\n${list || 'No results'}`
+          }
         }
 
         case 'delete_bookmarks':
-          await Promise.all(action.bookmarkIds.map(id => browser.bookmarks.remove(id)))
-          return { success: true, message: `Deleted ${action.bookmarkIds.length} bookmark(s).` }
+          await Promise.all(
+            action.bookmarkIds.map((id) => browser.bookmarks.remove(id))
+          )
+          return {
+            success: true,
+            message: `Deleted ${action.bookmarkIds.length} bookmark(s).`
+          }
 
         case 'move_bookmarks':
-          await Promise.all(action.bookmarkIds.map(id => browser.bookmarks.move(id, { parentId: action.folderId })))
-          return { success: true, message: `Moved ${action.bookmarkIds.length} bookmark(s) to folder.` }
+          await Promise.all(
+            action.bookmarkIds.map((id) =>
+              browser.bookmarks.move(id, { parentId: action.folderId })
+            )
+          )
+          return {
+            success: true,
+            message: `Moved ${action.bookmarkIds.length} bookmark(s) to folder.`
+          }
 
         case 'analyze':
           return { success: true, message: action.result }

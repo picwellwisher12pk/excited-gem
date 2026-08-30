@@ -29,7 +29,9 @@ interface ListsAnalyticsViewProps {
   onRefresh: () => void
 }
 
-export const ListsAnalyticsView: React.FC<ListsAnalyticsViewProps> = ({ stats }) => {
+export const ListsAnalyticsView: React.FC<ListsAnalyticsViewProps> = ({
+  stats
+}) => {
   const [domainSearch, setDomainSearch] = useState('')
   const [pageSize, setPageSize] = useState<number>(10)
 
@@ -46,15 +48,21 @@ export const ListsAnalyticsView: React.FC<ListsAnalyticsViewProps> = ({ stats })
       {/* ── Top Metrics ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3">
-          <Text className="text-[11px] font-semibold uppercase text-slate-400">Total Libraries</Text>
+          <Text className="text-[11px] font-semibold uppercase text-slate-400">
+            Total Libraries
+          </Text>
           <div className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">
             {stats.totalLibraries}
           </div>
-          <Text className="text-[11px] text-purple-500 font-medium">Collections</Text>
+          <Text className="text-[11px] text-purple-500 font-medium">
+            Collections
+          </Text>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3">
-          <Text className="text-[11px] font-semibold uppercase text-slate-400">Total Lists</Text>
+          <Text className="text-[11px] font-semibold uppercase text-slate-400">
+            Total Lists
+          </Text>
           <div className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">
             {stats.totalLists}
           </div>
@@ -64,27 +72,39 @@ export const ListsAnalyticsView: React.FC<ListsAnalyticsViewProps> = ({ stats })
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3">
-          <Text className="text-[11px] font-semibold uppercase text-slate-400">Saved Tabs</Text>
+          <Text className="text-[11px] font-semibold uppercase text-slate-400">
+            Saved Tabs
+          </Text>
           <div className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">
             {stats.totalTabs}
           </div>
-          <Text className="text-[11px] text-fuchsia-500 font-medium">Tabs in lists</Text>
+          <Text className="text-[11px] text-fuchsia-500 font-medium">
+            Tabs in lists
+          </Text>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3">
-          <Text className="text-[11px] font-semibold uppercase text-slate-400">Avg Tabs / List</Text>
+          <Text className="text-[11px] font-semibold uppercase text-slate-400">
+            Avg Tabs / List
+          </Text>
           <div className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">
             {stats.avgTabsPerList}
           </div>
-          <Text className="text-[11px] text-indigo-500 font-medium">Average size</Text>
+          <Text className="text-[11px] text-indigo-500 font-medium">
+            Average size
+          </Text>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3">
-          <Text className="text-[11px] font-semibold uppercase text-slate-400">Unique Domains</Text>
+          <Text className="text-[11px] font-semibold uppercase text-slate-400">
+            Unique Domains
+          </Text>
           <div className="text-2xl font-bold text-slate-800 dark:text-white mt-0.5">
             {stats.topDomains.length}
           </div>
-          <Text className="text-[11px] text-cyan-500 font-medium">Saved domains</Text>
+          <Text className="text-[11px] text-cyan-500 font-medium">
+            Saved domains
+          </Text>
         </div>
       </div>
 
@@ -99,7 +119,8 @@ export const ListsAnalyticsView: React.FC<ListsAnalyticsViewProps> = ({ stats })
               Storage Backend Distribution
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Lists stored inside Chrome extension storage vs Browser bookmark folders
+              Lists stored inside Chrome extension storage vs Browser bookmark
+              folders
             </p>
           </div>
         </div>
@@ -113,7 +134,8 @@ export const ListsAnalyticsView: React.FC<ListsAnalyticsViewProps> = ({ stats })
               <Tag color="purple">{stats.extensionListsCount} lists</Tag>
             </div>
             <p className="text-xs text-purple-700 dark:text-purple-400">
-              Fast, high-performance compressed storage with deduplicated URL bank
+              Fast, high-performance compressed storage with deduplicated URL
+              bank
             </p>
           </div>
 
@@ -125,7 +147,8 @@ export const ListsAnalyticsView: React.FC<ListsAnalyticsViewProps> = ({ stats })
               <Tag color="gold">{stats.bookmarksListsCount} lists</Tag>
             </div>
             <p className="text-xs text-amber-700 dark:text-amber-400">
-              Directly synced with Chrome/browser bookmarks across your signed-in devices
+              Directly synced with Chrome/browser bookmarks across your
+              signed-in devices
             </p>
           </div>
         </div>
@@ -173,7 +196,8 @@ export const ListsAnalyticsView: React.FC<ListsAnalyticsViewProps> = ({ stats })
                   </Tag>
                 </div>
                 <div className="text-[11px] text-slate-400 truncate">
-                  Library: {list.libraryName} • {new Date(list.created).toLocaleDateString()}
+                  Library: {list.libraryName} •{' '}
+                  {new Date(list.created).toLocaleDateString()}
                 </div>
 
                 {/* Top domains preview */}
@@ -193,7 +217,9 @@ export const ListsAnalyticsView: React.FC<ListsAnalyticsViewProps> = ({ stats })
             </div>
           ))}
           {stats.largestLists.length === 0 && (
-            <p className="text-xs text-slate-400 py-4 text-center">No saved lists found</p>
+            <p className="text-xs text-slate-400 py-4 text-center">
+              No saved lists found
+            </p>
           )}
         </div>
       </div>
@@ -207,7 +233,8 @@ export const ListsAnalyticsView: React.FC<ListsAnalyticsViewProps> = ({ stats })
             </div>
             <div>
               <h3 className="text-base font-semibold text-slate-800 dark:text-white">
-                Domains in Saved Lists ({stats.topDomains.length} unique domains)
+                Domains in Saved Lists ({stats.topDomains.length} unique
+                domains)
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 Most frequent domains across all your libraries and lists
@@ -250,19 +277,26 @@ export const ListsAnalyticsView: React.FC<ListsAnalyticsViewProps> = ({ stats })
             >
               <div className="flex items-center justify-between text-xs mb-1">
                 <span className="font-semibold text-slate-800 dark:text-white flex items-center gap-2 truncate">
-                  <span className="text-slate-400 font-mono text-[11px] w-5">{index + 1}.</span>
+                  <span className="text-slate-400 font-mono text-[11px] w-5">
+                    {index + 1}.
+                  </span>
                   {domainItem.favIconUrl && (
                     <img
                       src={domainItem.favIconUrl}
                       alt=""
                       className="w-4 h-4 rounded-sm flex-shrink-0"
-                      onError={(e) => ((e.target as HTMLElement).style.display = 'none')}
+                      onError={(e) =>
+                        ((e.target as HTMLElement).style.display = 'none')
+                      }
                     />
                   )}
                   <span className="truncate">{domainItem.domain}</span>
                 </span>
                 <span className="text-slate-500 font-medium">
-                  {domainItem.count} tabs <span className="text-slate-400 font-normal">({domainItem.percentage}%)</span>
+                  {domainItem.count} tabs{' '}
+                  <span className="text-slate-400 font-normal">
+                    ({domainItem.percentage}%)
+                  </span>
                 </span>
               </div>
               <Progress
@@ -275,7 +309,9 @@ export const ListsAnalyticsView: React.FC<ListsAnalyticsViewProps> = ({ stats })
             </div>
           ))}
           {filteredDomains.length === 0 && (
-            <p className="text-xs text-slate-400 py-6 text-center">No matching domains found</p>
+            <p className="text-xs text-slate-400 py-6 text-center">
+              No matching domains found
+            </p>
           )}
         </div>
       </div>

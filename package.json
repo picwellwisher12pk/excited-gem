@@ -21,6 +21,10 @@
     "start": "nodemon",
     "dev": "plasmo dev",
     "dev:win": "trap 'kill %1 %2 2>/dev/null; exit' INT TERM; plasmo dev & ./scripts/sync-build-enhanced.sh & wait",
+    "sync:win": "bash ./scripts/sync-build-enhanced.sh",
+    "sync:once": "rsync -av --delete build/chrome-mv3-dev/ /mnt/c/Users/amir/Documents/Projects/Personal/excited-gem/build/chrome-mv3-dev/",
+    "sync:build": "rsync -av --delete build/ /mnt/c/Users/amir/Documents/Projects/Personal/excited-gem/build/",
+    "sync:src": "rsync -av --exclude 'node_modules' --exclude '.git' --exclude 'build' ./ /mnt/c/Users/amir/Documents/Projects/Personal/excited-gem/",
     "build": "plasmo build",
     "package": "plasmo package",
     "start:chromium": "web-ext run --source-dir ./extension --target=chromium",
@@ -135,7 +139,8 @@
       "https://api.anthropic.com/*",
       "https://api.groq.com/*",
       "https://api.together.xyz/*",
-      "https://api.google.com/*"
+      "https://api.google.com/*",
+      "https://generativelanguage.googleapis.com/*"
     ],
     "oauth2": {
       "client_id": "895689043158-ilstmlvd16i9p88n22b7sva0d6mhnp6n.apps.googleusercontent.com",
@@ -148,10 +153,7 @@
     }
   },
   "nodemonConfig": {
-    "ignore": [
-      "test/*",
-      "docs/*"
-    ],
+    "ignore": ["test/*", "docs/*"],
     "delay": 1000
   }
 }
