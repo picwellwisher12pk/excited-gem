@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.8.0](https://github.com/picwellwisher12pk/excited-gem/compare/v1.7.0...v1.8.0) (2026-09-04)
+
+
+### Features
+
+* **ai:** add Gemini 3.5+ models, token budget calculator, and Windows sync tasks ([db5ff84](https://github.com/picwellwisher12pk/excited-gem/commit/db5ff84f22894a5d524ec7a778df7c126cfb904d))
+* **analytics:** add analytics dashboard with tabs, bookmarks, lists, sessions & domain matrix ([72c3313](https://github.com/picwellwisher12pk/excited-gem/commit/72c3313b523c6f42d7518cd323c596ef12e21579))
+* **windows:** display incognito and private windows as sleek dark theme tiles ([9f74984](https://github.com/picwellwisher12pk/excited-gem/commit/9f74984995b20afd76553d8022af3d72297af3bc))
+* **windows:** introduce Window Grid View with multi-window drag-drop, in-window search, context menus, and Ant Design confirmation ([3c42c88](https://github.com/picwellwisher12pk/excited-gem/commit/3c42c88b6d94cd8dab957a4b950b938f2117da36))
+
 ## [1.7.0](https://github.com/picwellwisher12pk/excited-gem/compare/v1.6.1...v1.7.0) (2026-08-24)
 
 

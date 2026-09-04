@@ -1,7 +1,7 @@
 {
   "name": "excited-gem",
   "displayName": "Excited Gem",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "A tool to manage your tabs and other browser related features.",
   "homepage": "https://picwellwisher12pk.github.io/excited-gem/",
   "license": "MIT",
@@ -153,7 +153,10 @@
     }
   },
   "nodemonConfig": {
-    "ignore": ["test/*", "docs/*"],
+    "ignore": [
+      "test/*",
+      "docs/*"
+    ],
     "delay": 1000
   }
 }
