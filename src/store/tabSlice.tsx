@@ -38,7 +38,10 @@ const initialState: TabState = {
   tabs: [],
   filteredTabs: [],
   selectedTabs: [],
-  selectedWindow: chrome.windows?.WINDOW_ID_CURRENT || -1,
+  selectedWindow:
+    typeof chrome !== 'undefined' && chrome.windows?.WINDOW_ID_CURRENT
+      ? chrome.windows.WINDOW_ID_CURRENT
+      : -1,
   youtubePermissionGranted: false,
   isSelectionMode: false,
   lastSelectedTabId: null
@@ -136,6 +139,29 @@ export const tabSlice = createSlice({
         state.selectedTabs = []
       }
     },
+    selectWindowTabs: (
+      state,
+      action: { payload: { tabIds: number[]; select: boolean } }
+    ) => {
+      const { tabIds, select } = action.payload
+      if (select) {
+        const idSet = new Set(state.selectedTabs)
+        tabIds.forEach((id) => idSet.add(id))
+        state.selectedTabs = Array.from(idSet)
+        state.isSelectionMode = true
+      } else {
+        const removeSet = new Set(tabIds)
+        state.selectedTabs = state.selectedTabs.filter(
+          (id) => !removeSet.has(id)
+        )
+        if (state.selectedTabs.length === 0) {
+          state.isSelectionMode = false
+        }
+      }
+      if (typeof window !== 'undefined') {
+        window.selectedTabs = [...state.selectedTabs]
+      }
+    },
     reorderTabs: (state, action) => {
       const { fromIndex, toIndex } = action.payload
       const newTabs = [...state.tabs]
@@ -166,6 +192,7 @@ export const {
   updateActiveTabs,
   updateSelectedTabs,
   selectTabRange,
+  selectWindowTabs,
   updateFilteredTabs,
   clearSelectedTabs,
   updateSelectedWindow,

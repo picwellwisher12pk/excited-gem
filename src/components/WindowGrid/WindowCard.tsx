@@ -21,11 +21,16 @@ import {
   GripVertical,
   ArrowDownToLine,
   ExternalLink,
-  Globe
+  Globe,
+  CheckSquare
 } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
 import type { RootState } from '../../store/store'
-import { updateSelectedTabs, selectTabRange } from '../../store/tabSlice'
+import {
+  updateSelectedTabs,
+  selectTabRange,
+  selectWindowTabs
+} from '../../store/tabSlice'
 import { batchMoveTabs } from '../../utils/bulkOperations'
 // @ts-ignore
 import { saveSession } from '../getsetSessions'
@@ -353,6 +358,7 @@ export function WindowCard({
   tabGroups = {},
   tabActionButtonsSetting = 'hover'
 }: WindowCardProps) {
+  const dispatch = useDispatch()
   const [localSearch, setLocalSearch] = useState('')
   const [isMovingBatch, setIsMovingBatch] = useState(false)
   const selectedTabs = useSelector(
@@ -396,6 +402,42 @@ export function WindowCard({
         (tab.url && tab.url.toLowerCase().includes(q))
     )
   }, [tabs, localSearch])
+
+  // Tab selection for this window
+  const displayedTabIds = useMemo(
+    () => displayedTabs.map((t) => t.id),
+    [displayedTabs]
+  )
+
+  const selectedInThisWindowCount = useMemo(() => {
+    return displayedTabIds.filter((id) => selectedTabs.includes(id)).length
+  }, [displayedTabIds, selectedTabs])
+
+  const isAllSelected =
+    displayedTabIds.length > 0 &&
+    selectedInThisWindowCount === displayedTabIds.length
+  const isIndeterminate =
+    selectedInThisWindowCount > 0 &&
+    selectedInThisWindowCount < displayedTabIds.length
+
+  const handleToggleSelectAll = (e?: React.MouseEvent | any) => {
+    if (e && e.stopPropagation) {
+      e.stopPropagation()
+    }
+    if (displayedTabIds.length === 0) return
+    dispatch(
+      selectWindowTabs({
+        tabIds: displayedTabIds,
+        select: !isAllSelected
+      })
+    )
+  }
+
+  const selectTooltip = isAllSelected
+    ? `Deselect all ${displayedTabs.length} tabs in Window ${windowIndex}`
+    : selectedInThisWindowCount > 0
+      ? `Select all ${displayedTabs.length} tabs in Window ${windowIndex} (${selectedInThisWindowCount} selected)`
+      : `Select all ${displayedTabs.length} tabs in Window ${windowIndex}`
 
   // Window Action Handlers
   const handleFocusWindow = () => {
@@ -516,6 +558,23 @@ export function WindowCard({
       {/* Window Header */}
       <div className={headerClass}>
         <div className="flex items-center gap-2 min-w-0">
+          <Tooltip title={selectTooltip}>
+            <div
+              className="flex items-center justify-center shrink-0 cursor-pointer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Checkbox
+                checked={isAllSelected}
+                indeterminate={isIndeterminate}
+                disabled={displayedTabs.length === 0}
+                onChange={(e) => {
+                  e.stopPropagation()
+                  handleToggleSelectAll(e)
+                }}
+                className="scale-90"
+              />
+            </div>
+          </Tooltip>
           <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${dotClass}`} />
           <div className="flex items-center gap-1.5 truncate">
             <span
@@ -556,10 +615,45 @@ export function WindowCard({
           >
             {tabs.length} {tabs.length === 1 ? 'tab' : 'tabs'}
           </span>
+          {selectedInThisWindowCount > 0 && (
+            <span
+              className={`text-[11px] px-1.5 py-0.2 rounded-full font-medium shrink-0 ${
+                isPrivateWindow
+                  ? 'bg-purple-900/80 text-purple-200 border border-purple-700/60'
+                  : 'bg-blue-100 text-blue-700'
+              }`}
+            >
+              {selectedInThisWindowCount} selected
+            </span>
+          )}
         </div>
 
         {/* Header Action Buttons */}
         <div className="flex items-center gap-0.5 shrink-0">
+          <Tooltip
+            title={isAllSelected ? 'Deselect All Tabs' : 'Select All Tabs'}
+          >
+            <Button
+              type="text"
+              size="small"
+              icon={
+                <CheckSquare
+                  size={14}
+                  className={
+                    isAllSelected
+                      ? isPrivateWindow
+                        ? 'text-purple-300'
+                        : 'text-blue-600'
+                      : isPrivateWindow
+                        ? 'text-zinc-300'
+                        : 'text-slate-600'
+                  }
+                />
+              }
+              onClick={handleToggleSelectAll}
+              className={headerBtnClass}
+            />
+          </Tooltip>
           <Tooltip title="Focus Window">
             <Button
               type="text"

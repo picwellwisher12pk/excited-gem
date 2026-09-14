@@ -28,6 +28,7 @@ import { asyncFilterTabs, getCurrentWindow } from './general'
 import {
   updateFilteredTabs,
   selectAllTabs,
+  selectWindowTabs,
   clearSelectedTabs,
   toggleSelectionMode
 } from '../store/tabSlice'
@@ -119,6 +120,7 @@ const Row = ({
     handleDiscardTabGroup,
     handleCloseTabGroup,
     handleFocusTabGroup,
+    handleToggleSelectWindow,
     isCompact,
     isSelectionMode
   } = data
@@ -149,6 +151,16 @@ const Row = ({
   }
 
   if (item.type === 'header') {
+    const itemTabIds: number[] = item.tabIds || []
+    const selectedInWindow = itemTabIds.filter((id) =>
+      selectedTabs.includes(id)
+    )
+    const isAllSelected =
+      itemTabIds.length > 0 && selectedInWindow.length === itemTabIds.length
+    const isIndeterminate =
+      selectedInWindow.length > 0 &&
+      selectedInWindow.length < itemTabIds.length
+
     return (
       <div ref={setNodeRef} style={dndStyle}>
         <GroupHeader
@@ -161,6 +173,13 @@ const Row = ({
           onDiscard={() => handleDiscardWindow(item.windowId)}
           onClose={() => handleCloseWindow(item.windowId)}
           onFocus={() => handleFocusWindow(item.windowId)}
+          isAllSelected={isAllSelected}
+          isIndeterminate={isIndeterminate}
+          selectedTabCount={selectedInWindow.length}
+          onToggleSelect={() => {
+            if (itemTabIds.length === 0) return
+            handleToggleSelectWindow(itemTabIds, !isAllSelected)
+          }}
         />
       </div>
     )
@@ -468,12 +487,17 @@ function TabList() {
     let lastWindowId = -1
     let lastGroupId = -1
 
-    // Calculate counts
+    // Calculate counts and collect tab IDs per window
     const windowCounts: Record<number, number> = {}
+    const windowTabIds: Record<number, number[]> = {}
     const groupCounts: Record<number, number> = {}
 
     sortedTabs.forEach((tab: any) => {
       windowCounts[tab.windowId] = (windowCounts[tab.windowId] || 0) + 1
+      if (!windowTabIds[tab.windowId]) {
+        windowTabIds[tab.windowId] = []
+      }
+      windowTabIds[tab.windowId].push(tab.id)
       if (tab.groupId && tab.groupId !== -1) {
         groupCounts[tab.groupId] = (groupCounts[tab.groupId] || 0) + 1
       }
@@ -493,6 +517,7 @@ function TabList() {
           type: 'header',
           windowId: tab.windowId,
           tabCount: windowCounts[tab.windowId],
+          tabIds: windowTabIds[tab.windowId] || [],
           isCurrentWindow: tab.windowId === currentWindowId,
           id: `header-${tab.windowId}`
         })
@@ -641,6 +666,13 @@ function TabList() {
     return <MyLoader width={400} />
   }
 
+  const handleToggleSelectWindow = React.useCallback(
+    (tabIds: number[], select: boolean) => {
+      dispatch(selectWindowTabs({ tabIds, select }))
+    },
+    [dispatch]
+  )
+
   const itemData = React.useMemo(
     () => ({
       displayItems,
@@ -659,6 +691,7 @@ function TabList() {
       handleDiscardTabGroup,
       handleCloseTabGroup,
       handleFocusTabGroup,
+      handleToggleSelectWindow,
       isCompact,
       isSelectionMode
     }),
@@ -669,6 +702,7 @@ function TabList() {
       selectedTabs,
       tabActionButtonsSetting,
       tabOperations,
+      handleToggleSelectWindow,
       isCompact,
       isSelectionMode
     ]
