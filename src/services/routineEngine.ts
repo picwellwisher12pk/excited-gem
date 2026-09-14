@@ -8,6 +8,8 @@ import type {
 } from '../types/routine'
 import { updateRoutineLastRun } from './routineStorage'
 import { saveSession, saveList } from '../components/getsetSessions'
+import { executeTabSort } from '../utils/tabSort'
+import { extractVideoId } from '../utils/youtube'
 
 const browser =
   typeof window !== 'undefined'
@@ -477,70 +479,47 @@ async function executeStep(
     }
 
     case 'sort-tabs': {
-      const tabs = await getTargetTabs(scope, context)
+      let tabs: any[] = await getTargetTabs(scope, context)
       const sortBy = params.sortBy || 'domain'
-      const dir = params.sortDirection === 'desc' ? -1 : 1
 
-      // Group tabs by windowId
-      const winMap: Record<number, chrome.tabs.Tab[]> = {}
-      for (const t of tabs) {
-        const wId = t.windowId || 0
-        if (!winMap[wId]) winMap[wId] = []
-        winMap[wId].push(t)
-      }
-
-      let totalMoved = 0
-      for (const winId of Object.keys(winMap)) {
-        const windowTabs = winMap[Number(winId)]
-        const sorted = [...windowTabs].sort((a, b) => {
-          // Pinned tabs always first
-          if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
-
-          if (sortBy === 'audible-first') {
-            if (a.audible !== b.audible) return a.audible ? -1 : 1
+      if (sortBy === 'duration') {
+        try {
+          if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+            const { youtubeInfoMap, youtubeApiCache } =
+              await chrome.storage.local.get([
+                'youtubeInfoMap',
+                'youtubeApiCache'
+              ])
+            tabs = tabs.map((t) => {
+              let youtubeInfo = youtubeInfoMap?.[t.url]
+              if (
+                !youtubeInfo &&
+                t.url &&
+                (t.url.includes('youtube.com/') || t.url.includes('youtu.be/'))
+              ) {
+                const vId = extractVideoId(t.url)
+                if (vId && youtubeApiCache?.[vId]) {
+                  youtubeInfo = { duration: youtubeApiCache[vId].duration || 0 }
+                }
+              }
+              return { ...t, youtubeInfo }
+            })
           }
-
-          let valA = ''
-          let valB = ''
-
-          if (sortBy === 'domain') {
-            try {
-              valA = new URL(a.url || '').hostname.replace(/^www\./, '')
-            } catch {
-              valA = a.url || ''
-            }
-            try {
-              valB = new URL(b.url || '').hostname.replace(/^www\./, '')
-            } catch {
-              valB = b.url || ''
-            }
-          } else if (sortBy === 'title') {
-            valA = (a.title || '').toLowerCase()
-            valB = (b.title || '').toLowerCase()
-          } else {
-            valA = (a.url || '').toLowerCase()
-            valB = (b.url || '').toLowerCase()
-          }
-
-          return valA.localeCompare(valB) * dir
-        })
-
-        for (let idx = 0; idx < sorted.length; idx++) {
-          const tab = sorted[idx]
-          if (tab.id && tab.index !== idx) {
-            try {
-              await browser.tabs.move(tab.id, { index: idx })
-              totalMoved++
-            } catch (err) {
-              console.warn('Sort move error:', err)
-            }
-          }
+        } catch (err) {
+          console.warn('Failed to enrich tabs with duration:', err)
         }
       }
 
+      const totalMoved = await executeTabSort(tabs, {
+        sortBy,
+        direction: params.sortDirection || 'asc',
+        mixedMode: params.mixedMode || 'grouped',
+        videoPlacement: params.videoPlacement || 'first'
+      })
+
       return {
         success: true,
-        message: `Sorted tabs by ${sortBy}.`,
+        message: `Sorted tabs by ${sortBy} (${params.sortDirection || 'asc'}).`,
         affectedCount: totalMoved
       }
     }

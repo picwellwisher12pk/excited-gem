@@ -48,8 +48,16 @@ export interface StepParams {
   isRegex?: boolean
 
   // sort-tabs
-  sortBy?: 'domain' | 'title' | 'url' | 'pinned-first' | 'audible-first'
+  sortBy?:
+    | 'domain'
+    | 'title'
+    | 'url'
+    | 'pinned-first'
+    | 'audible-first'
+    | 'duration'
   sortDirection?: 'asc' | 'desc'
+  mixedMode?: 'grouped' | 'in-place'
+  videoPlacement?: 'first' | 'last'
 
   // move-to-window & filter-tabs
   filterPattern?: string

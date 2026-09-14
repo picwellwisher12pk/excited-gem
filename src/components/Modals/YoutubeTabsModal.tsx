@@ -16,10 +16,12 @@ import {
   Volume2,
   VolumeX,
   X,
-  RotateCw
+  RotateCw,
+  ArrowDownWideNarrow
 } from 'lucide-react'
 import ItemBtn from '../ItemBtn'
 import { extractVideoId } from '../../utils/youtube'
+import { executeTabSort, getSavedTabSortSettings } from '../../utils/tabSort'
 
 const { Text, Title } = Typography
 
@@ -281,6 +283,23 @@ export const YoutubeTabsModal: React.FC<YoutubeTabsModalProps> = ({
     }
   }
 
+  const handleSortBrowserTabs = async () => {
+    try {
+      const settings = await getSavedTabSortSettings()
+      await executeTabSort(tabs, {
+        sortBy: 'duration',
+        direction: sortOrder,
+        mixedMode: settings.mixedMode,
+        videoPlacement: settings.videoPlacement
+      })
+      message.success(
+        `Browser tabs sorted by duration (${sortOrder === 'asc' ? 'shortest first' : 'longest first'})`
+      )
+    } catch (err: any) {
+      message.error(`Failed to sort browser tabs: ${err?.message || err}`)
+    }
+  }
+
   const isAllSelected =
     youtubeTabs.length > 0 && selectedTabIds.length === youtubeTabs.length
   const isPartiallySelected =
@@ -307,6 +326,14 @@ export const YoutubeTabsModal: React.FC<YoutubeTabsModalProps> = ({
                 {sortOrder === 'desc' ? 'Desc' : 'Asc'}
               </Button>
             </div>
+            <Button
+              size="small"
+              icon={<ArrowDownWideNarrow size={13} />}
+              onClick={handleSortBrowserTabs}
+              title="Sort actual browser tabs in window by video duration"
+            >
+              Sort Window Tabs
+            </Button>
             <div className="flex items-center gap-2">
               <span>Group by Type</span>
               <Switch

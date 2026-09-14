@@ -5,6 +5,7 @@ import {
   batchUpdateTabs,
   batchDiscardTabs
 } from '../utils/bulkOperations'
+import { executeTabSort } from '../utils/tabSort'
 
 export const HOMEPAGEURL = chrome.runtime.getURL('/tabs/home.html')
 let refinedTabs
@@ -187,18 +188,13 @@ export function removeClass(el, className) {
   }
 }
 
-export function sortTabs(sortby, tabs) {
-  return new Promise((resolve) => {
-    let tabsList = quicksort(sortby, tabs)
-    log('after quicksort', tabsList)
-    tabsList.forEach((tab, i) => {
-      setTimeout(() => {
-        chrome.tabs.move(tab.id, { index: i })
-      }, sortDelay)
-      console.log('sorting: still moving')
-    })
-    resolve(true)
-  })
+export async function sortTabs(sortby, tabs, customOptions = {}) {
+  const options = {
+    sortBy: sortby,
+    direction: customOptions.direction || 'asc',
+    ...customOptions
+  }
+  return executeTabSort(tabs, options)
 }
 
 export function santizeTabs(tabs, ignoredUrlPatterns) {

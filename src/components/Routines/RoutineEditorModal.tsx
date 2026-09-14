@@ -18,7 +18,6 @@ import {
   MoveDown,
   Copy,
   Play,
-  Zap,
   Sparkles,
   Layers,
   VolumeX,
@@ -31,10 +30,6 @@ import {
   Globe,
   FolderPlus,
   Search,
-  Sliders,
-  CheckCircle2,
-  HelpCircle,
-  X
 } from 'lucide-react'
 import type {
   Routine,
@@ -962,42 +957,108 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                       )}
 
                       {step.type === 'sort-tabs' && (
-                        <div className="flex flex-wrap items-center gap-4">
-                          <div className="flex items-center gap-2">
-                            <span>Sort by:</span>
-                            <Select
-                              size="small"
-                              value={step.params.sortBy || 'domain'}
-                              onChange={(val) =>
-                                handleUpdateStepParams(step.id, { sortBy: val })
-                              }
-                              options={[
-                                { value: 'domain', label: 'Domain' },
-                                { value: 'title', label: 'Page Title' },
-                                { value: 'url', label: 'Full URL' },
-                                {
-                                  value: 'audible-first',
-                                  label: 'Audible tabs first'
+                        <div className="space-y-2">
+                          <div className="flex flex-wrap items-center gap-4">
+                            <div className="flex items-center gap-2">
+                              <span>Sort by:</span>
+                              <Select
+                                size="small"
+                                value={step.params.sortBy || 'domain'}
+                                onChange={(val) =>
+                                  handleUpdateStepParams(step.id, { sortBy: val })
                                 }
-                              ]}
-                            />
+                                options={[
+                                  { value: 'domain', label: 'Domain' },
+                                  { value: 'title', label: 'Page Title' },
+                                  { value: 'url', label: 'Full URL' },
+                                  {
+                                    value: 'duration',
+                                    label: 'Video Duration'
+                                  },
+                                  {
+                                    value: 'audible-first',
+                                    label: 'Audible tabs first'
+                                  }
+                                ]}
+                              />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span>Direction:</span>
+                              <Select
+                                size="small"
+                                value={step.params.sortDirection || 'asc'}
+                                onChange={(val) =>
+                                  handleUpdateStepParams(step.id, {
+                                    sortDirection: val
+                                  })
+                                }
+                                options={[
+                                  {
+                                    value: 'asc',
+                                    label:
+                                      step.params.sortBy === 'duration'
+                                        ? 'Shortest First (Asc)'
+                                        : 'Ascending (A-Z)'
+                                  },
+                                  {
+                                    value: 'desc',
+                                    label:
+                                      step.params.sortBy === 'duration'
+                                        ? 'Longest First (Desc)'
+                                        : 'Descending (Z-A)'
+                                  }
+                                ]}
+                              />
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span>Direction:</span>
-                            <Select
-                              size="small"
-                              value={step.params.sortDirection || 'asc'}
-                              onChange={(val) =>
-                                handleUpdateStepParams(step.id, {
-                                  sortDirection: val
-                                })
-                              }
-                              options={[
-                                { value: 'asc', label: 'Ascending (A-Z)' },
-                                { value: 'desc', label: 'Descending (Z-A)' }
-                              ]}
-                            />
-                          </div>
+
+                          {step.params.sortBy === 'duration' && (
+                            <div className="flex flex-wrap items-center gap-4 pt-1 text-xs text-gray-500">
+                              <div className="flex items-center gap-2">
+                                <span>Mixed Window Mode:</span>
+                                <Select
+                                  size="small"
+                                  value={step.params.mixedMode || 'grouped'}
+                                  onChange={(val) =>
+                                    handleUpdateStepParams(step.id, {
+                                      mixedMode: val
+                                    })
+                                  }
+                                  options={[
+                                    {
+                                      value: 'grouped',
+                                      label: 'Grouped (Videos together)'
+                                    },
+                                    {
+                                      value: 'in-place',
+                                      label: 'In-Place (Slots preserved)'
+                                    }
+                                  ]}
+                                />
+                              </div>
+                              {(!step.params.mixedMode ||
+                                step.params.mixedMode === 'grouped') && (
+                                <div className="flex items-center gap-2">
+                                  <span>Videos Position:</span>
+                                  <Select
+                                    size="small"
+                                    value={
+                                      step.params.videoPlacement || 'first'
+                                    }
+                                    onChange={(val) =>
+                                      handleUpdateStepParams(step.id, {
+                                        videoPlacement: val
+                                      })
+                                    }
+                                    options={[
+                                      { value: 'first', label: 'Videos First' },
+                                      { value: 'last', label: 'Videos Last' }
+                                    ]}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
 
