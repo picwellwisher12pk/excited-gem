@@ -2,115 +2,199 @@
   <img src="src/assets/logo.svg" width="128" alt="Excited Gem Logo">
 </p>
 
-# Excited Gem
+<h1 align="center">💎 Excited Gem</h1>
 
-Excited Gem is a high-performance, unified productivity browser extension designed for power users who manage hundreds of tabs. More than just a tab manager, it serves as your digital workspace—combining advanced session management, YouTube media control, on-device AI assistance (experimental), and secure cloud synchronization into a beautiful, lightning-fast interface.
+<p align="center">
+  <strong>The High-Performance Workspace for Chrome Tabs, Automation, Media & AI</strong>
+</p>
 
-\---
+<p align="center">
+  <a href="https://github.com/picwellwisher12pk/excited-gem/releases"><img src="https://img.shields.io/badge/version-1.7.0-indigo.svg?style=flat-square" alt="Version 1.7.0"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square" alt="MIT License"></a>
+  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5.5+-3178c6.svg?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript"></a>
+  <a href="https://reactjs.org/"><img src="https://img.shields.io/badge/React-18-61dafb.svg?style=flat-square&logo=react&logoColor=black" alt="React 18"></a>
+  <a href="https://bun.sh/"><img src="https://img.shields.io/badge/Bun-1.0+-fbf0df.svg?style=flat-square&logo=bun&logoColor=black" alt="Bun"></a>
+  <a href="https://docs.plasmo.com/"><img src="https://img.shields.io/badge/Plasmo-Framework-brightgreen.svg?style=flat-square" alt="Plasmo Framework"></a>
+  <a href="https://developer.chrome.com/docs/extensions/mv3/intro/"><img src="https://img.shields.io/badge/Chrome-Manifest%20V3-4285f4.svg?style=flat-square&logo=googlechrome&logoColor=white" alt="Manifest V3"></a>
+  <a href="https://picwellwisher12pk.github.io/excited-gem/privacy.html"><img src="https://img.shields.io/badge/Privacy-100%25%20Local-success.svg?style=flat-square" alt="100% Local Privacy"></a>
+</p>
+
+<p align="center">
+  <a href="https://picwellwisher12pk.github.io/excited-gem/"><strong>Website & Documentation</strong></a> •
+  <a href="#-key-features"><strong>Features</strong></a> •
+  <a href="#-architecture--tech-stack"><strong>Tech Stack</strong></a> •
+  <a href="#-getting-started"><strong>Getting Started</strong></a> •
+  <a href="#-privacy--security"><strong>Privacy & Security</strong></a> •
+  <a href="CHANGELOG.md"><strong>Changelog</strong></a>
+</p>
+
+---
+
+## 📖 Overview
+
+**Excited Gem** is a unified, high-performance productivity workspace for power users who juggle dozens of windows and hundreds—or even thousands—of tabs. 
+
+Unlike traditional tab managers that crash under heavy loads or clutter your workflow, Excited Gem combines **virtualized DOM performance**, **spatial multi-window grid management**, **deep domain analytics**, **autonomous routines & macros**, **local-first AI assistance**, and **universal YouTube media control** into a seamless, lightning-fast extension.
+
+---
 
 ## ✨ Key Features
 
-### 🚀 Smart Tab \& Session Power Tools
+### 🪟 1. Multi-Window Spatial Grid View `New in v1.7`
+* **Interactive Window Grid**: Experience your entire browser layout as dynamic, interactive window cards instead of a cramped single-column list.
+* **Cross-Window Drag & Drop**: Effortlessly migrate tabs between windows with intuitive drag-and-drop targets and real-time visual positioning.
+* **In-Window Search**: Filter tabs within a specific window directly in that window's header without altering the rest of your workspace.
+* **Incognito & Private Window Recognition**: Sleek dark-themed tiles instantly distinguish incognito and private browsing sessions.
+* **Window Batch Operations**: One-click actions to save an entire window as a session, save as a curated tab list, discard inactive tabs to reclaim memory, or close with Ant Design confirmation modals.
 
-* **Visual Command Center (Virtualization)**: Handles thousands of open tabs with almost zero lag . Get a clean, real-time overview of your entire browser state across current or all windows in a single, high-performance view.
-* **Intelligent Sessions \& Collections**:
+### 📊 2. Deep Analytics Dashboard & Domain Intelligence `New in v1.7`
+* **6-in-1 Intelligence Suite**: Modular dashboards for **Overview**, **Tabs**, **Bookmarks**, **Lists**, **Sessions**, and **Domain Cross-Explorer**.
+* **Domain Cross-Matrix**: Correlate domain overlap across your digital footprint to spot duplicate links and see where your resources are concentrated.
+* **Memory & Resource Metrics**: Monitor discarded vs active tabs, audio-playing tabs, and pinned distribution in real-time.
+* **Exportable Reports**: Generate and export rich markdown summaries and structured JSON reports for personal auditing or automation.
 
-  * **Sessions**: Snapshot your entire browser state (all windows and tabs) and restore it with one click. Ideal for switching between deep-work contexts.
-  * **Tab Lists**: Curate specific groups of tabs and save them as persistent collections. Choose to store them in the **Extension Storage** for speed or directly as **Browser Bookmarks** for native sync.
-* **Flexible Management Modes**: Configure the extension to run in **Single Tab Mode** (one Excited Gem Tab instance for all windows) or **Per-Window Mode** (isolated management per browser window). Or configure to open in a popup or sidebar.
-* **Bulk Productivity Actions**: Perform group actions like "Close all tabs from this domain," "Mute all tabs with sound," or "Unpin all tabs", move tabs to start/end of window or to new window, with precision and speed.
+### ⚙️ 3. Autonomous Routines & Macros Automation `New in v1.7`
+* **No-Code Tab Automation**: Build custom trigger-filter-action pipelines to automate repetitive tab hygiene.
+* **Preset Gallery**: One-click prebuilt routines to clean workspace, suspend inactive tabs, group tabs by domain, or mute noisy background tabs.
+* **Custom Routine Editor**: Visual step-by-step rule builder with condition matching and dry-run execution testing.
+* **Quick Run Navigation Menu**: Trigger your favorite macros instantly from the extension header bar.
 
-### 🤖 Local-First AI Assistant (Experimental)
+### 🤖 4. Universal Multi-Provider AI Assistant
+* **100% On-Device Prompt API (Gemini Nano)**: Leverage Chrome's built-in AI for 100% private, zero-latency tab management that never sends your browsing data to external servers.
+* **Multi-Provider BYOK (Bring Your Own Key)**:
+  * **Google Gemini Cloud**: Support for Gemini 2.5 Flash, Gemini 3.5 Pro, and Gemini 3.5 Flash.
+  * **Anthropic Claude**: Connect your Claude API key for high-reasoning workspace orchestration.
+  * **Ollama (Local LLM)**: Connect directly to your local models running at `http://localhost:11434`.
+  * **OpenAI-Compatible Endpoints**: Use any OpenAI-compatible API gateway.
+* **Natural Language Tab Actions**: Tell the assistant to `"close all shopping tabs"`, `"group research tabs into a new window"`, `"suspend tabs from github.com"`, or `"deduplicate duplicate links"`.
+* **Token Budget Calculator**: Live token counter and context builder that estimates token usage and optimizes tab context before sending prompts.
+* **Multi-Session Chat History**: Searchable, persistent chat sessions with full markdown rendering and interactive tab preview buttons.
 
-* **On-Device Intelligence**: Leverages Chrome's native **Prompt API** to provide assistant capabilities without sending your sensitive browsing data to any external servers.
-* **Action-Oriented Context**: Your assistant "sees" your open tabs and can perform actions via text commands:
+### 📺 5. Advanced YouTube Workspace Remote
+* **Universal Media Remote**: Floating YouTube Tabs Modal and inline seekbar controllers to Play/Pause, Seek, and Mute media without hunting for tabs.
+* **Shorts & Music Integration**: Dedicated detection and control for YouTube Shorts, standard videos, and YouTube Music.
+* **Clickable Jump Titles**: Click any playing video's title to immediately bring that window and tab into focus.
+* **BYOK YouTube Data API v3**: Optional custom API key integration for high-speed metadata and thumbnail fetching without hitting public quota caps.
 
-  * *"Mute all noisy tabs in the background"*
-  * *"Close all shopping-related tabs"*
-  * *"Group my research tabs into a new window"*
-* **Privacy-First Design**: Designed for the privacy-conscious, the AI operates 100% locally on your machine, requiring zero external API calls for its core logic.
+### 📑 6. Curated Tab Lists & Bookmarks Management
+* **Save as List Modal**: Save any group of selected tabs into persistent, categorized collections.
+* **Dual Storage Strategy**: Choose between fast **Extension Local Storage** or native **Chrome Bookmarks** with live bidirectional folder synchronization.
+* **Full Bookmarks Suite**: Dedicated hierarchy manager with folder tree navigation, search, and bulk operations.
 
-### 📺 🎥 Advanced YouTube Workspace
+### ☁️ 7. Intelligent Sessions & Google Drive Sync
+* **Full-State Snapshots**: Save entire browsing environments across all open windows and restore them with a single click.
+* **Selective Tab Restoration**: Open only the tabs you need from a saved session without cluttering your active window.
+* **Google Drive AppData Backup**: Back up settings, sessions, and lists to your personal Google Drive hidden `appData` folder using direct Google OAuth2.
 
-* **Universal Media Remote**: Control YouTube playback (Play/Pause, Seek) directly from the extension sidebar or popup. No more hunting for the tab that's playing music.
-* **Playback Progress Tracking**: Real-time progress bars for every YouTube tab, allowing you to see exactly where you are in a video or Short without switching tabs.
-* **Custom API Integration (BYOK)**: For advanced users, "Bring Your Own Key" support for the YouTube Data API ensures you have full control over metadata fetching and never hit shared quota limits.
-* **Shorts \& Videos Integration**: Seamlessly handles both standard videos and YouTube Shorts with dedicated extraction logic.
+### ⚡ 8. High-Performance Virtualized Core
+* **10,000+ Tab Virtualization**: Virtualized list rendering powered by `@types/react-window` handles thousands of tabs at 60 FPS using minimal RAM.
+* **Bounded Favicon Cache**: Intelligent LRU domain favicon cache prevents memory leaks while ensuring instant icon display.
+* **Advanced Regex Search**: Search across tab titles, URLs, or both using powerful regular expression queries with instant "as you type" or "on enter" execution.
+* **Adaptive Layouts**: Seamlessly switch between **Side Panel (Sidebar)**, **Popup**, and **Full Tab** views with compact and expanded density options.
 
-### 🔍 Precision Search \& Filtering
+---
 
-* **Regex \& Advanced Queries**: Find exactly what you need using Regular Expression support. Search across Titles, URLs, or both with customizable search scopes.
-* **Dynamic Search Behavior**: Choose between **"As you type"** (instant results) or **"On Enter"** search behaviors to match your workflow.
-* **Status Filtering**: Instantly isolate tabs that are Audible, Pinned, Discarded (suspended), or from specific windows.
+## 🛠 Architecture & Tech Stack
 
-### ☁️ Secure Cloud Sync \& Privacy
+Excited Gem is built on modern, battle-tested web standards:
 
-* **Google Drive AppData Sync**: Back up your extension settings, sessions, and lists to your personal Google Drive's hidden `appData` folder. Your data stays in your personal cloud, not ours.
-* **Privacy-Centric Permissions**: Built with minimal host permissions. We only request access to the URLs necessary for media control (YouTube), ensuring your other browsing remains private.
-* **No Telemetry**: We believe in your right to privacy. Excited Gem includes zero third-party tracking, ads, or hidden telemetry.
+| Layer | Technologies |
+| :--- | :--- |
+| **Runtime & Bundler** | [Bun](https://bun.sh/) & [Plasmo Framework](https://docs.plasmo.com/) (Manifest V3) |
+| **Core Framework** | [React 18](https://reactjs.org/) & [TypeScript 5.5+](https://www.typescriptlang.org/) |
+| **State Management** | [Redux Toolkit](https://redux-toolkit.js.org/) & `@plasmohq/redux-persist` |
+| **UI Components** | [Ant Design 5](https://ant.design/) & [Tailwind CSS](https://tailwindcss.com/) |
+| **Drag & Drop** | [@dnd-kit/core](https://dndkit.com/) & `@dnd-kit/sortable` |
+| **AI Layer** | Chrome Prompt API (Gemini Nano), Google Gemini API, Anthropic, Ollama, OpenAI |
+| **Cloud Sync** | Google Identity Services (OAuth2) & Google Drive REST API (AppData) |
 
-### 🎨 Premium User Experience
-
-* **Adaptive UI Layouts**: Optimized for the modern browser experience. Switch seamlessly between the **Side Panel** (best for persistent management), **Popup**, and **Full Tab** views.
-* **Customizable Aesthetics**: Choose between Compact or Expanded list views. Set tab action buttons to be "Always Visible" or "On Hover" to reduce visual clutter.
-
-\---
-
-## 🛠 Tech Stack
-
-* **Core**: [React](https://reactjs.org/) \& [TypeScript](https://www.typescriptlang.org/)
-* **UI Architecture**: [Ant Design](https://ant.design/) \& [Tailwind CSS](https://tailwindcss.com/)
-* **State Engine**: [Redux Toolkit](https://redux-toolkit.js.org/)
-* **Build \& Runtime**: [Plasmo Framework](https://docs.plasmo.com/) \& [Bun](https://bun.sh/)
-
-\---
-
-## 🔒 Privacy \& Security
-
-Data sovereignty is at the heart of Excited Gem.
-
-* **Local-By-Default**: Your tabs, sessions, and chat history never leave your browser unless YOU trigger a sync.
-* **Secure Auth**: Authentication for sync is handled directly by Google Identity Services; the extension never sees your password.
-* **Open Transparency**: Read our full [**Privacy Policy**](https://picwellwisher12pk.github.io/excited-gem/privacy.html) for a detailed breakdown of how we use every permission.
-
-\---
+---
 
 ## 🚀 Getting Started
 
-### Installation
+### Prerequisites
+* [Bun](https://bun.sh/) (version 1.0 or higher recommended)
+* Google Chrome (or Chromium-based browser like Brave, Edge, Arc)
 
-1. Clone the repository.
-2. Install dependencies:
-
+### 1. Clone & Install
 ```bash
-   bun install
-   ```
+git clone https://github.com/picwellwisher12pk/excited-gem.git
+cd excited-gem
+bun install
+```
 
-### Development
-
-Start the development server with hot-reloading:
-
+### 2. Development Mode
+Start the live-reloading development server:
 ```bash
 bun dev
 ```
 
-### Build
+For WSL / Windows dual development with sync:
+```bash
+bun run dev:win
+```
 
-Generate a production-ready package for Chrome:
-
+### 3. Production Build
+Compile optimized production bundles:
 ```bash
 bun build
 ```
+The compiled Manifest V3 extension will be created in the `build/chrome-mv3-prod` directory.
 
-The output will be located in the `build/chrome-mv3-prod` directory.
+### 4. Load into Chrome
+1. Open Chrome and navigate to `chrome://extensions`.
+2. Toggle **Developer mode** in the top right corner.
+3. Click **Load unpacked**.
+4. Select the `build/chrome-mv3-prod` folder (or `build/chrome-mv3-dev` during development).
+5. Open Excited Gem from your extension toolbar or press `Alt + Shift + E`!
 
-\---
+---
+
+## ⌨️ Shortcuts & Navigation
+
+| Shortcut / Action | Function |
+| :--- | :--- |
+| `Alt + Shift + E` | Open Excited Gem Side Panel |
+| `Click on Tab` | Focus window and jump to tab |
+| `Drag Handle` | Reorder tab in window or drag across Window Grid |
+| `Right-Click Tab` | Open custom context menu (Pin, Mute, Discard, Move to New Window) |
+| `Slash (/) in Search` | Focus the instant Regex search bar |
+| `Quick Run Menu` | Trigger automation routines directly from the header |
+| `AI Drawer Button` | Slide out the universal AI Assistant drawer |
+
+---
+
+## 🔒 Privacy & Security
+
+Data sovereignty is fundamental to Excited Gem's architecture:
+
+* **100% Local by Default**: Your tab history, window states, bookmarks, and sessions are stored in your browser's local sandbox (`chrome.storage.local`).
+* **Zero Telemetry**: No third-party trackers, no analytics beacons, and no data harvesting.
+* **On-Device AI**: Chrome's Prompt API runs locally on your machine via Gemini Nano.
+* **Direct BYOK Communication**: Custom AI API keys and YouTube Data API keys communicate directly and exclusively with official endpoints.
+* **Isolated Cloud Backup**: Google Drive sync writes exclusively to your personal hidden `appData` folder. The extension cannot view or access any other files in your Drive.
+* **Full Transparency**: Review our [Privacy Policy](https://picwellwisher12pk.github.io/excited-gem/privacy.html) for detailed permissions documentation.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request or open an Issue.
+
+1. Fork the repository.
+2. Create your feature branch (`git checkout -b feature/amazing-feature`).
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`).
+4. Push to the branch (`git push origin feature/amazing-feature`).
+5. Open a Pull Request.
+
+---
 
 ## 📜 License
 
-MIT License - feel free to use, modify, and contribute!
+Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for more information.
 
-\---
+---
 
-*Built with ❤️ by Amir Hameed.*
-
+<p align="center">
+  Built with ❤️ for power users by <a href="https://github.com/picwellwisher12pk"><strong>Amir Hameed</strong></a>
+</p>
