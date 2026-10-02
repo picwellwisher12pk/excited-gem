@@ -5,9 +5,11 @@ import Btn from '../../components/Btn'
 import { DuplicateTabsModal } from '../../components/Modals/DuplicateTabsModal'
 import { YoutubeTabsModal } from '../../components/Modals/YoutubeTabsModal'
 import { AITestModal } from '../../components/Modals/AITestModal'
+import { BugReportModal } from '../../components/Modals/BugReportModal'
 import {
   BarChart3,
   Bot,
+  Bug,
   Copy,
   FileText,
   Layers,
@@ -22,6 +24,7 @@ const MoreActionsMenu = () => {
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false)
   const [isYoutubeModalOpen, setIsYoutubeModalOpen] = useState(false)
   const [isAITestModalOpen, setIsAITestModalOpen] = useState(false)
+  const [isBugReportModalOpen, setIsBugReportModalOpen] = useState(false)
   const [hasYoutubeApiKey, setHasYoutubeApiKey] = useState(false)
   const [experimentalAI, setExperimentalAI] = useState(false)
   const [isGrouping, setIsGrouping] = useState(false)
@@ -243,7 +246,16 @@ const MoreActionsMenu = () => {
             }
           }
         ]
-      : [])
+      : []),
+    {
+      key: 'report-bug-feedback',
+      label: 'Report Bug / Feedback',
+      icon: <Bug size={14} className="text-red-500" />,
+      onClick: () => {
+        setIsBugReportModalOpen(true)
+        setIsOpen(false)
+      }
+    }
   ]
 
   return (
@@ -291,6 +303,11 @@ const MoreActionsMenu = () => {
       <AITestModal
         visible={isAITestModalOpen}
         onClose={() => setIsAITestModalOpen(false)}
+      />
+
+      <BugReportModal
+        visible={isBugReportModalOpen}
+        onClose={() => setIsBugReportModalOpen(false)}
       />
     </>
   )

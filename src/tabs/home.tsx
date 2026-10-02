@@ -8,6 +8,8 @@ import '../styles/accessibility.css'
 import { StrictMode } from 'react'
 import { ConfigProvider } from 'antd'
 
+import { CrashBoundary } from '../components/Feedback/CrashBoundary'
+
 function Home() {
   return (
     <StrictMode>
@@ -21,7 +23,9 @@ function Home() {
             }
           }}
         >
-          <ActiveTabs />
+          <CrashBoundary>
+            <ActiveTabs />
+          </CrashBoundary>
         </ConfigProvider>
       </Provider>
     </StrictMode>

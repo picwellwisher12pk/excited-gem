@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.9.0](https://github.com/picwellwisher12pk/excited-gem/compare/v1.8.0...v1.9.0) (2026-10-02)
+
+### Features
+
+* **telemetry:** upgrade to GA4 Measurement Protocol with offline queue and diagnostic error persistence
+* **feedback:** implement app-based Bug Report & User Feedback modal with system diagnostics attachment and GitHub issue generator
+* **stability:** introduce React `CrashBoundary` to intercept unhandled promise rejections, render failures, and runtime exceptions
+* **ui:** add direct "Report Bug / Feedback" action in Header More Actions menu
+
 ## [1.8.0](https://github.com/picwellwisher12pk/excited-gem/compare/v1.7.0...v1.8.0) (2026-09-04)
 
 

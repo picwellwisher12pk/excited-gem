@@ -1,7 +1,7 @@
 {
   "name": "excited-gem",
   "displayName": "Excited Gem",
-  "version": "1.8.1",
+  "version": "1.9.0",
   "description": "A tool to manage your tabs and other browser related features.",
   "homepage": "https://picwellwisher12pk.github.io/excited-gem/",
   "license": "MIT",
@@ -140,7 +140,8 @@
       "https://api.groq.com/*",
       "https://api.together.xyz/*",
       "https://api.google.com/*",
-      "https://generativelanguage.googleapis.com/*"
+      "https://generativelanguage.googleapis.com/*",
+      "https://*.google-analytics.com/*"
     ],
     "oauth2": {
       "client_id": "895689043158-ilstmlvd16i9p88n22b7sva0d6mhnp6n.apps.googleusercontent.com",
