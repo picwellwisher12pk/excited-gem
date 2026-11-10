@@ -1,4 +1,71 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct NativeYoutubeInfo {
+    pub video_id: String,
+    pub title: Option<String>,
+    pub duration: u64,
+}
+
+#[tauri::command]
+pub fn fetch_youtube_video_native(video_id: String) -> Result<NativeYoutubeInfo, String> {
+    log::info!("Fetching YouTube video info natively for videoId: {}", video_id);
+    #[cfg(target_os = "windows")]
+    {
+        use std::process::Command;
+        let url = format!("https://www.youtube.com/watch?v={}", video_id);
+        let output = Command::new("curl.exe")
+            .args(["-s", "-L", "--max-time", "8", "-H", "Accept-Language: en-US,en;q=0.9", &url])
+            .output()
+            .map_err(|e| format!("Failed to run curl.exe: {}", e))?;
+
+        if !output.status.success() {
+            return Err(format!("curl.exe failed with code {:?}", output.status.code()));
+        }
+
+        let html = String::from_utf8_lossy(&output.stdout);
+
+        // 1. Find approxDurationMs
+        let duration_sec = if let Some(pos) = html.find("\"approxDurationMs\":\"") {
+            let start = pos + "\"approxDurationMs\":\"".len();
+            if let Some(end) = html[start..].find('"') {
+                let ms_str = &html[start..start + end];
+                ms_str.parse::<u64>().map(|ms| ms / 1000).unwrap_or(0)
+            } else {
+                0
+            }
+        } else {
+            0
+        };
+
+        // 2. Extract title if possible
+        let title = if let Some(pos) = html.find("<title>") {
+            let start = pos + "<title>".len();
+            if let Some(end) = html[start..].find(" - YouTube</title>") {
+                Some(html[start..start + end].to_string())
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+        if duration_sec > 0 {
+            return Ok(NativeYoutubeInfo {
+                video_id,
+                title,
+                duration: duration_sec,
+            });
+        }
+
+        return Err("Could not extract duration from YouTube watch page (video may be private or unavailable)".to_string());
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        Err("Native fetch currently supported on Windows".to_string())
+    }
+}
 
 #[derive(Serialize)]
 pub struct AppInfo {

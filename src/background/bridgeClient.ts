@@ -246,6 +246,13 @@ export function initBridgeClient(options?: BridgeClientOptions) {
         await sendYoutubeCache()
         break
 
+      case 'SET_YOUTUBE_API_KEY':
+        if (cmd.apiKey && chrome.storage?.local) {
+          await chrome.storage.local.set({ youtubeApiKey: cmd.apiKey })
+          await sendYoutubeCache()
+        }
+        break
+
       case 'FETCH_YOUTUBE_DURATIONS':
         if (options?.fetchYouTubeApiInfo) {
           const videoIds: string[] = Array.isArray(cmd.videoIds) ? cmd.videoIds : []

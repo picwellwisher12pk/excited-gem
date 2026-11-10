@@ -372,6 +372,10 @@ export class DesktopAdapter implements IBrowserAdapter {
     this.send({ type: 'FETCH_YOUTUBE_DURATIONS', videoIds })
   }
 
+  public setYoutubeApiKey(apiKey: string): void {
+    this.send({ type: 'SET_YOUTUBE_API_KEY', apiKey })
+  }
+
   onTabsChanged(listener: (browserId: string) => void): () => void {
     this.tabChangeListeners.add(listener)
     return () => this.tabChangeListeners.delete(listener)

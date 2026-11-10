@@ -151,7 +151,8 @@ pub fn run() {
             commands::focus_os_window,
             commands::launch_browser_url,
             commands::launch_browser_window,
-            commands::get_installed_browser_bookmarks
+            commands::get_installed_browser_bookmarks,
+            commands::fetch_youtube_video_native
         ])
         .run(tauri::generate_context!())
         .expect("error while building tauri application");

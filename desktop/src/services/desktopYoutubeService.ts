@@ -1,9 +1,17 @@
 import { extractVideoId, parseIsoDuration } from '../../../src/utils/youtube'
 import type { UnifiedTab } from '../../../src/adapter/types'
+import { getBrowserAdapter } from '../../../src/adapter'
 
 export interface CachedYoutubeVideo {
   title?: string
   duration: number // in seconds
+  timestamp: number
+}
+
+export interface YoutubeFetchError {
+  videoId?: string
+  title?: string
+  error: string
   timestamp: number
 }
 
@@ -15,9 +23,32 @@ class DesktopYoutubeService {
   private apiKey: string = ''
   private listeners: Set<() => void> = new Set()
   private inFlightVideoIds: Set<string> = new Set()
+  private lastErrors: YoutubeFetchError[] = []
 
   constructor() {
     this.loadFromStorage()
+  }
+
+  public getLastErrors(): YoutubeFetchError[] {
+    return [...this.lastErrors]
+  }
+
+  public clearErrors(): void {
+    this.lastErrors = []
+    this.notify()
+  }
+
+  public addError(error: string, videoId?: string, title?: string) {
+    this.lastErrors.unshift({
+      videoId,
+      title,
+      error,
+      timestamp: Date.now()
+    })
+    if (this.lastErrors.length > 50) {
+      this.lastErrors.pop()
+    }
+    this.notify()
   }
 
   private loadFromStorage() {
@@ -79,6 +110,13 @@ class DesktopYoutubeService {
         localStorage.setItem(STORAGE_API_KEY, this.apiKey)
       } catch {}
     }
+    // Also broadcast to connected extension bridge if adapter is available
+    try {
+      const adapter = getBrowserAdapter()
+      if (adapter && 'setYoutubeApiKey' in adapter) {
+        ;(adapter as any).setYoutubeApiKey(this.apiKey)
+      }
+    } catch {}
     this.notify()
   }
 
@@ -156,12 +194,41 @@ class DesktopYoutubeService {
   }
 
   /**
+   * Test a YouTube Data API v3 key
+   */
+  public async testApiKey(key: string): Promise<{ valid: boolean; error?: string }> {
+    const trimmed = key.trim()
+    if (!trimmed) {
+      return { valid: false, error: 'API key is empty' }
+    }
+    try {
+      const url = `https://www.googleapis.com/youtube/v3/videos?id=dQw4w9WgXcQ&part=snippet&key=${trimmed}`
+      const res = await fetch(url)
+      if (res.ok) {
+        return { valid: true }
+      }
+      let errorMsg = `HTTP ${res.status}: ${res.statusText}`
+      try {
+        const errorJson = await res.json()
+        if (errorJson?.error?.message) {
+          errorMsg = errorJson.error.message
+        }
+      } catch {}
+      return { valid: false, error: errorMsg }
+    } catch (err: any) {
+      return { valid: false, error: err?.message || 'Network error verifying key' }
+    }
+  }
+
+  /**
    * Directly fetch durations from YouTube Data API v3
    */
   public async fetchFromYoutubeApi(videoIds: string[], apiKeyOverride?: string): Promise<Record<string, number>> {
     const key = apiKeyOverride || this.apiKey
     if (!key) {
-      throw new Error('No YouTube API Key provided. Set one in Settings or sync from extension.')
+      const err = 'No YouTube API Key provided. Set one in the settings bar or sync from extension.'
+      this.addError(err)
+      throw new Error(err)
     }
 
     const uniqueIds = Array.from(new Set(videoIds)).filter(Boolean)
@@ -173,31 +240,61 @@ class DesktopYoutubeService {
     const chunkSize = 50
     for (let i = 0; i < uniqueIds.length; i += chunkSize) {
       const chunk = uniqueIds.slice(i, i + chunkSize)
+      const url = `https://www.googleapis.com/youtube/v3/videos?id=${chunk.join(',')}&part=snippet,contentDetails&key=${key}`
+      let res: Response
       try {
-        const url = `https://www.googleapis.com/youtube/v3/videos?id=${chunk.join(',')}&part=snippet,contentDetails&key=${key}`
-        const res = await fetch(url)
-        if (!res.ok) {
-          console.warn(`[DesktopYoutubeService] API request failed with status: ${res.status}`)
-          continue
+        res = await fetch(url)
+      } catch (networkErr: any) {
+        const msg = `Network fetch error: ${networkErr?.message || networkErr}`
+        for (const vId of chunk) {
+          this.addError(msg, vId)
         }
-        const data = await res.json()
-        if (Array.isArray(data.items)) {
-          for (const item of data.items) {
-            const vId = item.id
-            const durationStr = item.contentDetails?.duration
-            const durationSec = durationStr ? parseIsoDuration(durationStr) : 0
-            const title = item.snippet?.title
+        throw new Error(msg)
+      }
 
-            this.cache.set(vId, {
-              title,
-              duration: durationSec,
-              timestamp: Date.now()
-            })
-            results[vId] = durationSec
+      if (!res.ok) {
+        let errorMsg = `HTTP ${res.status}: ${res.statusText}`
+        try {
+          const errorJson = await res.json()
+          if (errorJson?.error?.message) {
+            errorMsg = errorJson.error.message
+          }
+        } catch {}
+        const fullError = `YouTube API Error (${res.status}): ${errorMsg}`
+        for (const vId of chunk) {
+          this.addError(fullError, vId)
+        }
+        throw new Error(fullError)
+      }
+
+      const data = await res.json()
+      const returnedIds = new Set<string>()
+
+      if (Array.isArray(data.items)) {
+        for (const item of data.items) {
+          const vId = item.id
+          returnedIds.add(vId)
+          const durationStr = item.contentDetails?.duration
+          const durationSec = durationStr ? parseIsoDuration(durationStr) : 0
+          const title = item.snippet?.title
+
+          this.cache.set(vId, {
+            title,
+            duration: durationSec,
+            timestamp: Date.now()
+          })
+          results[vId] = durationSec
+
+          if (durationSec === 0) {
+            this.addError('Live stream or zero-duration video', vId, title)
           }
         }
-      } catch (err) {
-        console.error('[DesktopYoutubeService] Error fetching batch from YouTube API:', err)
+      }
+
+      for (const vId of chunk) {
+        if (!returnedIds.has(vId)) {
+          this.addError('Video not found or is private/deleted', vId)
+        }
       }
     }
 
@@ -208,54 +305,92 @@ class DesktopYoutubeService {
 
   /**
    * Fallback: Fetch a single video duration by scraping its public HTML page
+   * Uses Tauri native command when available to bypass webview CORS restrictions
    */
   public async fetchViaWatchPage(videoId: string): Promise<number | null> {
     if (!videoId || this.inFlightVideoIds.has(videoId)) return null
     this.inFlightVideoIds.add(videoId)
 
     try {
-      const res = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
-        headers: {
-          'Accept-Language': 'en-US,en;q=0.9'
-        }
-      })
-      if (!res.ok) return null
-      const html = await res.text()
-
-      // 1. Look for approxDurationMs
-      const msMatch = html.match(/"approxDurationMs":"(\d+)"/)
-      if (msMatch) {
-        const ms = parseInt(msMatch[1], 10)
-        const seconds = Math.floor(ms / 1000)
-        if (seconds > 0) {
-          const titleMatch = html.match(/<title>([^<]+) - YouTube<\/title>/)
-          this.cache.set(videoId, {
-            title: titleMatch ? titleMatch[1] : undefined,
-            duration: seconds,
-            timestamp: Date.now()
-          })
-          this.persistCache()
-          this.notify()
-          return seconds
+      // 1. Try native desktop command first (bypasses browser CORS completely)
+      if (typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
+        try {
+          const { invoke } = await import('@tauri-apps/api/core')
+          const nativeRes = await invoke<{ video_id: string; title?: string; duration: number }>(
+            'fetch_youtube_video_native',
+            { videoId }
+          )
+          if (nativeRes && nativeRes.duration > 0) {
+            this.cache.set(videoId, {
+              title: nativeRes.title,
+              duration: nativeRes.duration,
+              timestamp: Date.now()
+            })
+            this.persistCache()
+            this.notify()
+            return nativeRes.duration
+          }
+        } catch (nativeErr: any) {
+          const errMsg = typeof nativeErr === 'string' ? nativeErr : nativeErr?.message || 'Native fetch failed'
+          this.addError(errMsg, videoId)
         }
       }
 
-      // 2. Look for itemprop="duration" content="PT...S"
-      const metaMatch = html.match(/itemprop="duration"\s+content="([^"]+)"/)
-      if (metaMatch) {
-        const seconds = parseIsoDuration(metaMatch[1])
-        if (seconds > 0) {
-          this.cache.set(videoId, {
-            duration: seconds,
-            timestamp: Date.now()
-          })
-          this.persistCache()
-          this.notify()
-          return seconds
+      // 2. Direct browser fetch fallback (if allowed or mock)
+      try {
+        const res = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+          headers: {
+            'Accept-Language': 'en-US,en;q=0.9'
+          }
+        })
+        if (!res.ok) {
+          this.addError(`HTTP ${res.status}: Failed to load watch page`, videoId)
+          return null
+        }
+        const html = await res.text()
+
+        // 1. Look for approxDurationMs
+        const msMatch = html.match(/"approxDurationMs":"(\d+)"/)
+        if (msMatch) {
+          const ms = parseInt(msMatch[1], 10)
+          const seconds = Math.floor(ms / 1000)
+          if (seconds > 0) {
+            const titleMatch = html.match(/<title>([^<]+) - YouTube<\/title>/)
+            this.cache.set(videoId, {
+              title: titleMatch ? titleMatch[1] : undefined,
+              duration: seconds,
+              timestamp: Date.now()
+            })
+            this.persistCache()
+            this.notify()
+            return seconds
+          }
+        }
+
+        // 2. Look for itemprop="duration" content="PT...S"
+        const metaMatch = html.match(/itemprop="duration"\s+content="([^"]+)"/)
+        if (metaMatch) {
+          const seconds = parseIsoDuration(metaMatch[1])
+          if (seconds > 0) {
+            this.cache.set(videoId, {
+              duration: seconds,
+              timestamp: Date.now()
+            })
+            this.persistCache()
+            this.notify()
+            return seconds
+          }
+        }
+
+        this.addError('Could not find duration in watch page HTML', videoId)
+      } catch (corsErr: any) {
+        if (!this.lastErrors.some((e) => e.videoId === videoId)) {
+          this.addError(
+            'Failed to fetch watch page (CORS restricted). Please configure a YouTube API Key.',
+            videoId
+          )
         }
       }
-    } catch (e) {
-      console.warn(`[DesktopYoutubeService] Scrape failed for ${videoId}:`, e)
     } finally {
       this.inFlightVideoIds.delete(videoId)
     }
@@ -268,7 +403,8 @@ class DesktopYoutubeService {
   public async fetchMissingDurationsForTabs(
     tabs: UnifiedTab[],
     onProgress?: (completed: number, total: number) => void
-  ): Promise<number> {
+  ): Promise<{ updated: number; errors: YoutubeFetchError[] }> {
+    this.clearErrors()
     const missingVideoIds: string[] = []
 
     for (const t of tabs) {
@@ -285,7 +421,9 @@ class DesktopYoutubeService {
       }
     }
 
-    if (missingVideoIds.length === 0) return 0
+    if (missingVideoIds.length === 0) {
+      return { updated: 0, errors: [] }
+    }
 
     let fetchedCount = 0
 
@@ -295,14 +433,14 @@ class DesktopYoutubeService {
         const results = await this.fetchFromYoutubeApi(missingVideoIds, this.apiKey)
         fetchedCount = Object.values(results).filter((d) => d > 0).length
         onProgress?.(fetchedCount, missingVideoIds.length)
-        return fetchedCount
-      } catch (e) {
-        console.warn('[DesktopYoutubeService] Batch API fetch failed, falling back to page scraper:', e)
+        return { updated: fetchedCount, errors: this.getLastErrors() }
+      } catch (e: any) {
+        console.warn('[DesktopYoutubeService] Batch API fetch failed, falling back to native scraper:', e)
       }
     }
 
     // 2. Otherwise fallback to watch page scraper with limited concurrency
-    const concurrency = 4
+    const concurrency = 3
     for (let i = 0; i < missingVideoIds.length; i += concurrency) {
       const slice = missingVideoIds.slice(i, i + concurrency)
       const promises = slice.map((id) => this.fetchViaWatchPage(id))
@@ -315,7 +453,7 @@ class DesktopYoutubeService {
       onProgress?.(Math.min(i + concurrency, missingVideoIds.length), missingVideoIds.length)
     }
 
-    return fetchedCount
+    return { updated: fetchedCount, errors: this.getLastErrors() }
   }
 }
 

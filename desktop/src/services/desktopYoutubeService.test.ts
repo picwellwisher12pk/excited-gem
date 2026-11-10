@@ -43,5 +43,25 @@ describe('desktopYoutubeService', () => {
     expect(desktopYoutubeService.getDurationForUrl('https://youtu.be/watchVideo456')).toBe(750)
     expect(desktopYoutubeService.getDurationForUrl('https://google.com')).toBeUndefined()
   })
+
+  it('tracks and clears errors correctly', () => {
+    desktopYoutubeService.clearErrors()
+    expect(desktopYoutubeService.getLastErrors().length).toBe(0)
+
+    desktopYoutubeService.addError('HTTP 403: Quota exceeded', 'vid123', 'Sample Video')
+    const errors = desktopYoutubeService.getLastErrors()
+    expect(errors.length).toBe(1)
+    expect(errors[0].videoId).toBe('vid123')
+    expect(errors[0].error).toContain('Quota exceeded')
+
+    desktopYoutubeService.clearErrors()
+    expect(desktopYoutubeService.getLastErrors().length).toBe(0)
+  })
+
+  it('validates empty API key in testApiKey', async () => {
+    const res = await desktopYoutubeService.testApiKey('   ')
+    expect(res.valid).toBe(false)
+    expect(res.error).toBe('API key is empty')
+  })
 })
 

@@ -988,7 +988,7 @@ dependencies = [
 
 [[package]]
 name = "excited-gem-desktop"
-version = "1.26.1"
+version = "1.26.2"
 dependencies = [
  "futures-util",
  "log",

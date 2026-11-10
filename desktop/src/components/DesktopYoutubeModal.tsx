@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { Modal, Tag, Tooltip, message, Checkbox, Switch, Button, Dropdown } from 'antd'
+import { Modal, Tag, Tooltip, message, Checkbox, Switch, Button, Dropdown, Input, Alert } from 'antd'
 import type { MenuProps } from 'antd'
 import {
   Youtube,
@@ -10,7 +10,14 @@ import {
   ExternalLink,
   Trash2,
   FolderPlus,
-  RotateCw
+  RotateCw,
+  Key,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  ChevronDown,
+  ChevronUp,
+  Settings2
 } from 'lucide-react'
 import type { UnifiedWindow, UnifiedTab, ConnectedBrowser } from '../../../src/adapter/types'
 import { desktopYoutubeService, formatVideoDuration } from '../services/desktopYoutubeService'
@@ -70,9 +77,17 @@ export const DesktopYoutubeModal: React.FC<DesktopYoutubeModalProps> = ({
   const [, setRefreshNonce] = useState(0)
   const [isFetchingDurations, setIsFetchingDurations] = useState(false)
 
+  // API Key Settings & Error tracking states
+  const [showSettings, setShowSettings] = useState(false)
+  const [showErrors, setShowErrors] = useState(false)
+  const [apiKeyInput, setApiKeyInput] = useState(() => desktopYoutubeService.getApiKey())
+  const [isTestingKey, setIsTestingKey] = useState(false)
+  const [keyStatusMessage, setKeyStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
   useEffect(() => {
     return desktopYoutubeService.subscribe(() => {
       setRefreshNonce((n) => n + 1)
+      setApiKeyInput(desktopYoutubeService.getApiKey())
     })
   }, [])
 
@@ -240,6 +255,7 @@ export const DesktopYoutubeModal: React.FC<DesktopYoutubeModalProps> = ({
       content: `Are you sure you want to close ${toClose.length} selected YouTube tabs?`,
       okText: 'Close Tabs',
       okType: 'danger',
+      cancelText: 'Cancel',
       onOk: async () => {
         for (const item of toClose) {
           await onCloseTab(item.browserId, item.tab.id)
@@ -250,6 +266,42 @@ export const DesktopYoutubeModal: React.FC<DesktopYoutubeModalProps> = ({
     })
   }
 
+  const errorsList = desktopYoutubeService.getLastErrors()
+  const errorsByVideoId = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const err of errorsList) {
+      if (err.videoId) {
+        map.set(err.videoId, err.error)
+      }
+    }
+    return map
+  }, [errorsList])
+
+  const handleTestKey = async () => {
+    setIsTestingKey(true)
+    setKeyStatusMessage(null)
+    try {
+      const res = await desktopYoutubeService.testApiKey(apiKeyInput)
+      if (res.valid) {
+        desktopYoutubeService.setApiKey(apiKeyInput)
+        setKeyStatusMessage({ type: 'success', text: '✓ API Key is valid and successfully connected!' })
+        message.success('API Key is valid and verified with YouTube Data API v3')
+      } else {
+        setKeyStatusMessage({ type: 'error', text: `✗ Verification failed: ${res.error || 'Invalid API Key'}` })
+        message.error(res.error || 'API Key verification failed')
+      }
+    } finally {
+      setIsTestingKey(false)
+    }
+  }
+
+  const handleClearKey = () => {
+    desktopYoutubeService.setApiKey('')
+    setApiKeyInput('')
+    setKeyStatusMessage(null)
+    message.info('YouTube API Key removed. Now using native page scraper fallback.')
+  }
+
   const handleFetchDurations = async () => {
     setIsFetchingDurations(true)
     try {
@@ -258,11 +310,23 @@ export const DesktopYoutubeModal: React.FC<DesktopYoutubeModalProps> = ({
         ;(adapter as any).fetchYoutubeDurations()
       }
       const rawTabs = allYoutubeTabs.map((item) => item.tab)
-      const count = await desktopYoutubeService.fetchMissingDurationsForTabs(rawTabs)
-      message.success(`Synced YouTube durations (${count} updated)`)
+      const { updated, errors } = await desktopYoutubeService.fetchMissingDurationsForTabs(rawTabs)
+      if (errors.length > 0) {
+        setShowErrors(true)
+        if (updated > 0) {
+          message.warning(`Updated ${updated} video(s), but encountered ${errors.length} error(s). See error details below.`)
+        } else {
+          message.error(`Failed to fetch video durations: ${errors[0]?.error || 'Unknown error'}`)
+        }
+      } else if (updated > 0) {
+        message.success(`Successfully synced ${updated} YouTube duration(s)`)
+      } else {
+        message.info('All YouTube tabs already have durations cached')
+      }
     } catch (e: any) {
-      console.warn('Error fetching YouTube durations:', e)
+      console.error('Error fetching YouTube durations:', e)
       message.error(e?.message || 'Failed to fetch YouTube durations')
+      setShowErrors(true)
     } finally {
       setIsFetchingDurations(false)
     }
@@ -287,8 +351,21 @@ export const DesktopYoutubeModal: React.FC<DesktopYoutubeModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            {/* API Key Settings Button */}
+            <Tooltip title="Configure YouTube Data API Key or view connection status">
+              <Button
+                size="small"
+                onClick={() => setShowSettings((prev) => !prev)}
+                icon={<Key size={13} className={desktopYoutubeService.getApiKey() ? 'text-emerald-500' : 'text-amber-500'} />}
+                className="flex items-center gap-1 text-xs"
+              >
+                <span>API Key {desktopYoutubeService.getApiKey() ? '✓' : '(Optional)'}</span>
+                {showSettings ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+              </Button>
+            </Tooltip>
+
             {/* Sync Durations Button */}
-            <Tooltip title="Fetch & sync video durations from YouTube API or extension cache">
+            <Tooltip title="Fetch & sync video durations from YouTube API or native page extractor">
               <Button
                 size="small"
                 onClick={handleFetchDurations}
@@ -336,7 +413,7 @@ export const DesktopYoutubeModal: React.FC<DesktopYoutubeModalProps> = ({
             )}
 
             {/* Group by type switch */}
-            <div className="flex items-center gap-1.5 text-xs text-zinc-400 ml-1">
+            <div className="flex items-center gap-1.5 text-xs text-[var(--text-tertiary)] ml-1">
               <span>Group</span>
               <Switch size="small" checked={groupByType} onChange={setGroupByType} />
             </div>
@@ -382,20 +459,131 @@ export const DesktopYoutubeModal: React.FC<DesktopYoutubeModalProps> = ({
           </div>
         </div>
       }
-      width={760}
+      width={780}
       centered
       destroyOnClose
     >
-      <div className="max-h-[60vh] overflow-y-auto pr-1 flex flex-col gap-4 py-2">
+      <div className="max-h-[60vh] overflow-y-auto pr-1 flex flex-col gap-3 py-2">
+        {/* API Key Configuration Panel */}
+        {showSettings && (
+          <div className="p-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-3)] flex flex-col gap-2.5 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
+                <Key size={14} className="text-amber-500" />
+                YouTube Data API v3 Configuration
+              </span>
+              <span className="text-[11px] text-[var(--text-tertiary)]">
+                {desktopYoutubeService.getApiKey() ? 'API Key Active (Batching enabled)' : 'Native Watch Page Scraper Active'}
+              </span>
+            </div>
+            <p className="text-[11px] text-[var(--text-secondary)] m-0 leading-relaxed">
+              An API key allows fast batch fetching of up to 50 video durations simultaneously. If not set, Excited Gem automatically falls back to our native background scraper without requiring any API key.
+            </p>
+            <div className="flex items-center gap-2">
+              <Input.Password
+                value={apiKeyInput}
+                onChange={(e) => {
+                  setApiKeyInput(e.target.value)
+                  setKeyStatusMessage(null)
+                }}
+                placeholder="Paste your YouTube Data API v3 key here (AIzaSy...)"
+                size="small"
+                className="flex-1 font-mono text-xs"
+              />
+              <Button
+                size="small"
+                type="primary"
+                onClick={handleTestKey}
+                loading={isTestingKey}
+                disabled={!apiKeyInput.trim()}
+              >
+                Test & Save
+              </Button>
+              {desktopYoutubeService.getApiKey() && (
+                <Button size="small" onClick={handleClearKey}>
+                  Clear
+                </Button>
+              )}
+            </div>
+            {keyStatusMessage && (
+              <div
+                className={`text-[11px] font-medium p-1.5 rounded flex items-center gap-1.5 ${
+                  keyStatusMessage.type === 'success'
+                    ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
+                    : 'text-red-600 dark:text-red-400 bg-red-500/10'
+                }`}
+              >
+                {keyStatusMessage.type === 'success' ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
+                <span>{keyStatusMessage.text}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Duration Fetch Errors Notice */}
+        {errorsList.length > 0 && (
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-600 dark:text-red-400">
+              <div className="flex items-center gap-2">
+                <AlertTriangle size={15} className="shrink-0 text-red-500" />
+                <span>
+                  <strong>{errorsList.length} error(s)</strong> occurred during video duration fetch.
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="small"
+                  type="link"
+                  onClick={() => setShowErrors((prev) => !prev)}
+                  className="p-0 h-auto text-xs font-medium text-red-500 hover:text-red-600"
+                >
+                  {showErrors ? 'Hide Error Details' : 'View Error Details'}
+                </Button>
+                <Button
+                  size="small"
+                  type="text"
+                  onClick={() => desktopYoutubeService.clearErrors()}
+                  className="p-0 h-auto text-[11px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                >
+                  Dismiss
+                </Button>
+              </div>
+            </div>
+
+            {showErrors && (
+              <div className="p-2.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-3)] max-h-40 overflow-y-auto flex flex-col gap-1.5 text-xs font-mono">
+                {errorsList.map((err, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-start justify-between gap-2 p-1.5 rounded bg-[var(--surface-2)] border border-[var(--border-subtle)] text-[11px]"
+                  >
+                    <div className="flex flex-col min-w-0 flex-1">
+                      {err.videoId && (
+                        <span className="font-semibold text-[var(--text-primary)]">
+                          Video ID: {err.videoId} {err.title ? `(${err.title})` : ''}
+                        </span>
+                      )}
+                      <span className="text-red-500 dark:text-red-400 break-words">{err.error}</span>
+                    </div>
+                    <span className="text-[10px] text-[var(--text-tertiary)] shrink-0">
+                      {new Date(err.timestamp).toLocaleTimeString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {allYoutubeTabs.length === 0 ? (
-          <div className="py-12 text-center text-zinc-400 text-sm flex flex-col items-center gap-2">
-            <Youtube size={32} className="text-zinc-500 stroke-1" />
+          <div className="py-12 text-center text-[var(--text-tertiary)] text-sm flex flex-col items-center gap-2">
+            <Youtube size={32} className="text-[var(--text-tertiary)] stroke-1" />
             <p>No active YouTube tabs detected across your open browser windows.</p>
           </div>
         ) : (
           groupedTabs.map((group) => (
             <div key={group.title} className="flex flex-col gap-2">
-              <div className="flex items-center justify-between text-xs font-semibold text-zinc-400 px-1 border-b pb-1 border-zinc-800">
+              <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-secondary)] px-1 border-b pb-1 border-[var(--border-subtle)]">
                 <span className="flex items-center gap-1.5">
                   <PlaySquare size={13} className="text-red-500" />
                   {group.title} ({group.items.length})
@@ -406,6 +594,7 @@ export const DesktopYoutubeModal: React.FC<DesktopYoutubeModalProps> = ({
                 {group.items.map((item) => {
                   const key = `${item.browserId}:${item.tab.id}`
                   const isSelected = selectedKeys.has(key)
+                  const vId = extractVideoId(item.tab.url)
 
                   return (
                     <div
@@ -414,7 +603,7 @@ export const DesktopYoutubeModal: React.FC<DesktopYoutubeModalProps> = ({
                       className={`group flex items-center justify-between gap-3 px-3 py-2 rounded-lg border transition-all cursor-pointer ${
                         isSelected
                           ? 'bg-red-500/10 border-red-500/30'
-                          : 'bg-zinc-800/40 hover:bg-zinc-800/80 border-transparent hover:border-zinc-700'
+                          : 'bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border-[var(--border-subtle)] hover:border-[var(--border)]'
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -447,7 +636,7 @@ export const DesktopYoutubeModal: React.FC<DesktopYoutubeModalProps> = ({
                           >
                             {item.tab.title || 'YouTube Video'}
                           </span>
-                          <span className="text-[11px] truncate text-zinc-500 font-mono">
+                          <span className="text-[11px] truncate text-[var(--text-tertiary)] font-mono">
                             {item.tab.url}
                           </span>
                         </div>
@@ -463,21 +652,44 @@ export const DesktopYoutubeModal: React.FC<DesktopYoutubeModalProps> = ({
                             <Clock size={11} />
                             {formatVideoDuration(item.duration)}
                           </Tag>
+                        ) : vId && errorsByVideoId.has(vId) ? (
+                          <Tooltip title={`Fetch failed: ${errorsByVideoId.get(vId)}. Click to view error log.`}>
+                            <Tag
+                              color="error"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setShowErrors(true)
+                              }}
+                              className="m-0 text-[11px] font-mono cursor-pointer flex items-center gap-1 hover:opacity-80 transition-opacity"
+                            >
+                              <AlertTriangle size={11} />
+                              <span>Failed</span>
+                            </Tag>
+                          </Tooltip>
                         ) : (
                           <Tag
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation()
-                              const vId = extractVideoId(item.tab.url)
-                              if (vId) desktopYoutubeService.fetchViaWatchPage(vId)
+                              if (vId) {
+                                message.loading({ content: 'Fetching video duration...', key: `fetch-${vId}` })
+                                const dur = await desktopYoutubeService.fetchViaWatchPage(vId)
+                                if (dur && dur > 0) {
+                                  message.success({ content: `Duration: ${formatVideoDuration(dur)}`, key: `fetch-${vId}` })
+                                } else {
+                                  const err = desktopYoutubeService.getLastErrors().find((errItem) => errItem.videoId === vId)?.error || 'Could not fetch duration'
+                                  message.error({ content: `Fetch failed: ${err}`, key: `fetch-${vId}` })
+                                  setShowErrors(true)
+                                }
+                              }
                             }}
-                            className="m-0 text-[11px] text-zinc-500 font-mono hover:text-red-400 hover:border-red-500/50 cursor-pointer transition-colors"
+                            className="m-0 text-[11px] text-[var(--text-tertiary)] font-mono hover:text-red-400 hover:border-red-500/50 cursor-pointer transition-colors"
                             title="Click to fetch duration for this video"
                           >
                             Fetch duration
                           </Tag>
                         )}
 
-                        <span className="text-[10px] text-zinc-500 font-mono">
+                        <span className="text-[10px] text-[var(--text-tertiary)] font-mono">
                           Win #{item.windowId}
                         </span>
 
@@ -488,7 +700,7 @@ export const DesktopYoutubeModal: React.FC<DesktopYoutubeModalProps> = ({
                               e.stopPropagation()
                               onFocusTab(item.browserId, item.windowId, item.tab.id)
                             }}
-                            className="p-1 rounded hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors"
+                            className="p-1 rounded hover:bg-[var(--surface-4)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors"
                           >
                             <ExternalLink size={13} />
                           </button>
@@ -501,7 +713,7 @@ export const DesktopYoutubeModal: React.FC<DesktopYoutubeModalProps> = ({
                               e.stopPropagation()
                               onCloseTab(item.browserId, item.tab.id)
                             }}
-                            className="p-1 rounded hover:bg-red-500/20 text-zinc-400 hover:text-red-400 transition-colors"
+                            className="p-1 rounded hover:bg-red-500/20 text-[var(--text-tertiary)] hover:text-red-500 transition-colors"
                           >
                             <Trash2 size={13} />
                           </button>
