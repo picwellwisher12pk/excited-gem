@@ -99,8 +99,19 @@ export function useWorkspaceActions(): WorkspaceActionsReturn {
   }, [adapter])
 
   const handleCloseTab = useCallback(async (browserId: string, tabId: number) => {
-    await adapter.closeTab(browserId, tabId)
-    await refreshData()
+    // Instant optimistic UI update (0ms latency)
+    setWindows((prev) =>
+      prev.map((win) => ({
+        ...win,
+        tabs: win.tabs.filter((t) => t.id !== tabId)
+      }))
+    )
+    try {
+      await adapter.closeTab(browserId, tabId)
+    } catch (err) {
+      console.error('Error closing tab:', err)
+      await refreshData()
+    }
   }, [adapter, refreshData])
 
   const handleCloseWindow = useCallback((browserId: string, windowId: number) => {
@@ -111,8 +122,14 @@ export function useWorkspaceActions(): WorkspaceActionsReturn {
       okType: 'danger',
       cancelText: 'Cancel',
       onOk: async () => {
-        await adapter.closeWindow(browserId, windowId)
-        await refreshData()
+        // Instant optimistic UI update
+        setWindows((prev) => prev.filter((win) => win.id !== windowId))
+        try {
+          await adapter.closeWindow(browserId, windowId)
+        } catch (err) {
+          console.error('Error closing window:', err)
+          await refreshData()
+        }
       }
     })
   }, [adapter, refreshData])
@@ -129,8 +146,19 @@ export function useWorkspaceActions(): WorkspaceActionsReturn {
   }, [adapter, selectedBrowserId, refreshData])
 
   const handleDiscardTab = useCallback(async (browserId: string, tabId: number) => {
-    await adapter.discardTab(browserId, tabId)
-    await refreshData()
+    // Instant optimistic UI update
+    setWindows((prev) =>
+      prev.map((win) => ({
+        ...win,
+        tabs: win.tabs.map((t) => (t.id === tabId ? { ...t, discarded: true } : t))
+      }))
+    )
+    try {
+      await adapter.discardTab(browserId, tabId)
+    } catch (err) {
+      console.error('Error discarding tab:', err)
+      await refreshData()
+    }
   }, [adapter, refreshData])
 
   const handleMoveTabs = useCallback(async (

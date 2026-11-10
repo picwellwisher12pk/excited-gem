@@ -15,6 +15,7 @@ export class DesktopAdapter implements IBrowserAdapter {
   private tabChangeListeners: Set<(browserId: string) => void> = new Set()
   private browserChangeListeners: Set<(browsers: ConnectedBrowser[]) => void> =
     new Set()
+  private recentlyClosedTabIds: Map<number, number> = new Map()
   private port: number = 49221
   private reconnectTimer: any = null
 
@@ -88,7 +89,17 @@ export class DesktopAdapter implements IBrowserAdapter {
 
       case 'WINDOWS_UPDATE':
         if (message.browserId && message.windows) {
-          const enrichedWindows = (message.windows as UnifiedWindow[]).map((win) => ({
+          const now = Date.now()
+          for (const [id, ts] of this.recentlyClosedTabIds.entries()) {
+            if (now - ts > 4000) {
+              this.recentlyClosedTabIds.delete(id)
+            }
+          }
+          const filteredWindows = (message.windows as UnifiedWindow[]).map((win) => ({
+            ...win,
+            tabs: (win.tabs || []).filter((tab) => !this.recentlyClosedTabIds.has(tab.id))
+          }))
+          const enrichedWindows = filteredWindows.map((win) => ({
             ...win,
             tabs: (win.tabs || []).map((tab) => {
               if (tab.url && (!tab.youtubeInfo?.duration || tab.youtubeInfo.duration <= 0)) {
@@ -211,6 +222,17 @@ export class DesktopAdapter implements IBrowserAdapter {
   }
 
   async closeTab(browserId: string, tabId: number): Promise<void> {
+    this.recentlyClosedTabIds.set(tabId, Date.now())
+    for (const [bId, windows] of this.windowsByBrowser.entries()) {
+      if (isSameBrowserEngine(bId, browserId) || bId === browserId) {
+        const updatedWindows = windows.map((w) => ({
+          ...w,
+          tabs: (w.tabs || []).filter((t) => t.id !== tabId)
+        }))
+        this.windowsByBrowser.set(bId, updatedWindows)
+      }
+    }
+    this.tabChangeListeners.forEach((fn) => fn(browserId))
     this.send({
       type: 'CLOSE_TAB',
       browserId,
@@ -219,6 +241,15 @@ export class DesktopAdapter implements IBrowserAdapter {
   }
 
   async closeWindow(browserId: string, windowId: number): Promise<void> {
+    for (const [bId, windows] of this.windowsByBrowser.entries()) {
+      if (isSameBrowserEngine(bId, browserId) || bId === browserId) {
+        this.windowsByBrowser.set(
+          bId,
+          windows.filter((w) => w.id !== windowId)
+        )
+      }
+    }
+    this.tabChangeListeners.forEach((fn) => fn(browserId))
     this.send({
       type: 'CLOSE_WINDOW',
       browserId,

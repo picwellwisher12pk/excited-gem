@@ -130,7 +130,7 @@ export function initBridgeClient(options?: BridgeClientOptions) {
     sendYoutubeCache()
   }
 
-  async function broadcastWindowState() {
+  async function broadcastWindowState(excludeTabId?: number, excludeWindowId?: number) {
     if (typeof chrome === 'undefined' || !chrome.windows) return
     try {
       const [windows, storageData] = await Promise.all([
@@ -147,12 +147,16 @@ export function initBridgeClient(options?: BridgeClientOptions) {
       const youtubeApiCache = storageData?.youtubeApiCache || {}
       const youtubeApiKey = storageData?.youtubeApiKey || ''
 
-      const unifiedWindows = windows.map((win) => ({
-        id: win.id ?? 0,
-        browserId: browserInfo.id,
-        focused: Boolean(win.focused),
-        incognito: Boolean(win.incognito),
-        tabs: (win.tabs || []).map((t, idx) => {
+      const unifiedWindows = windows
+        .filter((win) => (excludeWindowId ? win.id !== excludeWindowId : true))
+        .map((win) => ({
+          id: win.id ?? 0,
+          browserId: browserInfo.id,
+          focused: Boolean(win.focused),
+          incognito: Boolean(win.incognito),
+          tabs: (win.tabs || [])
+            .filter((t) => (excludeTabId ? t.id !== excludeTabId : true))
+            .map((t, idx) => {
           let youtubeInfo = (t as any).youtubeInfo || (t.url ? youtubeInfoMap[t.url] : undefined)
           if (!youtubeInfo && t.url) {
             const vId = extractVideoId(t.url)
@@ -291,8 +295,9 @@ export function initBridgeClient(options?: BridgeClientOptions) {
       case 'CLOSE_TAB':
         try {
           if (cmd.tabId) {
-            await chrome.tabs.remove(Number(cmd.tabId))
-            await broadcastWindowState()
+            const numericTabId = Number(cmd.tabId)
+            await chrome.tabs.remove(numericTabId)
+            await broadcastWindowState(numericTabId)
           }
         } catch (e) {
           console.error('[Bridge] Error closing tab:', e)
@@ -302,8 +307,9 @@ export function initBridgeClient(options?: BridgeClientOptions) {
       case 'CLOSE_WINDOW':
         try {
           if (cmd.windowId) {
-            await chrome.windows.remove(Number(cmd.windowId))
-            await broadcastWindowState()
+            const numericWinId = Number(cmd.windowId)
+            await chrome.windows.remove(numericWinId)
+            await broadcastWindowState(undefined, numericWinId)
           }
         } catch (e) {
           console.error('[Bridge] Error closing window:', e)

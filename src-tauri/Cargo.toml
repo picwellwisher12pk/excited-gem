@@ -1,6 +1,6 @@
 [package]
 name = "excited-gem-desktop"
-version = "1.26.0"
+version = "1.26.1"
 description = "Excited Gem - Universal Multi-Browser Workspace"
 authors = ["Amir Hameed"]
 license = "MIT"
