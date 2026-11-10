@@ -12,7 +12,7 @@ import {
   EyeOff,
   Plus,
   Save,
-  Moon,
+  CircleDashed,
   X,
   Search,
   Pin,
@@ -22,7 +22,6 @@ import {
   ArrowDownToLine,
   ExternalLink,
   Globe,
-  CheckSquare
 } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
 import type { RootState } from '../../store/store'
@@ -128,14 +127,35 @@ export function SortableGridTabItem({
     return faviconCache.getOrSet(tab.url, tab.favIconUrl)
   }, [tab.url, tab.favIconUrl])
 
+  const selectedTabs = useSelector(
+    (state: RootState) => state.tabs.selectedTabs
+  )
+  const hasAnySelection = selectedTabs.length > 0
+
   const handleCheckbox = (e: React.MouseEvent) => {
     e.stopPropagation()
     const nativeEvent = e.nativeEvent as MouseEvent
-    if (nativeEvent.shiftKey) {
+    if (nativeEvent.shiftKey || e.shiftKey) {
       dispatch(selectTabRange(tab.id))
     } else {
       dispatch(updateSelectedTabs({ id: tab.id, selected: !isSelected }))
     }
+  }
+
+  const handleItemClick = (e: React.MouseEvent) => {
+    if (e.shiftKey) {
+      e.preventDefault()
+      e.stopPropagation()
+      dispatch(selectTabRange(tab.id))
+      return
+    }
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault()
+      e.stopPropagation()
+      dispatch(updateSelectedTabs({ id: tab.id, selected: !isSelected }))
+      return
+    }
+    onTabClick(tab)
   }
 
   const itemBgClass = isPrivateTab
@@ -176,7 +196,7 @@ export function SortableGridTabItem({
           border transition-all duration-150 select-none cursor-pointer
           ${itemBgClass}
         `}
-        onClick={() => onTabClick(tab)}
+        onClick={handleItemClick}
       >
         {/* Drag handle */}
         <div
@@ -200,8 +220,10 @@ export function SortableGridTabItem({
         >
           <div
             className={`absolute inset-0 flex items-center justify-center transition-opacity ${
-              isSelected || isSelectionMode
+              isSelected
                 ? 'opacity-100 z-10'
+                : hasAnySelection || isSelectionMode
+                ? 'opacity-70 group-hover:opacity-100 z-10'
                 : 'opacity-0 group-hover:opacity-100 z-10'
             }`}
           >
@@ -218,7 +240,7 @@ export function SortableGridTabItem({
               src={cachedFavicon}
               alt=""
               className={`w-3.5 h-3.5 object-contain rounded-xs transition-opacity ${
-                isSelected || isSelectionMode
+                isSelected || isSelectionMode || hasAnySelection
                   ? 'opacity-0'
                   : 'group-hover:opacity-0'
               }`}
@@ -230,7 +252,7 @@ export function SortableGridTabItem({
               className={`${
                 isIncognito ? 'text-zinc-500' : 'text-slate-400'
               } transition-opacity ${
-                isSelected || isSelectionMode
+                isSelected || isSelectionMode || hasAnySelection
                   ? 'opacity-0'
                   : 'group-hover:opacity-0'
               }`}
@@ -241,7 +263,7 @@ export function SortableGridTabItem({
         {/* Tab Title & URL */}
         <div
           className="flex-1 min-w-0 cursor-pointer"
-          onClick={() => onTabClick(tab)}
+          onClick={handleItemClick}
         >
           <div className="flex items-center gap-1.5">
             {tab.pinned && (
@@ -314,7 +336,7 @@ export function SortableGridTabItem({
                 }}
                 className={actionBtnClass}
               >
-                <Moon size={12} />
+                <CircleDashed size={12} strokeWidth={1.75} />
               </button>
             </Tooltip>
           )}
@@ -516,14 +538,14 @@ export function WindowCard({
   }
 
   const cardContainerClass = isPrivateWindow
-    ? `flex flex-col bg-zinc-900 rounded-xl border shadow-md transition-all duration-200 overflow-hidden max-h-[580px] h-[520px] ${
+    ? `relative flex flex-col bg-zinc-900 rounded-xl border shadow-md transition-all duration-200 overflow-hidden max-h-[580px] h-[520px] ${
         isOver
           ? 'border-purple-500 ring-2 ring-purple-500/50 bg-purple-950/20'
           : isCurrentWindow
             ? 'border-purple-500/80 ring-2 ring-purple-500/30 shadow-purple-950/20'
             : 'border-zinc-800 hover:border-zinc-700'
       }`
-    : `flex flex-col bg-white rounded-xl border shadow-xs transition-all duration-200 overflow-hidden max-h-[580px] h-[520px] ${
+    : `relative flex flex-col bg-white rounded-xl border shadow-xs transition-all duration-200 overflow-hidden max-h-[580px] h-[520px] ${
         isOver
           ? 'border-blue-500 ring-2 ring-blue-400/40 bg-blue-50/20'
           : isCurrentWindow
@@ -620,7 +642,7 @@ export function WindowCard({
               className={`text-[11px] px-1.5 py-0.2 rounded-full font-medium shrink-0 ${
                 isPrivateWindow
                   ? 'bg-purple-900/80 text-purple-200 border border-purple-700/60'
-                  : 'bg-blue-100 text-blue-700'
+                  : 'bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300'
               }`}
             >
               {selectedInThisWindowCount} selected
@@ -630,30 +652,6 @@ export function WindowCard({
 
         {/* Header Action Buttons */}
         <div className="flex items-center gap-0.5 shrink-0">
-          <Tooltip
-            title={isAllSelected ? 'Deselect All Tabs' : 'Select All Tabs'}
-          >
-            <Button
-              type="text"
-              size="small"
-              icon={
-                <CheckSquare
-                  size={14}
-                  className={
-                    isAllSelected
-                      ? isPrivateWindow
-                        ? 'text-purple-300'
-                        : 'text-blue-600'
-                      : isPrivateWindow
-                        ? 'text-zinc-300'
-                        : 'text-slate-600'
-                  }
-                />
-              }
-              onClick={handleToggleSelectAll}
-              className={headerBtnClass}
-            />
-          </Tooltip>
           <Tooltip title="Focus Window">
             <Button
               type="text"
@@ -707,8 +705,9 @@ export function WindowCard({
               type="text"
               size="small"
               icon={
-                <Moon
+                <CircleDashed
                   size={14}
+                  strokeWidth={1.75}
                   className={
                     isPrivateWindow ? 'text-zinc-300' : 'text-slate-600'
                   }
@@ -801,6 +800,24 @@ export function WindowCard({
           >
             Move Here
           </Button>
+        </div>
+      )}
+
+      {/* Droppable Hover Overlay */}
+      {isOver && (
+        <div
+          className={`absolute inset-0 z-30 flex items-center justify-center pointer-events-none rounded-xl backdrop-blur-xs ${
+            isPrivateWindow ? 'bg-purple-950/40' : 'bg-blue-500/15'
+          }`}
+        >
+          <div
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold shadow-lg text-white ${
+              isPrivateWindow ? 'bg-purple-600' : 'bg-blue-600'
+            }`}
+          >
+            <ArrowDownToLine size={14} />
+            <span>Drop tabs into Window {windowIndex}</span>
+          </div>
         </div>
       )}
 

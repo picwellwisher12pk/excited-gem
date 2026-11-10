@@ -25,12 +25,6 @@ import {
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-// @ts-ignore
-import {
-  getLists,
-  saveList,
-  saveListAsBookmarks
-} from '../../components/getsetSessions'
 import { clearSelectedTabs } from '../../store/tabSlice'
 
 const { Text } = Typography

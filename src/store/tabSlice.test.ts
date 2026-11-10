@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'bun:test'
 import tabReducer, {
   selectWindowTabs,
+  selectTabRange,
+  updateSelectedTabs,
+  clearSelectedTabs,
+  selectAllTabs
 } from './tabSlice'
 
 describe('tabSlice - selectWindowTabs', () => {
@@ -75,5 +79,62 @@ describe('tabSlice - selectWindowTabs', () => {
 
     expect(nextState.selectedTabs).toEqual([5, 6])
     expect(nextState.isSelectionMode).toBe(true)
+  })
+})
+
+describe('tabSlice - selectTabRange and bulk selection', () => {
+  const sampleTabs: any[] = [
+    { id: 101, title: 'Tab 1', url: 'https://a.com' },
+    { id: 102, title: 'Tab 2', url: 'https://b.com' },
+    { id: 103, title: 'Tab 3', url: 'https://c.com' },
+    { id: 104, title: 'Tab 4', url: 'https://d.com' },
+    { id: 105, title: 'Tab 5', url: 'https://e.com' }
+  ]
+
+  const baseState = {
+    tabs: sampleTabs,
+    filteredTabs: sampleTabs,
+    selectedTabs: [],
+    selectedWindow: -1,
+    youtubePermissionGranted: false,
+    isSelectionMode: false,
+    lastSelectedTabId: null
+  }
+
+  it('should select range from anchor to clicked tab', () => {
+    // Step 1: select tab 102 as anchor
+    const stateWithAnchor = tabReducer(
+      baseState,
+      updateSelectedTabs({ id: 102, selected: true })
+    )
+    expect(stateWithAnchor.selectedTabs).toEqual([102])
+    expect(stateWithAnchor.lastSelectedTabId).toBe(102)
+
+    // Step 2: Shift-click tab 104 (should select 102, 103, 104)
+    const stateAfterRange = tabReducer(stateWithAnchor, selectTabRange(104))
+    expect(stateAfterRange.selectedTabs).toContain(102)
+    expect(stateAfterRange.selectedTabs).toContain(103)
+    expect(stateAfterRange.selectedTabs).toContain(104)
+    expect(stateAfterRange.isSelectionMode).toBe(true)
+  })
+
+  it('should select all filtered tabs with selectAllTabs', () => {
+    const state = tabReducer(baseState, selectAllTabs())
+    expect(state.selectedTabs).toEqual([101, 102, 103, 104, 105])
+    expect(state.isSelectionMode).toBe(true)
+  })
+
+  it('should clear all selected tabs and reset selection mode', () => {
+    const activeState = {
+      ...baseState,
+      selectedTabs: [101, 102, 103],
+      isSelectionMode: true,
+      lastSelectedTabId: 103
+    }
+
+    const state = tabReducer(activeState, clearSelectedTabs())
+    expect(state.selectedTabs).toEqual([])
+    expect(state.isSelectionMode).toBe(false)
+    expect(state.lastSelectedTabId).toBeNull()
   })
 })

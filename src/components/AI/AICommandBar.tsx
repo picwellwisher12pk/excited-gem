@@ -252,9 +252,15 @@ export function AICommandBar({ abortRef }: AICommandBarProps) {
       {/* Bottom bar: model info + clear */}
       <div className="flex items-center justify-between mt-1.5">
         <div className="text-[10px] text-gray-400 truncate flex-1 mr-2">
-          {settings.enabled
-            ? `${settings.providerType}${settings.model ? ' · ' + settings.model : ''} · ${(settings.contextWindowOverride ?? settings.tokenBudget).toLocaleString()} tokens · ↵ send · ⇧↵ newline`
-            : '⚠️ AI not configured — open Settings › AI'}
+          {settings.enabled ? (
+            <span>
+              ⚡ <strong className="text-purple-600 font-semibold">ONNX Local</strong> (instant) &rarr; {settings.providerType} ({settings.model || 'cloud'}) &bull; &crarr; send
+            </span>
+          ) : (
+            <span>
+              ⚡ <strong className="text-purple-600 font-semibold">ONNX Local</strong> active for all actions &bull; &crarr; send
+            </span>
+          )}
         </div>
         <Tooltip title="Clear chat">
           <Button

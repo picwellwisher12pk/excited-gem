@@ -25,6 +25,7 @@ export type ActionType =
   | 'ungroup_tabs'
   // Windows
   | 'open_new_window_with_tabs'
+  | 'merge_all_windows'
   // Sessions (extension-level)
   | 'save_session'
   | 'restore_session'
@@ -131,6 +132,20 @@ export interface OpenNewWindowWithTabs extends BaseAction {
   incognito?: boolean
 }
 
+export interface MergeAllWindows extends BaseAction {
+  type: 'merge_all_windows'
+  /** Target window ID, 'current', or 'new'. Defaults to 'current'. */
+  targetWindowId?: number | 'current' | 'new'
+  /** Specific tab IDs to gather across windows. If omitted, merges all matching tabs. */
+  tabIds?: number[]
+  /** Optional topic, domain, or keyword filter for which tabs to gather across windows */
+  filter?: string
+  /** Optional: bundle the combined tabs into a named tab group upon arrival */
+  groupName?: string
+  /** Color of the group: 'grey' | 'blue' | 'red' | 'yellow' | 'green' | 'pink' | 'purple' | 'cyan' | 'orange' */
+  groupColor?: string
+}
+
 export interface SaveSession extends BaseAction {
   type: 'save_session'
   name: string
@@ -210,6 +225,7 @@ export type BrowserAction =
   | CollapseTabGroup
   | ExpandTabGroup
   | OpenNewWindowWithTabs
+  | MergeAllWindows
   | SaveSession
   | RestoreSession
   | ListSessions
@@ -256,6 +272,8 @@ Available action types and their fields:
 - collapse_tab_group / expand_tab_group: { groupId: number }
 - ungroup_tabs: { tabIds: number[] }
 - open_new_window_with_tabs: { tabIds: number[], incognito?: boolean }
+- merge_all_windows: { targetWindowId?: number | "current" | "new", tabIds?: number[], filter?: string, groupName?: string, groupColor?: string }
+  (Combines/merges tabs across windows. You can filter by keyword/domain (e.g. filter: "github"), target a "new" window or current window, or group them with groupName. Normal windows merge with normal windows; incognito windows are kept isolated.)
 - save_session: { name: string, tabIds?: number[] }
 - restore_session: { sessionName: string }
 - list_sessions: {}

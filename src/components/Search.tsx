@@ -2,12 +2,13 @@ import { Input } from 'antd'
 import { debounce } from 'lodash'
 import React, { memo, useCallback, useEffect, useState, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Pin, Volume2, VolumeX } from 'lucide-react'
+import { Pin, Volume2, VolumeX, Sparkles } from 'lucide-react'
 import ErrorBoundary from '../scripts/ErrorBoundary'
 import { makePlaceholder as doPlaceholder } from '../scripts/general'
 import {
   toggleAudible,
   togglePinned,
+  toggleSemanticSearch,
   updateSearchTerm
 } from '../store/searchSlice'
 
@@ -54,12 +55,19 @@ const Search: React.FC<SearchProps> = ({
         pinnedSearch: false,
         audibleSearch: false,
         searchIn: { title: true, url: true },
-        regex: false
+        regex: false,
+        semanticSearch: false
       }
   )
 
-  const { searchTerm, pinnedSearch, audibleSearch, searchIn, regex } =
-    reduxSearch
+  const {
+    searchTerm,
+    pinnedSearch,
+    audibleSearch,
+    searchIn,
+    regex,
+    semanticSearch
+  } = reduxSearch
 
   // Local States
   const [internalPlaceholder, setInternalPlaceholder] = useState('')
@@ -180,6 +188,26 @@ const Search: React.FC<SearchProps> = ({
               {/* Redux Tab Filters */}
               {showTabFilters && isReduxConnected && (
                 <div className="flex items-center gap-2 border-l border-zinc-200 pl-2 ml-1">
+                  <button
+                    className="!border-0 flex align-items-center bg-transparent cursor-pointer p-0"
+                    type="button"
+                    title={
+                      semanticSearch
+                        ? 'Disable AI Semantic Search'
+                        : 'Enable AI Semantic Search (Local ONNX)'
+                    }
+                    onClick={() => dispatch(toggleSemanticSearch())}
+                  >
+                    <Sparkles
+                      size={16}
+                      className={
+                        semanticSearch
+                          ? 'text-purple-600 fill-purple-100 animate-pulse'
+                          : 'text-zinc-400 hover:text-purple-500'
+                      }
+                    />
+                  </button>
+
                   <button
                     className="!border-0 flex align-items-center bg-transparent cursor-pointer p-0"
                     type="button"

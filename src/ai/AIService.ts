@@ -8,6 +8,7 @@ import { OllamaProvider } from './providers/OllamaProvider'
 import { OpenAICompatProvider } from './providers/OpenAICompatProvider'
 import { GeminiCloudProvider } from './providers/GeminiCloudProvider'
 import { AnthropicProvider } from './providers/AnthropicProvider'
+import { SemanticRouterProvider } from './providers/SemanticRouterProvider'
 import {
   TabContextBuilder,
   type ContextStrategy,
@@ -28,6 +29,7 @@ import type { ChatMessage } from '../store/aiSlice'
 
 export type ProviderType =
   | 'gemini-nano'
+  | 'semantic-router'
   | 'ollama'
   | 'lm-studio'
   | 'jan'
@@ -49,6 +51,7 @@ export interface AISettings {
   systemPrompt: string
   streaming: boolean
   contextWindowOverride?: number
+  semanticRouterGuard?: boolean
 }
 
 export const DEFAULT_AI_SETTINGS: AISettings = {
@@ -60,7 +63,8 @@ export const DEFAULT_AI_SETTINGS: AISettings = {
   contextStrategy: 'auto',
   tokenBudget: 8192,
   streaming: true,
-  systemPrompt: ''
+  systemPrompt: '',
+  semanticRouterGuard: true
 }
 
 /** Default base URLs for each local backend */
@@ -92,6 +96,9 @@ export class AIService {
     switch (s.providerType) {
       case 'gemini-nano':
         return new GeminiNanoProvider(s.systemPrompt)
+
+      case 'semantic-router':
+        return new SemanticRouterProvider({ model: s.model })
 
       case 'ollama':
         return new OllamaProvider({
@@ -167,6 +174,35 @@ export class AIService {
   }
 
   /**
+   * Fast-path: Checks if the user query is a direct tab action that can be executed
+   * locally in <10ms via SemanticRouterProvider, saving cloud API tokens and latency.
+   */
+  private async tryRouteLocalTabAction(
+    userMessage: string
+  ): Promise<{ action: BrowserAction | null; rawResponse: string } | null> {
+    if (this.settings.semanticRouterGuard === false) return null
+    if (this.settings.providerType === 'semantic-router') return null // already primary
+
+    try {
+      const router = new SemanticRouterProvider()
+      const { action, confidence } = await router.routeAction(userMessage)
+
+      // Only intercept high-confidence tab action intents (close, group, discard, pin)
+      if (confidence >= 0.75 && action !== 'general_query') {
+        const raw = await router.chat([{ role: 'user', content: userMessage }])
+        const parsed = TabActionExecutor.parseAIResponse(raw)
+        if (parsed) {
+          return { action: parsed, rawResponse: raw }
+        }
+      }
+    } catch (err) {
+      console.warn('[AIService] Local semantic router fast-path bypassed:', err)
+    }
+
+    return null
+  }
+
+  /**
    * Send a natural-language query about tabs.
    * Builds context, sends to AI, parses the action, returns it for confirmation.
    */
@@ -176,6 +212,12 @@ export class AIService {
     currentWindowId?: number,
     history: ChatMessage[] = []
   ): Promise<{ action: BrowserAction | null; rawResponse: string }> {
+    // 1. Guard check: try local ONNX router first if enabled
+    const localFastResult = await this.tryRouteLocalTabAction(userMessage)
+    if (localFastResult) {
+      return localFastResult
+    }
+
     if (!this.provider) throw new Error('AI provider not configured.')
 
     const effectiveBudget =
@@ -217,6 +259,13 @@ export class AIService {
     abortSignal?: AbortSignal,
     history: ChatMessage[] = []
   ): AsyncGenerator<StreamChunk> {
+    // 1. Guard check: try local ONNX router first if enabled
+    const localFastResult = await this.tryRouteLocalTabAction(userMessage)
+    if (localFastResult) {
+      yield { text: localFastResult.rawResponse, done: true }
+      return
+    }
+
     if (!this.provider) throw new Error('AI provider not configured.')
 
     const effectiveBudget =

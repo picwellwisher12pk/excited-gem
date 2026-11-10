@@ -4,6 +4,7 @@
  */
 
 import type { BrowserAction } from './ActionDefinitions'
+import { combineAllWindows } from '../../services/windowManagerService'
 
 export interface ExecutionResult {
   success: boolean
@@ -187,6 +188,40 @@ export class TabActionExecutor {
           return {
             success: true,
             message: `Opened ${action.tabIds.length} tab(s) in a new window.`
+          }
+        }
+
+        case 'merge_all_windows': {
+          const res = await combineAllWindows({
+            targetWindowId: action.targetWindowId,
+            filter: action.filter,
+            tabIds: action.tabIds,
+            groupName: action.groupName,
+            groupColor: action.groupColor
+          })
+          if (!res.success) {
+            return {
+              success: false,
+              message: res.error || 'Failed to combine tabs across windows.'
+            }
+          }
+          const incognitoNote =
+            res.skippedIncognitoCount > 0
+              ? ` (${res.skippedIncognitoCount} incognito window(s) kept isolated for security/privacy).`
+              : '.'
+          if (res.movedCount === 0) {
+            return {
+              success: true,
+              message: `No other matching tabs to move${incognitoNote}`
+            }
+          }
+          const groupNote = res.createdGroupId
+            ? ` and grouped into "${action.groupName}"`
+            : ''
+          return {
+            success: true,
+            message: `Combined ${res.movedCount} tab(s) from ${res.closedWindowsCount} window(s)${groupNote} into one window${incognitoNote}`,
+            affectedCount: res.movedCount
           }
         }
 

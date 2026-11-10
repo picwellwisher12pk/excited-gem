@@ -3,7 +3,7 @@ import { PlayCircleOutlined, PauseCircleOutlined } from '@ant-design/icons'
 import React, { useState, useEffect, useRef } from 'react'
 import { controlYouTubeVideo } from '../../services/tabService'
 import { useDispatch, useSelector } from 'react-redux'
-import { Pin, Volume2, VolumeX, X, Moon } from 'lucide-react'
+import { Pin, Volume2, VolumeX, X, CircleDashed } from 'lucide-react'
 import {
   toggleSelectionMode,
   updateSelectedTabs,
@@ -218,16 +218,33 @@ export const Tab = React.forwardRef<HTMLDivElement, TabProps>(
       [dispatch, id, selected]
     )
 
-    const handleTabClick = React.useCallback(async () => {
-      if (windowId) {
-        try {
-          await chrome.windows.update(windowId, { focused: true })
-        } catch (err) {
-          console.error('Failed to focus window:', err)
+    const handleTabClick = React.useCallback(
+      async (e?: React.MouseEvent) => {
+        if (e) {
+          if (e.shiftKey) {
+            e.preventDefault()
+            e.stopPropagation()
+            dispatch(selectTabRange(id))
+            return
+          }
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault()
+            e.stopPropagation()
+            dispatch(updateSelectedTabs({ id, selected: !selected }))
+            return
+          }
         }
-      }
-      chrome.tabs.update(id, { active: true })
-    }, [id, windowId])
+        if (windowId) {
+          try {
+            await chrome.windows.update(windowId, { focused: true })
+          } catch (err) {
+            console.error('Failed to focus window:', err)
+          }
+        }
+        chrome.tabs.update(id, { active: true })
+      },
+      [id, windowId, selected, dispatch]
+    )
 
     const handleMuteTab = React.useCallback(() => {
       toggleMuteTab(id, mutedInfo.muted)
@@ -456,7 +473,7 @@ export const Tab = React.forwardRef<HTMLDivElement, TabProps>(
                     }}
                     className="rounded-full !bg-white hover:!bg-slate-100 shadow-sm !border-0 w-7 h-7 !min-w-0 flex items-center justify-center transition-colors"
                   >
-                    <Moon size={14} className="text-slate-500" />
+                    <CircleDashed size={14} strokeWidth={1.75} className="text-slate-500" />
                   </ItemBtn>
                 )}
                 {(audible || mutedInfo.muted) && (

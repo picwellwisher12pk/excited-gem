@@ -8,7 +8,7 @@ import {
   X,
   Move,
   Save,
-  Moon,
+  CircleDashed,
   ChevronDown,
   Layers,
   XCircle,
@@ -385,7 +385,7 @@ export default function Header({
               title="Discard Selected"
               onClick={() => processTabs('discardSelected', selectedTabs, tabs)}
             >
-              <Moon size={14} className="mr-1" />
+              <CircleDashed size={14} strokeWidth={1.75} className="mr-1" />
               <span>Discard</span>
             </Btn>
             <Btn

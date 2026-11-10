@@ -1,0 +1,309 @@
+/* ============================================================
+   Excited Gem Desktop — Design Tokens
+   CSS Custom Properties for systematic theming
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ── Light Theme (default) ─────────────────────────────────── */
+:root {
+  /* Font */
+  --font-sans: 'Inter', 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Surface Elevation (lightest → deepest) */
+  --surface-0: #f8f9fa;      /* Page background */
+  --surface-1: #f0f1f3;      /* Sidebar, titlebar */
+  --surface-2: #ffffff;      /* Cards, panels */
+  --surface-3: #f5f6f8;      /* Nested cards, insets */
+  --surface-4: #ebedf0;      /* Hover states */
+  --surface-5: #e2e4e8;      /* Active/pressed states */
+
+  /* Text Hierarchy */
+  --text-primary: #0f1419;
+  --text-secondary: #536471;
+  --text-tertiary: #8899a6;
+  --text-accent: #0078d4;
+  --text-on-accent: #ffffff;
+  --text-danger: #e5484d;
+
+  /* Accent Palette */
+  --accent: #0078d4;
+  --accent-hover: #106ebe;
+  --accent-subtle: rgba(0, 120, 212, 0.08);
+  --accent-glow: rgba(0, 120, 212, 0.15);
+  --accent-gradient-start: #0078d4;
+  --accent-gradient-end: #00b4d8;
+
+  /* Gem Brand Accents (warm tones from the logo) */
+  --gem-red: #ea291c;
+  --gem-gold: #fbd000;
+  --gem-warm: #ff8c42;
+
+  /* Status Colors */
+  --status-success: #2da44e;
+  --status-warning: #d29922;
+  --status-danger: #cf222e;
+  --status-info: #0078d4;
+
+  /* Browser Brand Colors */
+  --browser-chrome: #fbbc04;
+  --browser-edge: #0078d4;
+  --browser-firefox: #ff7139;
+
+  /* Borders */
+  --border: #d8dee4;
+  --border-subtle: #e8ecf0;
+  --border-strong: #c4cad2;
+  --border-accent: rgba(0, 120, 212, 0.4);
+
+  /* Glass / Blur */
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg-heavy: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.45);
+  --glass-blur: 20px;
+
+  /* Shadows (elevation tiers) */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-glow: 0 0 20px rgba(0, 120, 212, 0.12);
+
+  /* Radius Scale */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 9999px;
+
+  /* Spacing Scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* Transitions */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+}
+
+/* ── Dark Theme ────────────────────────────────────────────── */
+.dark {
+  /* Surface Elevation (darkest → lighter) */
+  --surface-0: #0d0d0d;      /* Page background */
+  --surface-1: #141414;      /* Sidebar, titlebar */
+  --surface-2: #1a1a1a;      /* Cards, panels */
+  --surface-3: #212121;      /* Nested cards, insets */
+  --surface-4: #2a2a2a;      /* Hover states */
+  --surface-5: #333333;      /* Active/pressed states */
+
+  /* Text Hierarchy */
+  --text-primary: #f0f2f5;
+  --text-secondary: #a0aab4;
+  --text-tertiary: #6b7785;
+  --text-accent: #60cdff;
+  --text-on-accent: #ffffff;
+  --text-danger: #ff6369;
+
+  /* Accent Palette */
+  --accent: #60cdff;
+  --accent-hover: #4db8e8;
+  --accent-subtle: rgba(96, 205, 255, 0.08);
+  --accent-glow: rgba(96, 205, 255, 0.12);
+  --accent-gradient-start: #0078d4;
+  --accent-gradient-end: #60cdff;
+
+  /* Borders */
+  --border: #2d2d2d;
+  --border-subtle: #252525;
+  --border-strong: #3d3d3d;
+  --border-accent: rgba(96, 205, 255, 0.3);
+
+  /* Glass / Blur */
+  --glass-bg: rgba(20, 20, 20, 0.72);
+  --glass-bg-heavy: rgba(20, 20, 20, 0.88);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-blur: 20px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.35), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
+  --shadow-glow: 0 0 20px rgba(96, 205, 255, 0.08);
+}
+
+/* ── Global Overrides ──────────────────────────────────────── */
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--surface-4);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--surface-5);
+}
+
+/* Scroll fade edges */
+.scroll-fade-bottom {
+  mask-image: linear-gradient(to bottom, black calc(100% - 32px), transparent);
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 32px), transparent);
+}
+
+/* Glass surface utility */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+}
+
+.glass-heavy {
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(calc(var(--glass-blur) * 1.5));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 1.5));
+  border: 1px solid var(--glass-border);
+}
+
+/* Glow accent ring */
+.glow-accent {
+  box-shadow: var(--shadow-glow);
+}
+
+/* Animated gradient border (for AI button) */
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.gradient-border-animated {
+  position: relative;
+}
+
+.gradient-border-animated::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(
+    135deg,
+    var(--accent-gradient-start),
+    var(--gem-gold),
+    var(--gem-red),
+    var(--accent-gradient-end),
+    var(--accent-gradient-start)
+  );
+  background-size: 300% 300%;
+  animation: gradient-shift 4s ease-in-out infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Number counter animation */
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-count-up {
+  animation: count-up var(--duration-normal) var(--ease-out) both;
+}
+
+/* Subtle pulse for active indicators */
+@keyframes soft-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.animate-soft-pulse {
+  animation: soft-pulse 2s ease-in-out infinite;
+}
+
+/* Skeleton shimmer loader */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface-3) 25%,
+    var(--surface-4) 50%,
+    var(--surface-3) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Global Scrollbars ─────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--surface-4);
+  border-radius: var(--radius-full);
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--surface-5);
+}
+
+/* ── Micro-Interactions ────────────────────────────────────── */
+.btn-press {
+  transition: transform var(--duration-fast) var(--ease-spring), filter var(--duration-fast) ease;
+}
+
+.btn-press:active {
+  transform: scale(0.96);
+}
+
+.card-hover-lift {
+  transition: transform var(--duration-normal) var(--ease-out), box-shadow var(--duration-normal) var(--ease-out), border-color var(--duration-normal) ease;
+}
+
+.card-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}

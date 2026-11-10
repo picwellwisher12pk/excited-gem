@@ -4,13 +4,15 @@ import tabReducer from './tabSlice'
 import configReducer from './configSlice'
 import searchReducer from './searchSlice'
 import aiReducer from './aiSlice'
+import browserReducer from './browserSlice'
 
 const store = configureStore({
   reducer: {
     tabs: tabReducer,
     config: configReducer,
     search: searchReducer,
-    ai: aiReducer
+    ai: aiReducer,
+    browsers: browserReducer
   },
   middleware: (getDefaultMiddleware) => {
     const middleware = getDefaultMiddleware()

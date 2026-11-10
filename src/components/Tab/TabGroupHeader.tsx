@@ -47,20 +47,20 @@ export function TabGroupHeader({
 }: TabGroupHeaderProps) {
   return (
     <div
-      className="flex items-center px-4 py-1.5 bg-slate-50 border-b border-stone-100 h-[40px] group hover:bg-slate-100 transition-colors select-none ml-4 border-l-4"
+      className="flex items-center px-4 py-1.5 bg-slate-50 dark:bg-slate-800/60 border-b border-stone-100 dark:border-slate-700/60 h-[40px] group hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors select-none ml-4 border-l-4"
       style={{ borderLeftColor: colorMap[color] || color }}
     >
       <div
         className="flex items-center cursor-pointer mr-2 flex-1 min-w-0"
         onClick={onToggle}
       >
-        <div className="mr-1 text-slate-400 flex-shrink-0">
+        <div className="mr-1 text-slate-400 dark:text-slate-400 flex-shrink-0">
           {collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
         </div>
-        <span className="font-medium text-slate-900 text-sm px-2 whitespace-nowrap">
+        <span className="font-medium text-slate-900 dark:text-slate-100 text-sm px-2 whitespace-nowrap">
           {title && title.trim() !== '' ? title : `Group ${id}`}
         </span>
-        <span className="ml-2 text-xs text-slate-400 flex-shrink-0">
+        <span className="ml-2 text-xs text-slate-400 dark:text-slate-400 flex-shrink-0">
           ({tabCount})
         </span>
       </div>

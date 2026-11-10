@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { Tabs, Button, Spin, Typography, Badge, Tooltip, message } from 'antd'
 import {
-  BarChart3,
   RefreshCw,
   Download,
   LayoutGrid,

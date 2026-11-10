@@ -1,24 +1,17 @@
 import React, { useState } from 'react'
 import {
-  Card,
   Typography,
   Progress,
   Button,
   Tag,
-  Space,
   Input,
   Select,
-  Tooltip
 } from 'antd'
 import {
   FolderOpen,
-  Monitor,
-  Layers,
-  Clock,
   Search,
   ExternalLink,
   Globe,
-  Database
 } from 'lucide-react'
 import type { SessionsStats } from '../../services/analyticsDataService'
 

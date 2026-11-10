@@ -13,6 +13,9 @@ import {
 } from './BaseProvider'
 
 const GEMINI_MODELS: DiscoveredModel[] = [
+  { id: 'gemini-3.8-flash', name: 'Gemini 3.8 Flash (Recommended)', contextLength: 1048576 },
+  { id: 'gemini-3.8-pro', name: 'Gemini 3.8 Pro', contextLength: 2097152 },
+  { id: 'gemini-3.5-flash-lite', name: 'Gemini 3.5 Flash-Lite (Fastest)', contextLength: 1048576 },
   { id: 'gemini-3.7-flash', name: 'Gemini 3.7 Flash', contextLength: 1048576 },
   { id: 'gemini-3.7-pro', name: 'Gemini 3.7 Pro', contextLength: 2097152 },
   {
@@ -20,10 +23,12 @@ const GEMINI_MODELS: DiscoveredModel[] = [
     name: 'Gemini 3.7 Flash Thinking',
     contextLength: 1048576
   },
-  { id: 'gemini-3.6-pro', name: 'Gemini 3.6 Pro', contextLength: 2097152 },
-  { id: 'gemini-3.6-flash', name: 'Gemini 3.6 Flash', contextLength: 1048576 },
-  { id: 'gemini-3.5-pro', name: 'Gemini 3.5 Pro', contextLength: 2097152 },
-  { id: 'gemini-3.5-flash', name: 'Gemini 3.5 Flash', contextLength: 1048576 }
+  { id: 'gemini-3.1-pro', name: 'Gemini 3.1 Pro', contextLength: 2097152 },
+  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', contextLength: 1048576 },
+  { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', contextLength: 2097152 },
+  { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', contextLength: 1048576 },
+  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', contextLength: 1048576 },
+  { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', contextLength: 2097152 }
 ]
 
 const BASE = 'https://generativelanguage.googleapis.com/v1beta'
@@ -64,20 +69,63 @@ export class GeminiCloudProvider extends BaseProvider {
     return req
   }
 
+  private async parseError(res: Response): Promise<string> {
+    let detail = ''
+    try {
+      const json = await res.json()
+      detail = json.error?.message || ''
+    } catch {
+      try {
+        detail = await res.text()
+      } catch {}
+    }
+
+    if (res.status === 503) {
+      return `Gemini service temporarily overloaded (503 Service Unavailable). ${
+        detail ? `Details: ${detail}. ` : ''
+      }Please try again in a moment, or switch to a faster model (e.g. gemini-3.8-flash) in Settings.`
+    }
+    if (res.status === 429) {
+      return `Gemini rate limit exceeded (429 Too Many Requests). ${
+        detail ? `Details: ${detail}. ` : ''
+      }Please wait a moment before sending another message.`
+    }
+    if (res.status === 404) {
+      return `Gemini model "${this.model}" not found (404). This model may be deprecated. Please select a newer model (e.g. gemini-3.8-flash) in Settings.`
+    }
+    if (res.status === 400) {
+      return `Gemini 400 Bad Request: ${detail || 'Invalid request configuration'}`
+    }
+    return `Gemini API error ${res.status}: ${detail || res.statusText}`
+  }
+
   async chat(
     messages: ChatMessage[],
     abortSignal?: AbortSignal
   ): Promise<string> {
     const url = `${BASE}/models/${this.model}:generateContent?key=${this.apiKey}`
-    const res = await fetch(url, {
+    const body = JSON.stringify(this.buildRequest(messages))
+    let res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(this.buildRequest(messages)),
+      body,
       signal: abortSignal
     })
+
+    // Retry once on transient 503
+    if (res.status === 503 && !abortSignal?.aborted) {
+      await new Promise((r) => setTimeout(r, 1500))
+      res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+        signal: abortSignal
+      })
+    }
+
     if (!res.ok) {
-      const err = await res.text()
-      throw new Error(`Gemini error ${res.status}: ${err}`)
+      const err = await this.parseError(res)
+      throw new Error(err)
     }
     const data = await res.json()
     return data.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
@@ -88,13 +136,30 @@ export class GeminiCloudProvider extends BaseProvider {
     abortSignal?: AbortSignal
   ): AsyncGenerator<StreamChunk> {
     const url = `${BASE}/models/${this.model}:streamGenerateContent?alt=sse&key=${this.apiKey}`
-    const res = await fetch(url, {
+    const body = JSON.stringify(this.buildRequest(messages))
+
+    let res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(this.buildRequest(messages)),
+      body,
       signal: abortSignal
     })
-    if (!res.ok) throw new Error(`Gemini stream error ${res.status}`)
+
+    // If 503 (temporary overload), auto-retry once after 1.5s
+    if (res.status === 503 && !abortSignal?.aborted) {
+      await new Promise((r) => setTimeout(r, 1500))
+      res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+        signal: abortSignal
+      })
+    }
+
+    if (!res.ok) {
+      const errMsg = await this.parseError(res)
+      throw new Error(errMsg)
+    }
 
     const reader = res.body!.getReader()
     const decoder = new TextDecoder()
@@ -135,10 +200,8 @@ export class GeminiCloudProvider extends BaseProvider {
               .filter((m: any) => {
                 const methods = m.supportedGenerationMethods || []
                 const name = (m.name || '').toLowerCase()
-                const isLegacy = /gemini-(1\.|2\.|3\.0|3\.1|3\.2)/i.test(name)
                 return (
                   methods.includes('generateContent') &&
-                  !isLegacy &&
                   !name.includes('embedding') &&
                   !name.includes('aqa')
                 )

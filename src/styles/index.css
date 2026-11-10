@@ -49,12 +49,16 @@ svg {
   position: relative;
 }
 
-/* Fix Ant Design dropdown z-index issues */
+/* Fix Ant Design dropdown and submenu z-index issues */
 .ant-dropdown,
 .ant-select-dropdown,
 .ant-picker-dropdown,
 .ant-tooltip {
   z-index: 9999 !important;
+}
+
+.ant-dropdown-menu-submenu-popup {
+  z-index: 10050 !important;
 }
 
 .ant-popover {
@@ -435,7 +439,69 @@ body {
   /* App handles scrolling */
 }
 
-/* Compact Context Menu Styles */
+/* Compact Context Menu & Submenu Styles */
+.ant-dropdown .ant-dropdown-menu,
+.ant-dropdown-menu-submenu-popup .ant-dropdown-menu {
+  background: var(--surface-2, #ffffff) !important;
+  border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.08)) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.22), 0 8px 10px -6px rgba(0, 0, 0, 0.12) !important;
+  padding: 4px !important;
+}
+
+.ant-dropdown-menu-submenu-popup {
+  z-index: 10050 !important;
+  pointer-events: auto !important;
+}
+
+.ant-dropdown-menu-submenu-popup .ant-dropdown-menu-item,
+.ant-dropdown-menu-submenu-popup .ant-dropdown-menu-submenu-title,
+.ant-dropdown-menu-item,
+.ant-dropdown-menu-submenu-title {
+  border-radius: 6px !important;
+  color: var(--text-primary, #0f1419) !important;
+  font-family: var(--font-sans, inherit) !important;
+  font-size: 13px !important;
+  line-height: 1.3 !important;
+  padding: 6px 12px !important;
+  min-height: 30px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.ant-dropdown-menu-submenu-title {
+  justify-content: space-between !important;
+}
+
+.ant-dropdown-menu-submenu-arrow {
+  margin-left: auto !important;
+  padding-left: 12px !important;
+  position: static !important;
+  color: var(--text-tertiary, #8899a6) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.ant-dropdown-menu-item:hover,
+.ant-dropdown-menu-submenu-title:hover {
+  background: var(--surface-4, #ebedf0) !important;
+  color: var(--text-primary, #0f1419) !important;
+}
+
+.ant-dropdown-menu-item-danger {
+  color: var(--text-danger, #e5484d) !important;
+}
+
+.ant-dropdown-menu-item-danger:hover {
+  background: rgba(229, 72, 77, 0.1) !important;
+  color: var(--text-danger, #e5484d) !important;
+}
+
+.ant-dropdown-menu-item-divider {
+  margin: 3px 0 !important;
+  background-color: var(--border-subtle, rgba(0, 0, 0, 0.06)) !important;
+}
+
 .compact-context-menu .ant-dropdown-menu {
   padding: 4px !important;
   border-radius: 8px !important;

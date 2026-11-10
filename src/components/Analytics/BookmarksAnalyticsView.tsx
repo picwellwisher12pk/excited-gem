@@ -1,21 +1,14 @@
 import React, { useState } from 'react'
 import {
-  Card,
   Typography,
   Progress,
   Button,
   Tag,
-  Table,
-  Space,
   Input,
   Select,
-  Tooltip
 } from 'antd'
 import {
-  Bookmark,
   Folder,
-  FolderX,
-  Layers,
   AlertTriangle,
   Search,
   ExternalLink,

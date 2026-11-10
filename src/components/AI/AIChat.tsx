@@ -138,12 +138,17 @@ function ActionCard({
               {action.description}
             </div>
           </div>
-          <Tag
-            color={RISK_COLORS[action.risk]}
-            className="text-[9px] flex-shrink-0 mt-0.5"
-          >
-            {RISK_LABELS[action.risk]}
-          </Tag>
+          <div className="flex items-center gap-1">
+            <Tag
+              color={RISK_COLORS[action.risk]}
+              className="text-[9px] flex-shrink-0 mt-0.5"
+            >
+              {RISK_LABELS[action.risk]}
+            </Tag>
+            <Tag color="purple" className="text-[9px] flex-shrink-0 mt-0.5">
+              ⚡ Local ONNX
+            </Tag>
+          </div>
         </div>
         <div className="text-[10px] text-gray-400 mt-0.5 font-mono">
           {action.type.replace(/_/g, ' ')}
@@ -351,21 +356,44 @@ export function AIChat({ isLoading }: AIChatProps) {
         <div className="grid grid-cols-1 gap-2 w-full">
           {[
             {
-              text: 'What can you do?',
-              icon: <RobotOutlined />,
+              text: '🪟 Combine all tabs across windows',
+              icon: <AppstoreOutlined className="text-indigo-500" />,
+              prompt: 'Combine all tabs across all windows into one window'
+            },
+            {
+              text: '⚡ Smart Group Dev & Docs',
+              icon: <AppstoreOutlined className="text-blue-500" />,
+              prompt: 'Group all dev, github and documentation tabs'
+            },
+            {
+              text: '🔇 Mute all noisy tabs',
+              icon: <AudioMutedOutlined className="text-red-500" />,
+              prompt: 'Mute all audio tabs'
+            },
+            {
+              text: 'Put idle tabs to sleep (Save RAM)',
+              icon: <PieChartOutlined className="text-amber-500" />,
+              prompt: 'Discard inactive background tabs to save memory'
+            },
+            {
+              text: '📌 Pin messaging & media tabs',
+              icon: <SearchOutlined className="text-cyan-500" />,
+              prompt: 'Pin music and messaging tabs'
+            },
+            {
+              text: '💾 Save window as session',
+              icon: <SaveOutlined className="text-emerald-500" />,
+              prompt: 'Save current tabs as a session Work'
+            },
+            {
+              text: '🧹 Close duplicate & shopping tabs',
+              icon: <CloseOutlined className="text-rose-500" />,
+              prompt: 'Close shopping and checkout tabs'
+            },
+            {
+              text: '❓ What can you do?',
+              icon: <RobotOutlined className="text-purple-500" />,
               prompt: 'List all your actions, features and capabilities.'
-            },
-            { text: 'List all Facebook tabs', icon: <SearchOutlined /> },
-            { text: 'Close all YouTube tabs', icon: <CloseOutlined /> },
-            { text: 'Group tabs by domain', icon: <AppstoreOutlined /> },
-            {
-              text: 'Which domain has the most tabs?',
-              icon: <PieChartOutlined />
-            },
-            { text: 'Mute all audio tabs', icon: <AudioMutedOutlined /> },
-            {
-              text: 'Save this window as session "Work"',
-              icon: <SaveOutlined />
             }
           ].map((cap) => (
             <div

@@ -6,7 +6,7 @@ import {
   X,
   Eye,
   MinusCircle,
-  CheckSquare
+  Combine
 } from 'lucide-react'
 import { Button, Tooltip, Checkbox } from 'antd'
 
@@ -20,6 +20,7 @@ interface GroupHeaderProps {
   onDiscard: () => void
   onClose: () => void
   onFocus: () => void
+  onMergeIntoCurrent?: () => void
   isAllSelected?: boolean
   isIndeterminate?: boolean
   selectedTabCount?: number
@@ -36,6 +37,7 @@ export function GroupHeader({
   onDiscard,
   onClose,
   onFocus,
+  onMergeIntoCurrent,
   isAllSelected = false,
   isIndeterminate = false,
   selectedTabCount = 0,
@@ -49,10 +51,10 @@ export function GroupHeader({
 
   return (
     <div
-      className="flex items-center px-4 py-2 bg-slate-100 border-b border-stone-200 h-[50px] cursor-pointer hover:bg-slate-200 transition-colors select-none group"
+      className="flex items-center px-4 py-2 bg-slate-100 dark:bg-slate-800/90 border-b border-stone-200 dark:border-slate-700 h-[50px] cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700/80 transition-colors select-none group"
       onClick={onToggle}
     >
-      <div className="mr-2 text-slate-500">
+      <div className="mr-2 text-slate-500 dark:text-slate-400">
         {collapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
       </div>
 
@@ -77,17 +79,17 @@ export function GroupHeader({
         </Tooltip>
       )}
 
-      <Layout size={16} className="text-slate-500 mr-2" />
-      <span className="font-semibold text-slate-700 text-sm mr-2">
+      <Layout size={16} className="text-slate-500 dark:text-slate-400 mr-2" />
+      <span className="font-semibold text-slate-700 dark:text-slate-200 text-sm mr-2">
         Window {windowId}
         {isCurrentWindow && (
-          <span className="text-slate-400 font-normal ml-2">(Current)</span>
+          <span className="text-slate-400 dark:text-slate-400 font-normal ml-2">(Current)</span>
         )}
       </span>
-      <span className="text-xs text-slate-400">({tabCount})</span>
+      <span className="text-xs text-slate-400 dark:text-slate-400">({tabCount})</span>
 
       {selectedTabCount > 0 && (
-        <span className="ml-2 text-[11px] bg-blue-100 text-blue-700 font-medium px-2 py-0.5 rounded-full">
+        <span className="ml-2 text-[11px] bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 font-medium px-2 py-0.5 rounded-full">
           {selectedTabCount} selected
         </span>
       )}
@@ -96,20 +98,13 @@ export function GroupHeader({
         className="ml-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
         onClick={(e) => e.stopPropagation()}
       >
-        {onToggleSelect && (
-          <Tooltip
-            title={isAllSelected ? 'Deselect All Tabs' : 'Select All Tabs'}
-          >
+        {onMergeIntoCurrent && !isCurrentWindow && (
+          <Tooltip title={`Merge Window ${windowId} into Current Window`}>
             <Button
               type="text"
               size="small"
-              icon={
-                <CheckSquare
-                  size={14}
-                  className={isAllSelected ? 'text-blue-600' : 'text-slate-600'}
-                />
-              }
-              onClick={onToggleSelect}
+              icon={<Combine size={14} className="text-indigo-600 dark:text-indigo-400" />}
+              onClick={onMergeIntoCurrent}
               className="flex items-center justify-center w-6 h-6 min-w-0"
             />
           </Tooltip>

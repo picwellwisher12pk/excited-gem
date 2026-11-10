@@ -1,0 +1,33 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Excited Gem",
+  "version": "../package.json",
+  "identifier": "com.excitedgem.desktop",
+  "build": {
+    "frontendDist": "../dist-desktop",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "bun run vite --config vite.desktop.config.ts",
+    "beforeBuildCommand": "bun run vite build --config vite.desktop.config.ts"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "android": {
+      "debugApplicationIdSuffix": ".debug"
+    }
+  }
+}

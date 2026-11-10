@@ -1,6 +1,6 @@
 {
   "extends": "plasmo/templates/tsconfig.base",
-  "exclude": ["node_modules", "build", "dist", ".plasmo"],
+  "exclude": ["node_modules", "build", "dist", ".plasmo", "src-tauri"],
   "include": [
     "src",
     ".plasmo/index.d.ts",

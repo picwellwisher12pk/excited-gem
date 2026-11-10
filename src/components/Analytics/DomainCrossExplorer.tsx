@@ -6,12 +6,10 @@ import {
   Button,
   Drawer,
   Typography,
-  Space,
   Popover,
   Checkbox,
   Segmented,
   Select,
-  Tooltip
 } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import {
@@ -22,12 +20,9 @@ import {
   BookmarkPlus,
   FolderOpen,
   Eye,
-  SlidersHorizontal,
   Columns3,
   RotateCcw,
   Filter,
-  Check,
-  X
 } from 'lucide-react'
 import type {
   CrossDomainStat,

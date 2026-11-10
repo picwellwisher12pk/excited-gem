@@ -18,6 +18,7 @@ import Sidebar from '../components/Sidebar'
 import { usePageTracking } from '../components/Analytics/usePageTracking'
 import { AIDrawer } from '../components/AI/AIDrawer'
 import { AIProviderBadge } from '../components/AI/AIProviderBadge'
+import { FloatingActionBar } from '../components/FloatingActionBar'
 import { toggleDrawer, setProviderStatus } from '../store/aiSlice'
 import type { AppDispatch, RootState } from '../store/store'
 import { getAIService } from '../ai/AIService'
@@ -224,6 +225,9 @@ const ActiveTabs = () => {
 
       {/* AI Drawer */}
       <AIDrawer onOpenSettings={openAISettings} />
+
+      {/* Floating Action Bar for Selected Tabs */}
+      <FloatingActionBar />
 
       {/* Floating AI trigger button */}
       <div className="fixed bottom-4 right-4 z-30">

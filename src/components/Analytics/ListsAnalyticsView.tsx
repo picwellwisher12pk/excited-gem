@@ -1,23 +1,17 @@
 import React, { useState } from 'react'
 import {
-  Card,
   Typography,
   Progress,
   Button,
   Tag,
-  Space,
   Input,
   Select,
-  Tooltip
 } from 'antd'
 import {
-  BookmarkPlus,
   Library,
-  Layers,
   Database,
   Search,
   ExternalLink,
-  Clock,
   Globe
 } from 'lucide-react'
 import type { ListsStats } from '../../services/analyticsDataService'

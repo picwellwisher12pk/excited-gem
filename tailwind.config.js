@@ -4,6 +4,7 @@ module.exports = {
   darkMode: 'class',
   content: [
     './src/**/*.{ts,tsx}',
+    './desktop/**/*.{ts,tsx}',
     './tabs/**/*.{ts,tsx}',
     './contents/**/*.{ts,tsx}',
     './popup/**/*.{ts,tsx}',

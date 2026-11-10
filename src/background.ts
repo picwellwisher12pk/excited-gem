@@ -3,6 +3,7 @@ import { preferences } from './scripts/defaultPreferences'
 import { extractVideoId, parseIsoDuration } from './utils/youtube'
 import { getRoutines, syncRoutineAlarms } from './services/routineStorage'
 import { executeRoutine } from './services/routineEngine'
+import { initBridgeClient } from './background/bridgeClient'
 import debounce from 'lodash/debounce'
 
 const browser =
@@ -11,6 +12,9 @@ const browser =
     : (globalThis as any).browser) || chrome
 
 console.log('DEBUG: Background script loaded')
+initBridgeClient({
+  fetchYouTubeApiInfo: (videoId, force) => fetchYouTubeApiInfo(videoId, force)
+})
 
 // --- Storage Debouncing & Cache Management ---
 const MAX_CACHE_SIZE = 1000
@@ -70,6 +74,20 @@ browser.runtime.onInstalled.addListener(() => {
   syncRoutineAlarms().catch((err) =>
     console.error('Error syncing routine alarms:', err)
   )
+  // Warm up SemanticRouter ONNX model in the background after install/update
+  // so the first NL command has no cold-start delay
+  setTimeout(() => {
+    import('./services/semanticSearchService').then(({ getSemanticRouterInstance }) => {
+      const router = getSemanticRouterInstance()
+      router.init().then(() => {
+        console.log('[ExcitedGem] SemanticRouter warmed up successfully')
+      }).catch((err) => {
+        console.warn('[ExcitedGem] SemanticRouter warmup failed (non-critical):', err)
+      })
+    }).catch(() => {
+      // Silently ignore if import fails (e.g. during extension reload)
+    })
+  }, 5000) // 5s delay so we don't interfere with install/startup performance
 })
 
 // --- Routine Automation Handlers ---

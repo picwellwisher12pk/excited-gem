@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.25.0] (2026-11-05)
+
+### Features
+
+* **desktop:** add `DesktopCommandPalette` — `Ctrl+K` global command palette with fuzzy tab search, view navigation, and keyboard-navigable results
+* **desktop:** extract `useWorkspaceActions` hook from `App.tsx` — separates all handler logic, eliminates 200+ lines from the god component
+* **adapter:** add `AdapterContext` / `useAdapter()` React context hook for stable singleton adapter access across the render tree
+* **ai:** pre-warm SemanticRouter ONNX model (23MB) in background service worker on extension install/update — eliminates cold-start delay on first NL command
+* **desktop:** wire `Ctrl+K` to command palette in `useGlobalShortcuts` (previously focused a plain search input)
+* **types:** fix `tab: any` → `TabWithMuteInfo` (extends `UnifiedTab`) in `ContextMenu.tsx` — TypeScript strictness restored
+
+### Refactors
+
+* **desktop/App.tsx:** reduced from 395 lines to ~180 lines by extracting `useWorkspaceActions`
+* **adapter:** optimistic UI roll-back now triggers `refreshData()` on move/migrate errors instead of silently failing
+* **desktop:** `setTimeout` refresh delays reduced and scoped only to post-operation reconciliation
+
+
+
 ## [1.9.0](https://github.com/picwellwisher12pk/excited-gem/compare/v1.8.0...v1.9.0) (2026-10-02)
 
 ### Features

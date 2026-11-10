@@ -1,31 +1,20 @@
 import React, { useState } from 'react'
 import {
-  Card,
   Typography,
   Progress,
   Button,
   Tag,
-  Space,
-  Table,
   Popconfirm,
   message,
   Input,
   Select,
-  Tooltip
 } from 'antd'
 import {
-  LayoutGrid,
   Monitor,
-  Pin,
-  Volume2,
-  VolumeX,
-  Moon,
   AlertTriangle,
   Layers,
   Search,
-  ExternalLink,
   Trash2,
-  ShieldCheck,
   Globe
 } from 'lucide-react'
 import {

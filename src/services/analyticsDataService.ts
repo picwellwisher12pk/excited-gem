@@ -1,11 +1,8 @@
 import { getTree } from '../utils/bookmarks'
 import type { BookmarkNode } from '../utils/bookmarks'
-// @ts-ignore
 import {
-  getLists,
-  getBookmarkLists,
   getSessions
-} from '../components/getsetSessions'
+} from './storageService'
 
 const browser =
   typeof chrome !== 'undefined'

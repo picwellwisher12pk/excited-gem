@@ -62,7 +62,10 @@ export const tabSlice = createSlice({
         state.selectedTabs = state.selectedTabs.filter((t) => t !== id)
       }
       state.lastSelectedTabId = id
-      window.selectedTabs = [...state.selectedTabs]
+      state.isSelectionMode = state.selectedTabs.length > 0
+      if (typeof window !== 'undefined') {
+        window.selectedTabs = [...state.selectedTabs]
+      }
     },
     // Select all tabs between lastSelectedTabId and the given id (inclusive)
     selectTabRange: (state, action) => {
@@ -76,7 +79,10 @@ export const tabSlice = createSlice({
           state.selectedTabs = state.selectedTabs.filter((t) => t !== clickedId)
         }
         state.lastSelectedTabId = clickedId
-        window.selectedTabs = [...state.selectedTabs]
+        state.isSelectionMode = state.selectedTabs.length > 0
+        if (typeof window !== 'undefined') {
+          window.selectedTabs = [...state.selectedTabs]
+        }
         return
       }
       // Find positions in filteredTabs order
@@ -93,19 +99,32 @@ export const tabSlice = createSlice({
       rangeIds.forEach((id) => {
         if (!state.selectedTabs.includes(id)) state.selectedTabs.push(id)
       })
+      state.isSelectionMode = state.selectedTabs.length > 0
       // Don't update anchor on range select (next shift-click extends from same anchor)
-      window.selectedTabs = [...state.selectedTabs]
+      if (typeof window !== 'undefined') {
+        window.selectedTabs = [...state.selectedTabs]
+      }
     },
     updateFilteredTabs: (state, action) => {
       state.filteredTabs = [...action.payload]
-      window.filteredTabs = [...action.payload]
+      if (typeof window !== 'undefined') {
+        window.filteredTabs = [...action.payload]
+      }
     },
     clearSelectedTabs: (state) => {
       state.selectedTabs = []
-      window.selectedTabs = []
+      state.isSelectionMode = false
+      state.lastSelectedTabId = null
+      if (typeof window !== 'undefined') {
+        window.selectedTabs = []
+      }
     },
     selectAllTabs: (state) => {
       state.selectedTabs = [...state.filteredTabs.map((tab) => tab.id)]
+      state.isSelectionMode = state.selectedTabs.length > 0
+      if (state.selectedTabs.length > 0) {
+        state.lastSelectedTabId = state.selectedTabs[0]
+      }
     },
     invertSelectedTabs: (state) => {
       state.selectedTabs = [
@@ -117,7 +136,9 @@ export const tabSlice = createSlice({
     updateSelectedWindow: (state, action) => {
       console.log('updateSelectedWindow:', action.payload)
       state.selectedWindow = action.payload
-      window.selectedWindow = action.payload
+      if (typeof window !== 'undefined') {
+        window.selectedWindow = action.payload
+      }
     },
     updateYouTubeInfo: (state, action) => {
       const { tabId, info } = action.payload

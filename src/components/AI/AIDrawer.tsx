@@ -149,10 +149,17 @@ export function AIDrawer({ onOpenSettings }: AIDrawerProps) {
 
             {/* Status bar */}
             {!settings.enabled && (
-              <div className="mt-3 px-3 py-2 rounded-lg bg-orange-400/20 border border-orange-300/30">
-                <span className="text-orange-100 text-xs">
-                  AI is not enabled. Click ⚙️ to configure a provider.
+              <div className="mt-3 px-3 py-2 rounded-lg bg-white/10 border border-white/20 flex items-center justify-between">
+                <span className="text-white/90 text-xs">
+                  ⚡ <strong>Local ONNX Ready</strong>: Fast tab actions work instantly at $0 cost.
                 </span>
+                <button
+                  type="button"
+                  onClick={onOpenSettings}
+                  className="text-xs bg-white/20 hover:bg-white/30 text-white rounded px-2 py-0.5 ml-2 cursor-pointer transition-colors"
+                >
+                  Configure Cloud
+                </button>
               </div>
             )}
           </div>

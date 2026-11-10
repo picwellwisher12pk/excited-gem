@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   DndContext,
   closestCorners,
@@ -13,11 +13,11 @@ import {
 import { useSelector, useDispatch } from 'react-redux'
 import type { RootState } from '../../store/store'
 import { WindowCard, SortableGridTabItem, isWindowPrivate } from './WindowCard'
-import { getAllWindows, getCurrentWindow } from '../../scripts/general'
-import { updateFilteredTabs } from '../../store/tabSlice'
+import { updateFilteredTabs, clearSelectedTabs } from '../../store/tabSlice'
+import { batchMoveTabs } from '../../utils/bulkOperations'
 import { arrayMove } from '@dnd-kit/sortable'
 import { LayoutGrid, Layers, Plus, EyeOff } from 'lucide-react'
-import { Button, Dropdown } from 'antd'
+import { Button, Dropdown, message } from 'antd'
 import type { MenuProps } from 'antd'
 
 interface WindowGridViewProps {
@@ -30,6 +30,9 @@ export function WindowGridView({
   const dispatch = useDispatch()
   const filteredTabs = useSelector(
     (state: RootState) => state.tabs.filteredTabs
+  )
+  const selectedTabs = useSelector(
+    (state: RootState) => state.tabs.selectedTabs
   )
   const [windowsList, setWindowsList] = useState<chrome.windows.Window[]>([])
   const [currentWindowId, setCurrentWindowId] = useState<number | null>(null)
@@ -146,6 +149,12 @@ export function WindowGridView({
     const activeTab = filteredTabs.find((t) => t.id === activeTabId)
     if (!activeTab) return
 
+    // If activeTab is part of multi-tab selection, move all selected tabs
+    const isSelected = selectedTabs.includes(activeTabId)
+    const tabsToMove = isSelected && selectedTabs.length > 1
+      ? selectedTabs
+      : [activeTabId]
+
     // 1. Dropped on another tab
     const overTabId = Number(over.id)
     const overTab = filteredTabs.find((t) => t.id === overTabId)
@@ -156,21 +165,41 @@ export function WindowGridView({
       const targetIndex = overTab.index
 
       if (sourceWindowId === targetWindowId) {
-        // Reorder within same window
-        const oldIndex = filteredTabs.findIndex((t) => t.id === activeTabId)
-        const newIndex = filteredTabs.findIndex((t) => t.id === overTabId)
-        const newTabs = arrayMove(filteredTabs, oldIndex, newIndex)
-        dispatch(updateFilteredTabs(newTabs))
-        chrome.tabs.move(activeTabId, { index: targetIndex })
+        if (tabsToMove.length === 1) {
+          // Reorder single tab within same window
+          const oldIndex = filteredTabs.findIndex((t) => t.id === activeTabId)
+          const newIndex = filteredTabs.findIndex((t) => t.id === overTabId)
+          const newTabs = arrayMove(filteredTabs, oldIndex, newIndex)
+          dispatch(updateFilteredTabs(newTabs))
+          chrome.tabs.move(activeTabId, { index: targetIndex })
+        } else {
+          // Move batch of selected tabs within same window to targetIndex
+          try {
+            await batchMoveTabs(tabsToMove, {
+              windowId: targetWindowId,
+              index: targetIndex
+            })
+            message.success(`Moved ${tabsToMove.length} tabs to target position`)
+            dispatch(clearSelectedTabs())
+          } catch (err) {
+            console.error('Failed to move selected tabs:', err)
+          }
+        }
       } else {
         // Move to different window at target index
         try {
-          await chrome.tabs.move(activeTabId, {
+          await batchMoveTabs(tabsToMove, {
             windowId: targetWindowId,
             index: targetIndex
           })
+          message.success(
+            `Moved ${tabsToMove.length} ${tabsToMove.length === 1 ? 'tab' : 'tabs'} to Window`
+          )
+          if (tabsToMove.length > 1) {
+            dispatch(clearSelectedTabs())
+          }
         } catch (err) {
-          console.error('Failed to move tab between windows:', err)
+          console.error('Failed to move tabs between windows:', err)
         }
       }
       return
@@ -178,17 +207,26 @@ export function WindowGridView({
 
     // 2. Dropped on a Window Card container directly
     const overData = over.data?.current
-    if (overData?.type === 'window-card' && overData.windowId) {
-      const targetWindowId = overData.windowId
-      if (activeTab.windowId !== targetWindowId) {
-        try {
-          await chrome.tabs.move(activeTabId, {
-            windowId: targetWindowId,
-            index: -1
-          })
-        } catch (err) {
-          console.error('Failed to move tab to window container:', err)
+    const isWindowCard =
+      overData?.type === 'window-card' ||
+      String(over.id).startsWith('window-card-')
+    const targetWindowId =
+      overData?.windowId || Number(String(over.id).replace('window-card-', ''))
+
+    if (isWindowCard && targetWindowId) {
+      try {
+        await batchMoveTabs(tabsToMove, {
+          windowId: targetWindowId,
+          index: -1
+        })
+        message.success(
+          `Moved ${tabsToMove.length} ${tabsToMove.length === 1 ? 'tab' : 'tabs'} to Window`
+        )
+        if (tabsToMove.length > 1) {
+          dispatch(clearSelectedTabs())
         }
+      } catch (err) {
+        console.error('Failed to move tab to window container:', err)
       }
     }
   }
@@ -275,7 +313,12 @@ export function WindowGridView({
             {/* Drag Overlay for smooth preview */}
             <DragOverlay>
               {activeDragTab ? (
-                <div className="w-64 shadow-2xl rounded-lg opacity-90 pointer-events-none scale-105">
+                <div className="relative w-64 shadow-2xl rounded-lg opacity-95 pointer-events-none scale-105">
+                  {selectedTabs.includes(activeDragTab.id) && selectedTabs.length > 1 && (
+                    <div className="absolute -top-3 -right-3 z-50 bg-blue-600 text-white text-xs font-bold px-2.5 py-0.5 rounded-full shadow-lg border-2 border-white ring-2 ring-blue-400/40">
+                      Moving {selectedTabs.length} tabs
+                    </div>
+                  )}
                   <SortableGridTabItem
                     tab={activeDragTab}
                     isSelected={false}

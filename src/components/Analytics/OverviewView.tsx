@@ -1,5 +1,5 @@
 import React from 'react'
-import { Card, Typography, Progress, Button, Tag, Space, Tooltip } from 'antd'
+import { Typography, Progress, Button, Tag, } from 'antd'
 import {
   LayoutGrid,
   Bookmark,
@@ -9,11 +9,7 @@ import {
   AlertTriangle,
   Zap,
   CheckCircle,
-  ExternalLink,
-  Volume2,
-  Pin,
-  Moon,
-  Layers
+  CircleDashed,
 } from 'lucide-react'
 import type { FullAnalyticsData } from '../../services/analyticsDataService'
 
@@ -77,7 +73,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             </span>
             {tabs.discardedTabsCount > 0 && (
               <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 font-medium flex items-center gap-1">
-                <Moon size={11} /> {tabs.discardedTabsCount} sleeping
+                <CircleDashed size={11} strokeWidth={1.75} /> {tabs.discardedTabsCount} suspended
               </span>
             )}
           </div>

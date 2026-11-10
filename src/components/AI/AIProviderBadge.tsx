@@ -4,6 +4,7 @@ import type { ProviderType } from '../../ai/AIService'
 
 const PROVIDER_ICONS: Record<ProviderType, string> = {
   'gemini-nano': '⚡',
+  'semantic-router': '🧭',
   ollama: '🦙',
   'lm-studio': '🏠',
   jan: '🌀',
@@ -12,11 +13,13 @@ const PROVIDER_ICONS: Record<ProviderType, string> = {
   openai: '🤖',
   'gemini-cloud': '✨',
   anthropic: '🧠',
-  groq: '⚡'
+  groq: '⚡',
+  jev: '🎯'
 }
 
 const PROVIDER_LABELS: Record<ProviderType, string> = {
   'gemini-nano': 'Nano',
+  'semantic-router': 'Router',
   ollama: 'Ollama',
   'lm-studio': 'LM Studio',
   jan: 'Jan',
@@ -25,7 +28,8 @@ const PROVIDER_LABELS: Record<ProviderType, string> = {
   openai: 'OpenAI',
   'gemini-cloud': 'Gemini',
   anthropic: 'Claude',
-  groq: 'Groq'
+  groq: 'Groq',
+  jev: 'Jev'
 }
 
 interface AIProviderBadgeProps {

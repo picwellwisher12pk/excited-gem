@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from 'bun:test'
+import { describe, expect, it, } from 'bun:test'
 import { analytics } from './analytics'
 import type { BugReportPayload } from '../types/telemetry'
 

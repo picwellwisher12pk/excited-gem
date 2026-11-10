@@ -33,11 +33,12 @@ import {
   toggleSelectionMode
 } from '../store/tabSlice'
 import { setRegex, setSearchIn } from '../store/searchSlice'
-import { batchRemoveTabs } from '../utils/bulkOperations'
+import { batchRemoveTabs, batchMoveTabs } from '../utils/bulkOperations'
 // @ts-ignore
 import { saveSession } from '../components/getsetSessions'
 import { useResponsive } from '../hooks/useResponsive'
 import { WindowGridView } from '../components/WindowGrid'
+import { filterTabsSemantically } from '../services/semanticSearchService'
 
 const MyLoader = ({ width }: { width: number }) => (
   <ContentLoader
@@ -116,6 +117,7 @@ const Row = ({
     handleDiscardWindow,
     handleCloseWindow,
     handleFocusWindow,
+    handleMergeWindowIntoCurrent,
     handleSaveTabGroup,
     handleDiscardTabGroup,
     handleCloseTabGroup,
@@ -173,6 +175,7 @@ const Row = ({
           onDiscard={() => handleDiscardWindow(item.windowId)}
           onClose={() => handleCloseWindow(item.windowId)}
           onFocus={() => handleFocusWindow(item.windowId)}
+          onMergeIntoCurrent={() => handleMergeWindowIntoCurrent(item.windowId)}
           isAllSelected={isAllSelected}
           isIndeterminate={isIndeterminate}
           selectedTabCount={selectedInWindow.length}
@@ -317,6 +320,46 @@ function TabList() {
 
   const handleFocusWindow = (windowId: number) => {
     chrome.windows.update(windowId, { focused: true })
+  }
+
+  const handleMergeWindowIntoCurrent = async (sourceWindowId: number) => {
+    try {
+      const current = await chrome.windows.getCurrent()
+      if (!current?.id) return
+
+      const sourceWin = await new Promise<chrome.windows.Window | undefined>((resolve) => {
+        chrome.windows.get(sourceWindowId, (w) => resolve(w))
+      }).catch(() => undefined)
+
+      if (sourceWin && !!sourceWin.incognito !== !!current.incognito) {
+        console.warn('Cannot merge across different incognito profiles.')
+        return
+      }
+
+      const allWindowTabs = tabs && tabs.length > 0 ? tabs : filteredTabs
+      const tabsInSource = allWindowTabs.filter((t: any) => t.windowId === sourceWindowId)
+      const tabIds = tabsInSource.map((t: any) => t.id).filter(Boolean)
+      if (tabIds.length > 0) {
+        try {
+          await chrome.tabs.move(tabIds, { windowId: current.id, index: -1 })
+        } catch {
+          for (const tid of tabIds) {
+            try {
+              await chrome.tabs.move(tid, { windowId: current.id, index: -1 })
+            } catch {
+              try {
+                await chrome.tabs.update(tid, { pinned: false })
+                await chrome.tabs.move(tid, { windowId: current.id, index: -1 })
+              } catch (e) {
+                console.warn('Could not move tab during window merge:', tid, e)
+              }
+            }
+          }
+        }
+      }
+    } catch (err: any) {
+      console.error('Failed to merge window into current window:', err)
+    }
   }
 
   const handleSaveTabGroup = async (groupId: number) => {
@@ -579,6 +622,28 @@ function TabList() {
     const filterAndUpdate = async () => {
       try {
         setIsLoading(true)
+
+        // 1. If semantic search is enabled and a search query is typed, use local ONNX router
+        if (searchState.semanticSearch && searchState.searchTerm?.trim()) {
+          // First filter by pinned/audible attributes if active
+          let prefiltered = tabs
+          if (searchState.audibleSearch) {
+            prefiltered = prefiltered.filter((t: any) => t.audible === true)
+          }
+          if (searchState.pinnedSearch) {
+            prefiltered = prefiltered.filter((t: any) => t.pinned === true)
+          }
+
+          const semanticMatches = await filterTabsSemantically(
+            prefiltered,
+            searchState.searchTerm,
+            0.25
+          )
+          dispatch(updateFilteredTabs(semanticMatches))
+          return
+        }
+
+        // 2. Standard exact/regex filter
         const filtered = await asyncFilterTabs(
           {
             searchTerm: searchState.searchTerm,
@@ -647,18 +712,31 @@ function TabList() {
     const oldIndex = filteredTabs.findIndex((tab: any) => tab.id === activeId)
     const newIndex = filteredTabs.findIndex((tab: any) => tab.id === overId)
 
-    if (activeItem.windowId === targetWindowId) {
-      const newTabs = arrayMove(filteredTabs, oldIndex, newIndex)
-      dispatch(updateFilteredTabs(newTabs))
-    }
+    const isSelected = selectedTabs.includes(Number(activeId))
+    const tabsToMove = isSelected && selectedTabs.length > 1
+      ? selectedTabs
+      : [Number(activeId)]
 
-    if (activeItem.windowId !== targetWindowId) {
-      chrome.tabs.move(Number(activeId), {
+    if (activeItem.windowId === targetWindowId) {
+      if (tabsToMove.length === 1) {
+        const newTabs = arrayMove(filteredTabs, oldIndex, newIndex)
+        dispatch(updateFilteredTabs(newTabs))
+        chrome.tabs.move(Number(activeId), { index: targetIndex })
+      } else {
+        batchMoveTabs(tabsToMove, {
+          windowId: targetWindowId,
+          index: targetIndex
+        })
+        dispatch(clearSelectedTabs())
+      }
+    } else {
+      batchMoveTabs(tabsToMove, {
         windowId: targetWindowId,
         index: targetIndex
       })
-    } else {
-      chrome.tabs.move(Number(activeId), { index: targetIndex })
+      if (tabsToMove.length > 1) {
+        dispatch(clearSelectedTabs())
+      }
     }
   }
 
@@ -687,6 +765,7 @@ function TabList() {
       handleDiscardWindow,
       handleCloseWindow,
       handleFocusWindow,
+      handleMergeWindowIntoCurrent,
       handleSaveTabGroup,
       handleDiscardTabGroup,
       handleCloseTabGroup,

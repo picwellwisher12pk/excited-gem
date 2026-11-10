@@ -66,6 +66,15 @@ const PROVIDERS: ProviderOption[] = [
     defaultModel: 'gemini-nano'
   },
   {
+    value: 'semantic-router',
+    label: '🧭 Semantic Router (100% Local / Free)',
+    isLocal: true,
+    isBuiltin: false,
+    requiresKey: false,
+    defaultUrl: '',
+    defaultModel: 'all-MiniLM-L6-v2'
+  },
+  {
     value: 'ollama',
     label: '🦙 Ollama (Local)',
     isLocal: true,
@@ -126,7 +135,7 @@ const PROVIDERS: ProviderOption[] = [
     isBuiltin: false,
     requiresKey: true,
     defaultUrl: '',
-    defaultModel: 'gemini-3.7-flash'
+    defaultModel: 'gemini-3.8-flash'
   },
   {
     value: 'anthropic',
@@ -152,16 +161,22 @@ const QUICK_MODEL_PRESETS: Partial<
   Record<ProviderType, Array<{ id: string; label: string; badge?: string }>>
 > = {
   'gemini-cloud': [
-    { id: 'gemini-3.7-flash', label: 'Gemini 3.7 Flash', badge: 'Latest' },
+    { id: 'gemini-3.8-flash', label: 'Gemini 3.8 Flash', badge: 'Latest' },
+    { id: 'gemini-3.8-pro', label: 'Gemini 3.8 Pro', badge: 'Flagship' },
+    { id: 'gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash-Lite', badge: 'Fastest' },
+    { id: 'gemini-3.7-flash', label: 'Gemini 3.7 Flash', badge: 'Balanced' },
     { id: 'gemini-3.7-pro', label: 'Gemini 3.7 Pro', badge: '2M ctx' },
-    { id: 'gemini-3.6-pro', label: 'Gemini 3.6 Pro', badge: 'Smart' },
-    { id: 'gemini-3.6-flash', label: 'Gemini 3.6 Flash', badge: 'Fast' },
-    { id: 'gemini-3.5-pro', label: 'Gemini 3.5 Pro', badge: '2M ctx' }
+    { id: 'gemini-3.1-pro', label: 'Gemini 3.1 Pro', badge: 'Smart' },
+    { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', badge: 'Compat' }
   ],
   openai: [
     { id: 'gpt-4o-mini', label: 'GPT-4o Mini', badge: 'Fast' },
     { id: 'gpt-4o', label: 'GPT-4o', badge: 'Smart' },
     { id: 'o3-mini', label: 'o3 Mini', badge: 'Reasoning' }
+  ],
+  'semantic-router': [
+    { id: 'all-MiniLM-L6-v2', label: 'all-MiniLM-L6-v2 (ONNX)', badge: 'Local 23MB' },
+    { id: 'semantic-router-fast', label: 'Fast Heuristics', badge: '<1ms' }
   ],
   anthropic: [
     {
@@ -619,6 +634,26 @@ export function AISettingsPanel() {
           checked={localSettings.streaming}
           onChange={(v) => update('streaming', v)}
           className={localSettings.streaming ? '!bg-blue-500' : ''}
+        />
+      </div>
+
+      {/* Semantic Router Guard toggle */}
+      <div className="flex items-center justify-between">
+        <div>
+          <Text strong className="block">
+            Local ONNX Action Guard
+            <Tooltip title="When enabled, simple tab actions (e.g. 'close shopping tabs', 'group github tabs') run locally in <10ms for $0.00, conserving cloud API tokens and latency. Creative/general questions still pass directly to your cloud provider.">
+              <InfoCircleOutlined className="ml-1 text-blue-400 text-xs" />
+            </Tooltip>
+          </Text>
+          <Text type="secondary" className="text-xs">
+            Intercept tab actions with local ONNX router (&lt;10ms, $0 cost)
+          </Text>
+        </div>
+        <Switch
+          checked={localSettings.semanticRouterGuard ?? true}
+          onChange={(v) => update('semanticRouterGuard', v)}
+          className={(localSettings.semanticRouterGuard ?? true) ? '!bg-blue-500' : ''}
         />
       </div>
 

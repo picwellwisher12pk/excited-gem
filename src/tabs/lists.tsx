@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Provider } from 'react-redux'
 import {
   Button,
@@ -10,7 +10,8 @@ import {
   message,
   ConfigProvider,
   Empty,
-  Tabs
+  Tabs,
+  Spin
 } from 'antd'
 import {
   FolderOpen,
@@ -22,22 +23,23 @@ import {
   Library,
   BookOpen,
   X,
-  Bookmark
+  Bookmark,
 } from 'lucide-react'
-// @ts-ignore
 import {
-  getLists,
-  getBookmarkLists,
-  removeLibrary,
-  removeList,
-  renameLibrary,
-  renameTabList
-} from '../components/getsetSessions'
+  getCollections,
+  getBookmarkCollections,
+  deleteCollection,
+  deleteList,
+  renameCollection,
+  renameList,
+  markUrlAccessed
+} from '../services/storageService'
+import type { HydratedCollection } from '../services/storageTypes'
 import Sidebar, { SidebarToggleButton } from '../components/Sidebar'
 import Brand from '../components/Header/Brand'
 import logo from '../assets/logo.svg'
 import store from '../store/store'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import { analytics } from '../utils/analytics'
 import { usePageTracking } from '../components/Analytics/usePageTracking'
 import UnifiedSearch from '../components/Search'
@@ -45,7 +47,6 @@ import { RoutineQuickMenu } from '../components/Routines/RoutineQuickMenu'
 import 'antd/dist/reset.css'
 import '../styles/index.css'
 
-import { useDispatch } from 'react-redux'
 import type { AppDispatch, RootState } from '../store/store'
 import { toggleDrawer, setProviderStatus } from '../store/aiSlice'
 import { AIDrawer } from '../components/AI/AIDrawer'
@@ -54,135 +55,112 @@ import { getAIService } from '../ai/AIService'
 
 const browser = chrome
 
-interface TabData {
-  url: string
-  title: string
-}
-interface ListItem {
-  id: string
-  name: string
-  created: number
-  tabs: TabData[]
-}
-interface LibraryData {
-  id: string
-  name: string
-  created: number
-  storageType?: 'extension' | 'bookmarks' | string
-  bookmarkRootId?: string
-  lists: ListItem[]
-}
-
-function getTabCount(lib: LibraryData) {
-  return lib.lists.reduce((sum, l) => sum + l.tabs.length, 0)
-}
-
 function formatDate(ts: number) {
   return new Date(ts).toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+    month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit'
   })
 }
 
-function LibraryList({
-  libraries,
+function getTabCount(col: HydratedCollection) {
+  return col.lists.reduce((sum, l) => sum + l.tabs.length, 0)
+}
+
+function CollectionList({
+  collections,
   isBookmarks,
   onReload
 }: {
-  libraries: LibraryData[]
+  collections: HydratedCollection[]
   isBookmarks: boolean
   onReload: () => void
 }) {
-  const [expandedLibs, setExpandedLibs] = useState<Set<string>>(new Set())
+  const [expandedCols, setExpandedCols] = useState<Set<string>>(new Set())
   const [expandedLists, setExpandedLists] = useState<Set<string>>(new Set())
-  const [editingLibId, setEditingLibId] = useState<string | null>(null)
+  const [editingColId, setEditingColId] = useState<string | null>(null)
   const [editingListKey, setEditingListKey] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
 
-  const toggleLib = (id: string) => {
-    const s = new Set(expandedLibs)
-    s.has(id) ? s.delete(id) : s.add(id)
-    setExpandedLibs(s)
-  }
-  const toggleList = (key: string) => {
-    const s = new Set(expandedLists)
-    s.has(key) ? s.delete(key) : s.add(key)
-    setExpandedLists(s)
+  const toggleCol = (id: string) => {
+    setExpandedCols((prev) => {
+      const s = new Set(prev)
+      s.has(id) ? s.delete(id) : s.add(id)
+      return s
+    })
   }
 
-  const openAllTabs = (tabs: TabData[]) => {
-    tabs.forEach((t) => browser.tabs.create({ url: t.url }))
+  const toggleList = (key: string) => {
+    setExpandedLists((prev) => {
+      const s = new Set(prev)
+      s.has(key) ? s.delete(key) : s.add(key)
+      return s
+    })
+  }
+
+  const openAllTabs = async (tabs: { url: string; title: string }[]) => {
+    for (const t of tabs) {
+      await markUrlAccessed(t.url)
+      browser.tabs.create({ url: t.url })
+    }
     message.success(`${tabs.length} tabs opened`)
     analytics.trackEvent('Lists', 'Open All Tabs')
   }
 
-  const handleDeleteLibrary = async (libId: string) => {
+  const handleDeleteCollection = async (colId: string) => {
     if (isBookmarks) {
-      await new Promise<void>((res) => browser.bookmarks.removeTree(libId, res))
+      await new Promise<void>((res) => browser.bookmarks.removeTree(colId, res))
     } else {
-      await removeLibrary(libId)
+      await deleteCollection(colId)
     }
     onReload()
-    message.success('Library deleted')
+    message.success('Collection deleted')
   }
 
-  const handleDeleteList = async (libId: string, listId: string) => {
+  const handleDeleteList = async (colId: string, listId: string) => {
     if (isBookmarks) {
-      await new Promise<void>((res) =>
-        browser.bookmarks.removeTree(listId, res)
-      )
+      await new Promise<void>((res) => browser.bookmarks.removeTree(listId, res))
     } else {
-      await removeList(libId, listId)
+      await deleteList(colId, listId)
     }
     onReload()
     message.success('List deleted')
   }
 
-  const commitRenameLib = async (libId: string) => {
-    if (!editName.trim()) {
-      setEditingLibId(null)
-      return
-    }
+  const commitRenameCol = async (colId: string) => {
+    if (!editName.trim()) { setEditingColId(null); return }
     if (isBookmarks) {
       await new Promise<void>((res) =>
-        browser.bookmarks.update(libId, { title: editName.trim() }, () => res())
+        browser.bookmarks.update(colId, { title: editName.trim() }, () => res())
       )
     } else {
-      await renameLibrary(libId, editName.trim())
+      await renameCollection(colId, editName.trim())
     }
     onReload()
-    setEditingLibId(null)
-    message.success('Library renamed')
+    setEditingColId(null)
+    message.success('Collection renamed')
   }
 
-  const commitRenameList = async (libId: string, listId: string) => {
-    if (!editName.trim()) {
-      setEditingListKey(null)
-      return
-    }
+  const commitRenameList = async (colId: string, listId: string) => {
+    if (!editName.trim()) { setEditingListKey(null); return }
     if (isBookmarks) {
       await new Promise<void>((res) =>
-        browser.bookmarks.update(listId, { title: editName.trim() }, () =>
-          res()
-        )
+        browser.bookmarks.update(listId, { title: editName.trim() }, () => res())
       )
     } else {
-      await renameTabList(libId, listId, editName.trim())
+      await renameList(colId, listId, editName.trim())
     }
     onReload()
     setEditingListKey(null)
     message.success('List renamed')
   }
 
-  if (libraries.length === 0) {
+  if (collections.length === 0) {
     return (
       <Empty
         description={
           isBookmarks
-            ? 'No bookmark lists saved yet — choose "Browser Bookmarks" when saving a list'
-            : 'No extension lists yet — select tabs and click "Save as List"'
+            ? 'No bookmark collections yet — choose "Browser Bookmarks" when saving a list'
+            : 'No extension collections yet — select tabs and click "Save as List"'
         }
         className="mt-16"
       />
@@ -191,64 +169,50 @@ function LibraryList({
 
   return (
     <div className="space-y-3">
-      {libraries.map((lib) => {
-        const isLibExpanded = expandedLibs.has(lib.id)
-        const totalTabs = getTabCount(lib)
-        const isEditingLib = editingLibId === lib.id
+      {collections.map((col) => {
+        const isColExpanded = expandedCols.has(col.id)
+        const totalTabs = getTabCount(col)
+        const isEditingCol = editingColId === col.id
 
         return (
           <div
-            key={lib.id}
+            key={col.id}
             className="bg-white rounded-lg shadow-sm hover:shadow transition-shadow"
           >
-            {/* Library header */}
+            {/* Collection header */}
             <div
               className="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-gray-50 rounded-t-lg"
-              onClick={() => toggleLib(lib.id)}
+              onClick={() => toggleCol(col.id)}
             >
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <Button
                   type="text"
                   size="small"
-                  icon={
-                    isLibExpanded ? (
-                      <ChevronUp size={15} />
-                    ) : (
-                      <ChevronDown size={15} />
-                    )
-                  }
+                  icon={isColExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                   className="flex items-center justify-center shrink-0"
                 />
                 <Library
                   size={16}
-                  className={
-                    isBookmarks
-                      ? 'text-amber-500 shrink-0'
-                      : 'text-blue-500 shrink-0'
-                  }
+                  className={isBookmarks ? 'text-amber-500 shrink-0' : 'text-blue-500 shrink-0'}
                 />
-                {isEditingLib ? (
+                {isEditingCol ? (
                   <Input
                     autoFocus
                     size="small"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    onPressEnter={() => commitRenameLib(lib.id)}
-                    onBlur={() => commitRenameLib(lib.id)}
+                    onPressEnter={() => commitRenameCol(col.id)}
+                    onBlur={() => commitRenameCol(col.id)}
                     onClick={(e) => e.stopPropagation()}
                     className="w-48"
                   />
                 ) : (
                   <span className="font-semibold truncate">
-                    {lib.name || 'Unnamed Library'}
+                    {col.name || 'Unnamed Collection'}
                   </span>
                 )}
-                <Tag color={isBookmarks ? 'gold' : 'blue'}>
-                  {formatDate(lib.created)}
-                </Tag>
-                <Tag color="green">
-                  {lib.lists.length} lists · {totalTabs} tabs
-                </Tag>
+                <Tag color={isBookmarks ? 'gold' : 'blue'}>{formatDate(col.created)}</Tag>
+                <Tag color="green">{col.lists.length} lists · {totalTabs} tabs</Tag>
               </div>
 
               <Space size="small" onClick={(e) => e.stopPropagation()}>
@@ -259,7 +223,7 @@ function LibraryList({
                     icon={<FolderOpen size={15} />}
                     onClick={(e) => {
                       e.stopPropagation()
-                      openAllTabs(lib.lists.flatMap((l) => l.tabs))
+                      openAllTabs(col.lists.flatMap((l) => l.tabs))
                     }}
                     className="flex items-center justify-center"
                   />
@@ -270,16 +234,16 @@ function LibraryList({
                     icon={<Edit2 size={15} />}
                     onClick={(e) => {
                       e.stopPropagation()
-                      setEditingLibId(lib.id)
+                      setEditingColId(col.id)
                       setEditingListKey(null)
-                      setEditName(lib.name || '')
+                      setEditName(col.name || '')
                     }}
                     className="flex items-center justify-center text-gray-500"
                   />
                 </Tooltip>
                 <Popconfirm
-                  title="Delete this entire library and all its lists?"
-                  onConfirm={() => handleDeleteLibrary(lib.id)}
+                  title="Delete this entire collection and all its lists?"
+                  onConfirm={() => handleDeleteCollection(col.id)}
                   okText="Delete"
                   cancelText="Cancel"
                 >
@@ -295,15 +259,15 @@ function LibraryList({
             </div>
 
             {/* Lists */}
-            {isLibExpanded && (
+            {isColExpanded && (
               <div className="border-t bg-gray-50 rounded-b-lg px-4 py-3 space-y-2">
-                {lib.lists.length === 0 ? (
+                {col.lists.length === 0 ? (
                   <div className="text-gray-400 text-sm text-center py-2">
-                    No lists in this library
+                    No lists in this collection
                   </div>
                 ) : (
-                  lib.lists.map((list) => {
-                    const listKey = `${lib.id}:${list.id}`
+                  col.lists.map((list) => {
+                    const listKey = `${col.id}:${list.id}`
                     const isListExpanded = expandedLists.has(listKey)
                     const isEditingList = editingListKey === listKey
 
@@ -320,58 +284,37 @@ function LibraryList({
                             <Button
                               type="text"
                               size="small"
-                              icon={
-                                isListExpanded ? (
-                                  <ChevronUp size={13} />
-                                ) : (
-                                  <ChevronDown size={13} />
-                                )
-                              }
+                              icon={isListExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                               className="flex items-center justify-center shrink-0"
                             />
-                            <BookOpen
-                              size={14}
-                              className="text-indigo-400 shrink-0"
-                            />
+                            <BookOpen size={14} className="text-indigo-400 shrink-0" />
                             {isEditingList ? (
                               <Input
                                 autoFocus
                                 size="small"
                                 value={editName}
                                 onChange={(e) => setEditName(e.target.value)}
-                                onPressEnter={() =>
-                                  commitRenameList(lib.id, list.id)
-                                }
-                                onBlur={() => commitRenameList(lib.id, list.id)}
+                                onPressEnter={() => commitRenameList(col.id, list.id)}
+                                onBlur={() => commitRenameList(col.id, list.id)}
                                 onClick={(e) => e.stopPropagation()}
                                 className="w-40"
                               />
                             ) : (
                               <span className="font-medium text-sm truncate">
-                                {list.name || (
-                                  <span className="italic text-gray-400">
-                                    Unnamed List
-                                  </span>
-                                )}
+                                {list.name || <span className="italic text-gray-400">Unnamed List</span>}
                               </span>
                             )}
                             <Tag>{formatDate(list.created)}</Tag>
                             <Tag color="cyan">{list.tabs.length} tabs</Tag>
                           </div>
 
-                          <Space
-                            size="small"
-                            onClick={(e) => e.stopPropagation()}
-                          >
+                          <Space size="small" onClick={(e) => e.stopPropagation()}>
                             <Tooltip title="Open all tabs in list">
                               <Button
                                 type="primary"
                                 size="small"
                                 icon={<ExternalLink size={13} />}
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  openAllTabs(list.tabs)
-                                }}
+                                onClick={(e) => { e.stopPropagation(); openAllTabs(list.tabs) }}
                                 className="flex items-center justify-center"
                               />
                             </Tooltip>
@@ -382,7 +325,7 @@ function LibraryList({
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   setEditingListKey(listKey)
-                                  setEditingLibId(null)
+                                  setEditingColId(null)
                                   setEditName(list.name || '')
                                 }}
                                 className="flex items-center justify-center text-gray-500"
@@ -390,9 +333,7 @@ function LibraryList({
                             </Tooltip>
                             <Popconfirm
                               title="Delete this list?"
-                              onConfirm={() =>
-                                handleDeleteList(lib.id, list.id)
-                              }
+                              onConfirm={() => handleDeleteList(col.id, list.id)}
                               okText="Delete"
                               cancelText="Cancel"
                             >
@@ -423,20 +364,24 @@ function LibraryList({
                                   >
                                     {tab.title || tab.url}
                                   </a>
-                                  <div className="text-[10px] text-gray-400 truncate">
-                                    {tab.url}
-                                  </div>
+                                  <div className="text-[10px] text-gray-400 truncate">{tab.url}</div>
                                 </div>
-                                <Button
-                                  type="link"
-                                  size="small"
-                                  onClick={() =>
-                                    browser.tabs.create({ url: tab.url })
-                                  }
-                                  className="shrink-0"
-                                >
-                                  Open
-                                </Button>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {tab.freq > 1 && (
+                                    <span className="text-[10px] text-amber-500 font-medium">★×{tab.freq}</span>
+                                  )}
+                                  <Button
+                                    type="link"
+                                    size="small"
+                                    onClick={async () => {
+                                      await markUrlAccessed(tab.url)
+                                      browser.tabs.create({ url: tab.url })
+                                    }}
+                                    className="shrink-0"
+                                  >
+                                    Open
+                                  </Button>
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -455,80 +400,60 @@ function LibraryList({
 }
 
 function ListsPageContent() {
-  const [extLibraries, setExtLibraries] = useState<LibraryData[]>([])
-  const [bmLibraries, setBmLibraries] = useState<LibraryData[]>([])
-  const [filteredExt, setFilteredExt] = useState<LibraryData[]>([])
-  const [filteredBm, setFilteredBm] = useState<LibraryData[]>([])
+  const [extCollections, setExtCollections] = useState<HydratedCollection[]>([])
+  const [bmCollections, setBmCollections] = useState<HydratedCollection[]>([])
+  const [filteredExt, setFilteredExt] = useState<HydratedCollection[]>([])
+  const [filteredBm, setFilteredBm] = useState<HydratedCollection[]>([])
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('extension')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
   const dispatch = useDispatch<AppDispatch>()
-  const {
-    drawerOpen,
-    isLoading: aiLoading,
-    status
-  } = useSelector((s: RootState) => s.ai)
+  const { drawerOpen, status } = useSelector((s: RootState) => s.ai)
+  const { regex: isRegex } = useSelector(
+    (state: any) => state.search || { regex: false }
+  )
 
   usePageTracking('/lists', 'Lists')
 
-  const fetchAll = async () => {
+  const fetchAll = useCallback(async () => {
     setLoading(true)
     try {
-      const [ext, bm] = await Promise.all([getLists(), getBookmarkLists()])
-      setExtLibraries(ext || [])
-      setBmLibraries(bm || [])
+      const [ext, bm] = await Promise.all([getCollections(), getBookmarkCollections()])
+      setExtCollections(ext || [])
+      setBmCollections(bm || [])
       setFilteredExt(ext || [])
       setFilteredBm(bm || [])
     } finally {
       setLoading(false)
     }
-  }
-
-  const { regex: isRegex } = useSelector(
-    (state: any) => state.search || { regex: false }
-  )
+  }, [])
 
   useEffect(() => {
     const checkAI = async () => {
       try {
         const service = await getAIService()
-        const status = await service.getStatus()
-        dispatch(setProviderStatus(status))
-      } catch (e) {
-        dispatch(
-          setProviderStatus({
-            connected: false,
-            error: 'AI Service unavailable'
-          })
-        )
+        const s = await service.getStatus()
+        dispatch(setProviderStatus(s))
+      } catch {
+        dispatch(setProviderStatus({ connected: false, error: 'AI Service unavailable' }))
       }
     }
     checkAI()
-  }, [dispatch])
-
-  useEffect(() => {
     fetchAll()
 
     const onStorageChanged = (changes: any, area: string) => {
-      if (
-        area === 'local' &&
-        (changes.libraries || changes.urlBank || changes.bookmarkLibraryIds)
-      ) {
+      if (area === 'local' && (changes.collections_v2 || changes.urlRegistry)) {
         fetchAll()
       }
     }
-
     browser.storage.onChanged.addListener(onStorageChanged)
 
     if (browser.bookmarks) {
-      const onBmChanged = () => {
-        fetchAll()
-      }
+      const onBmChanged = () => fetchAll()
       browser.bookmarks.onCreated.addListener(onBmChanged)
       browser.bookmarks.onRemoved.addListener(onBmChanged)
       browser.bookmarks.onChanged.addListener(onBmChanged)
       browser.bookmarks.onMoved.addListener(onBmChanged)
-
       return () => {
         browser.storage.onChanged.removeListener(onStorageChanged)
         browser.bookmarks.onCreated.removeListener(onBmChanged)
@@ -537,59 +462,38 @@ function ListsPageContent() {
         browser.bookmarks.onMoved.removeListener(onBmChanged)
       }
     }
-
-    return () => {
-      browser.storage.onChanged.removeListener(onStorageChanged)
-    }
-  }, [])
+    return () => browser.storage.onChanged.removeListener(onStorageChanged)
+  }, [dispatch, fetchAll])
 
   const handleSearch = (value: string) => {
     const q = value.toLowerCase()
-    const filter = (libs: LibraryData[]) => {
-      if (!q) return libs
+    let searchRegex: RegExp | null = null
+    if (isRegex && value) {
+      try { searchRegex = new RegExp(value, 'i') } catch { /* invalid */ }
+    }
 
-      let searchRegex: RegExp | null = null
-      if (isRegex) {
-        try {
-          searchRegex = new RegExp(value, 'i')
-        } catch (e) {
-          /* invalid regex */
-        }
-      }
-
-      return libs.filter((lib) => {
-        if (isRegex && searchRegex) {
-          return (
-            searchRegex.test(lib.name) ||
-            lib.lists.some(
-              (list) =>
-                searchRegex?.test(list.name) ||
-                list.tabs.some(
-                  (t) => searchRegex?.test(t.url) || searchRegex?.test(t.title)
-                )
-            )
-          )
-        }
+    const filter = (cols: HydratedCollection[]) => {
+      if (!q) return cols
+      return cols.filter((col) => {
+        const test = (str: string) =>
+          isRegex && searchRegex ? searchRegex.test(str) : str.toLowerCase().includes(q)
         return (
-          lib.name.toLowerCase().includes(q) ||
-          lib.lists.some(
+          test(col.name) ||
+          col.lists.some(
             (list) =>
-              list.name.toLowerCase().includes(q) ||
-              list.tabs.some(
-                (t) =>
-                  t.url.toLowerCase().includes(q) ||
-                  t.title.toLowerCase().includes(q)
-              )
+              test(list.name) ||
+              list.tabs.some((t) => test(t.url) || test(t.title))
           )
         )
       })
     }
-    setFilteredExt(filter(extLibraries))
-    setFilteredBm(filter(bmLibraries))
+
+    setFilteredExt(filter(extCollections))
+    setFilteredBm(filter(bmCollections))
   }
 
-  const totalExt = extLibraries.reduce((n, l) => n + l.lists.length, 0)
-  const totalBm = bmLibraries.reduce((n, l) => n + l.lists.length, 0)
+  const totalExt = extCollections.reduce((n, c) => n + c.lists.length, 0)
+  const totalBm = bmCollections.reduce((n, c) => n + c.lists.length, 0)
 
   return (
     <div className="flex h-[100vh] relative overflow-hidden">
@@ -601,26 +505,24 @@ function ListsPageContent() {
         aiEnabled={status?.connected}
       />
       <div className="flex flex-col flex-1">
-        {/* Header */}
         <header className="bg-gradient-to-t from-cyan-500 to-blue-500 p-2 transition-all duration-200 ease-in-out">
           <section className="flex items-center justify-between gap-4 w-full">
             <div className="flex-none flex items-center shrink-0">
               <div className="mr-2">
-                <SidebarToggleButton
-                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                />
+                <SidebarToggleButton onClick={() => setSidebarCollapsed(!sidebarCollapsed)} />
               </div>
               <div className="hidden sm:block">{Brand(logo)}</div>
-              <span className="text-white font-semibold text-lg ml-4">
-                Lists
-              </span>
+              <div className="flex items-center ml-4 gap-2">
+                <Library size={18} className="text-white/80" />
+                <span className="text-white font-semibold text-lg">Collections</span>
+              </div>
             </div>
             <div className="flex-1 flex justify-end items-center gap-3 pr-2">
               <RoutineQuickMenu size="middle" buttonText="Routines" />
               <div className="w-full max-w-xl">
                 <UnifiedSearch
                   isReduxConnected={false}
-                  placeholder="Search libraries, lists, URLs..."
+                  placeholder="Search collections, lists, URLs..."
                   onChange={handleSearch}
                   onSearch={handleSearch}
                   showTabFilters={false}
@@ -632,70 +534,69 @@ function ListsPageContent() {
           </section>
         </header>
 
-        {/* Tabs */}
         <div className="flex-1 overflow-auto bg-gray-50">
-          <Tabs
-            activeKey={activeTab}
-            onChange={setActiveTab}
-            className="px-4 pt-2"
-            items={[
-              {
-                key: 'extension',
-                label: (
-                  <span className="flex items-center gap-1.5">
-                    <Library size={14} />
-                    Extension
-                    {extLibraries.length > 0 && (
-                      <Tag color="blue" className="ml-1 !text-xs">
-                        {totalExt}
-                      </Tag>
-                    )}
-                  </span>
-                ),
-                children: (
-                  <div className="pb-6">
-                    <LibraryList
-                      libraries={filteredExt}
-                      isBookmarks={false}
-                      onReload={fetchAll}
-                    />
-                  </div>
-                )
-              },
-              {
-                key: 'bookmarks',
-                label: (
-                  <span className="flex items-center gap-1.5">
-                    <Bookmark size={14} />
-                    Bookmarks
-                    {bmLibraries.length > 0 && (
-                      <Tag color="gold" className="ml-1 !text-xs">
-                        {totalBm}
-                      </Tag>
-                    )}
-                  </span>
-                ),
-                children: (
-                  <div className="pb-6">
-                    <LibraryList
-                      libraries={filteredBm}
-                      isBookmarks={true}
-                      onReload={fetchAll}
-                    />
-                  </div>
-                )
-              }
-            ]}
-          />
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <Spin size="large" />
+            </div>
+          ) : (
+            <Tabs
+              activeKey={activeTab}
+              onChange={setActiveTab}
+              className="px-4 pt-2"
+              items={[
+                {
+                  key: 'extension',
+                  label: (
+                    <span className="flex items-center gap-1.5">
+                      <Library size={14} />
+                      Extension
+                      {extCollections.length > 0 && (
+                        <Tag color="blue" className="ml-1 !text-xs">{totalExt}</Tag>
+                      )}
+                    </span>
+                  ),
+                  children: (
+                    <div className="pb-6">
+                      <CollectionList
+                        collections={filteredExt}
+                        isBookmarks={false}
+                        onReload={fetchAll}
+                      />
+                    </div>
+                  )
+                },
+                {
+                  key: 'bookmarks',
+                  label: (
+                    <span className="flex items-center gap-1.5">
+                      <Bookmark size={14} />
+                      Bookmarks
+                      {bmCollections.length > 0 && (
+                        <Tag color="gold" className="ml-1 !text-xs">{totalBm}</Tag>
+                      )}
+                    </span>
+                  ),
+                  children: (
+                    <div className="pb-6">
+                      <CollectionList
+                        collections={filteredBm}
+                        isBookmarks={true}
+                        onReload={fetchAll}
+                      />
+                    </div>
+                  )
+                }
+              ]}
+            />
+          )}
         </div>
       </div>
 
       <AIDrawer
-        onOpenSettings={() => {
-          chrome.tabs.create({
-            url: chrome.runtime.getURL('tabs/settings.html#ai')
-          })
-        }}
+        onOpenSettings={() =>
+          chrome.tabs.create({ url: chrome.runtime.getURL('tabs/settings.html#ai') })
+        }
       />
 
       <div className="fixed bottom-4 right-4 z-30">
@@ -713,9 +614,7 @@ export default function ListsPage() {
   return (
     <Provider store={store}>
       <ConfigProvider
-        theme={{
-          token: { borderRadius: 4, borderRadiusSM: 4, borderRadiusLG: 4 }
-        }}
+        theme={{ token: { borderRadius: 4, borderRadiusSM: 4, borderRadiusLG: 4 } }}
       >
         <ListsPageContent />
       </ConfigProvider>
